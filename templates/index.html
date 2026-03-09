@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2>My Flock</h2>
+        <a href="{{ url_for('add_bird') }}" class="btn btn-primary">+ Add Bird</a>
+    </div>
+
+    <form class="filters" method="get">
+        <label>Species:</label>
+        <select name="species" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="duck" {{ 'selected' if filter_species == 'duck' }}>Ducks</option>
+            <option value="hen" {{ 'selected' if filter_species == 'hen' }}>Hens</option>
+        </select>
+        <label>Status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="alive" {{ 'selected' if filter_status == 'alive' }}>Alive</option>
+            <option value="dead" {{ 'selected' if filter_status == 'dead' }}>Dead</option>
+            <option value="all" {{ 'selected' if filter_status == 'all' }}>All</option>
+        </select>
+    </form>
+
+    {% if birds %}
+    <table>
+        <thead>
+            <tr>
+                <th></th>
+                <th>Ring #</th>
+                <th>Name</th>
+                <th>Species</th>
+                <th>Breed</th>
+                <th>Sex</th>
+                <th>Born</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bird in birds %}
+            <tr class="{{ 'dead' if bird.is_dead }}">
+                <td>
+                    {% if bird.has_image %}
+                    <img src="{{ url_for('bird_image', bird_id=bird.id) }}" class="thumb" alt="">
+                    {% endif %}
+                </td>
+                <td><a href="{{ url_for('view_bird', bird_id=bird.id) }}">{{ bird.ring_number }}</a></td>
+                <td>{{ bird.name or '—' }} {% if bird.is_dead %}<span class="badge dead">dead</span>{% endif %}</td>
+                <td><span class="badge {{ bird.species }}">{{ bird.species }}</span></td>
+                <td>{{ bird.breed or '—' }}{% if bird.breed == 'hybrid' and bird.breed_mix %} ({{ bird.breed_mix }}){% endif %}</td>
+                <td>{{ bird.sex or '—' }}</td>
+                <td>{{ ('~' if bird.birth_approximate else '') }}{{ bird.birth_date or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align:center; padding:2rem; color:#888;">No birds registered yet. Add your first bird!</p>
+    {% endif %}
+</div>
+{% endblock %}

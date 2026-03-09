@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:start;">
+        <div>
+            <h2>
+                {{ bird.name or bird.ring_number }}
+                <span class="badge {{ bird.species }}">{{ bird.species }}</span>
+                {% if bird.is_dead %}<span class="badge dead">deceased</span>{% endif %}
+            </h2>
+            {% if bird.name %}
+            <p style="color:#888;">Ring #{{ bird.ring_number }}</p>
+            {% endif %}
+        </div>
+        {% if bird.has_image %}
+        <img src="{{ url_for('bird_image', bird_id=bird.id) }}" class="bird-image" alt="{{ bird.name or bird.ring_number }}">
+        {% endif %}
+    </div>
+
+    <dl class="detail-grid" style="margin-top:1.5rem;">
+        <dt>Sex</dt>
+        <dd>{{ bird.sex | capitalize }}</dd>
+
+        <dt>Breed</dt>
+        <dd>{{ bird.breed or '—' }}{% if bird.breed == 'hybrid' and bird.breed_mix %} ({{ bird.breed_mix }}){% endif %}</dd>
+
+        <dt>Date of Birth</dt>
+        <dd>{{ ('~' if bird.birth_approximate else '') }}{{ bird.birth_date or '—' }}</dd>
+
+        {% if bird.is_dead %}
+        <dt>Date of Death</dt>
+        <dd>{{ bird.death_date or '—' }}</dd>
+        {% endif %}
+
+        {% if bird.notes %}
+        <dt>Notes</dt>
+        <dd style="white-space:pre-wrap;">{{ bird.notes }}</dd>
+        {% endif %}
+    </dl>
+
+    <div class="actions">
+        <a href="{{ url_for('edit_bird', bird_id=bird.id) }}" class="btn btn-primary">Edit</a>
+        <form method="post" action="{{ url_for('delete_bird', bird_id=bird.id) }}" class="inline"
+              onsubmit="return confirm('Delete this bird permanently?')">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+        <a href="{{ url_for('index') }}" style="margin-left:auto;">Back to flock</a>
+    </div>
+</div>
+{% endblock %}
