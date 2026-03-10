@@ -2,9 +2,10 @@
 {% block content %}
 <div class="card">
     <h2>{{ 'Edit Bird' if bird else 'Register New Bird' }}</h2>
-    {% if owner.id != current_user.id %}
-    <p style="color:#888; font-size:0.9rem; margin-top:0.25rem;">Adding to {{ owner.username }}'s flock</p>
-    {% endif %}
+    <p style="color:#888; font-size:0.9rem; margin-top:0.25rem;">
+        Flock: <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}">{{ flock.name }}</a>
+        {% if flock.user_id != current_user.id %} ({{ flock.username }}){% endif %}
+    </p>
     <form method="post" enctype="multipart/form-data" style="margin-top:1rem;">
         <div class="form-row">
             <div class="form-group">
@@ -23,6 +24,12 @@
                 <select id="species" name="species" required>
                     <option value="duck" {{ 'selected' if bird and bird.species == 'duck' }}>Duck</option>
                     <option value="hen" {{ 'selected' if bird and bird.species == 'hen' }}>Hen</option>
+                    <option value="goose" {{ 'selected' if bird and bird.species == 'goose' }}>Goose</option>
+                    <option value="turkey" {{ 'selected' if bird and bird.species == 'turkey' }}>Turkey</option>
+                    <option value="quail" {{ 'selected' if bird and bird.species == 'quail' }}>Quail</option>
+                    <option value="pigeon" {{ 'selected' if bird and bird.species == 'pigeon' }}>Pigeon</option>
+                    <option value="guinea fowl" {{ 'selected' if bird and bird.species == 'guinea fowl' }}>Guinea Fowl</option>
+                    <option value="peafowl" {{ 'selected' if bird and bird.species == 'peafowl' }}>Peafowl</option>
                 </select>
             </div>
             <div class="form-group">
@@ -62,14 +69,27 @@
         {% if bird %}
         <div class="form-row">
             <div class="form-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="is_dead" name="is_dead" {{ 'checked' if bird and bird.is_dead }}>
+                <label style="margin-bottom:0.5rem;">Status</label>
+                <div class="checkbox-group" style="margin-bottom:0.4rem;">
+                    <input type="checkbox" id="is_dead" name="is_dead" {{ 'checked' if bird.is_dead }}
+                           onchange="syncStatus('dead')">
                     <label for="is_dead" style="font-weight:normal;">Deceased</label>
                 </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="is_sold" name="is_sold" {{ 'checked' if bird.is_sold }}
+                           onchange="syncStatus('sold')">
+                    <label for="is_sold" style="font-weight:normal;">Sold / rehomed</label>
+                </div>
             </div>
-            <div class="form-group" id="death-date-group" style="{{ '' if bird and bird.is_dead else 'display:none;' }}">
-                <label for="death_date">Date of Death</label>
-                <input type="date" id="death_date" name="death_date" value="{{ bird.death_date if bird and bird.death_date else '' }}">
+            <div class="form-group">
+                <div id="death-date-group" style="{{ '' if bird.is_dead else 'display:none;' }}">
+                    <label for="death_date">Date of Death</label>
+                    <input type="date" id="death_date" name="death_date" value="{{ bird.death_date if bird.death_date else '' }}">
+                </div>
+                <div id="sold-date-group" style="{{ '' if bird.is_sold else 'display:none;' }}">
+                    <label for="sold_date">Date Sold</label>
+                    <input type="date" id="sold_date" name="sold_date" value="{{ bird.sold_date if bird.sold_date else '' }}">
+                </div>
             </div>
         </div>
         {% endif %}
@@ -94,7 +114,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">{{ 'Save Changes' if bird else 'Register Bird' }}</button>
-        <a href="{{ url_for('view_flock', username=owner.username) }}" style="margin-left:1rem;">Cancel</a>
+        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" style="margin-left:1rem;">Cancel</a>
     </form>
 </div>
 
@@ -107,12 +127,14 @@
     breedInput.addEventListener('input', toggleMix);
     toggleMix();
 
-    const deadCheckbox = document.getElementById('is_dead');
-    const deathGroup = document.getElementById('death-date-group');
-    if (deadCheckbox && deathGroup) {
-        deadCheckbox.addEventListener('change', () => {
-            deathGroup.style.display = deadCheckbox.checked ? '' : 'none';
-        });
+    function syncStatus(changed) {
+        const dead = document.getElementById('is_dead');
+        const sold = document.getElementById('is_sold');
+        if (!dead || !sold) return;
+        if (changed === 'dead' && dead.checked) sold.checked = false;
+        if (changed === 'sold' && sold.checked) dead.checked = false;
+        document.getElementById('death-date-group').style.display = dead.checked ? '' : 'none';
+        document.getElementById('sold-date-group').style.display  = sold.checked ? '' : 'none';
     }
 </script>
 {% endblock %}

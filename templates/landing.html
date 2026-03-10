@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align:center; padding:2.5rem 1rem 1.5rem;">
+    <h1 style="font-size:2.2rem; color:#5b7a3a; margin-bottom:0.5rem;">&#x1f986; RingLog</h1>
+    <p style="font-size:1.15rem; color:#555; max-width:540px; margin:0 auto;">
+        A simple registry for your poultry and birds — track rings, breeds, ages, notes, and more.
+    </p>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; margin-bottom:2rem;">
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f4cb;</div>
+        <h3 style="margin-bottom:0.4rem;">Bird registry</h3>
+        <p style="color:#666; font-size:0.9rem;">Record ring numbers, species, breed, sex, birth date, and a photo for each bird.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f4dd;</div>
+        <h3 style="margin-bottom:0.4rem;">Dated notes</h3>
+        <p style="color:#666; font-size:0.9rem;">Keep a running log of observations, health events, and milestones per bird.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f465;</div>
+        <h3 style="margin-bottom:0.4rem;">Flock sharing</h3>
+        <p style="color:#666; font-size:0.9rem;">Share your flock with a partner or vet — read-only or with edit access.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f4f1;</div>
+        <h3 style="margin-bottom:0.4rem;">Mobile friendly</h3>
+        <p style="color:#666; font-size:0.9rem;">Works on any device — check the registry from the barn, no app install needed.</p>
+    </div>
+</div>
+
+<div class="card" style="max-width:480px; margin:0 auto; text-align:center;">
+    <p style="color:#555; margin-bottom:1.25rem;">
+        RingLog is made for <strong>hobby keepers and small-scale flock owners</strong>.
+        Free to use, no ads, no fluff.
+    </p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Create a free account</a>
+        <a href="{{ url_for('login') }}" class="btn" style="background:#eee; color:#333;">Log in</a>
+    </div>
+</div>
+
+{% endblock %}

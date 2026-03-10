@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:720px; margin:0 auto;">
+    <h2 style="margin-bottom:0.25rem;">Terms of Use</h2>
+    <p style="color:#888; font-size:0.85rem; margin-bottom:1.5rem;">Last updated: March 2026</p>
+
+    <h3 style="margin:1.25rem 0 0.4rem;">1. About RingLog</h3>
+    <p>RingLog is a free, personal registry service intended for hobby keepers and small-scale owners of domestic birds (ducks, hens, and similar poultry). It is provided as-is, without charge, by a private individual.</p>
+
+    <h3 style="margin:1.25rem 0 0.4rem;">2. Acceptable use</h3>
+    <p>You may use RingLog to record information about birds you own or care for. You must not use the service to store data about third parties without their consent, or for any unlawful purpose.</p>
+
+    <h3 style="margin:1.25rem 0 0.4rem;">3. Your data</h3>
+    <p>The data you enter — bird records, notes, and your account details — is stored on our server solely for the purpose of providing the service to you. We do not sell, share, or process your data for any other purpose. You can delete your data at any time by deleting your birds, flocks, and account.</p>
+
+    <h3 style="margin:1.25rem 0 0.4rem;">4. No warranty</h3>
+    <p>RingLog is provided <strong>"as is"</strong> without warranty of any kind. We make no guarantees regarding uptime, data durability, or fitness for any particular purpose. You are responsible for keeping your own backups of important records.</p>
+
+    <h3 style="margin:1.25rem 0 0.4rem;">5. Inactive accounts</h3>
+    <p>Accounts that have not been logged into for more than <strong>6 months</strong> may be deleted without prior notice, along with all associated data. If you provide an email address, we will make reasonable effort to notify you before deletion.</p>
+
+    <h3 style="margin:1.25rem 0 0.4rem;">6. Changes to these terms</h3>
+    <p>We may update these terms from time to time. Continued use of the service after changes are posted constitutes acceptance of the updated terms.</p>
+
+    <h3 style="margin:1.25rem 0 0.4rem;">7. Contact</h3>
+    <p>Questions or concerns can be directed to <a href="mailto:ringlog@noteng.no">ringlog@noteng.no</a>.</p>
+
+    <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid #eee;">
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Create an account</a>
+        <a href="{{ url_for('index') }}" style="margin-left:1rem;">Back</a>
+    </div>
+</div>
+{% endblock %}

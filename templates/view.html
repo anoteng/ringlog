@@ -7,13 +7,15 @@
                 {{ bird.name or bird.ring_number }}
                 <span class="badge {{ bird.species }}">{{ bird.species }}</span>
                 {% if bird.is_dead %}<span class="badge dead">deceased</span>{% endif %}
+                {% if bird.is_sold %}<span class="badge sold">sold</span>{% endif %}
             </h2>
             {% if bird.name %}
             <p style="color:#888;">Ring #{{ bird.ring_number }}</p>
             {% endif %}
-            {% if owner.id != current_user.id %}
-            <p style="color:#888; font-size:0.85rem;">Owner: {{ owner.username }}</p>
-            {% endif %}
+            <p style="color:#888; font-size:0.85rem;">
+                <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}">{{ flock.name }}</a>
+                {% if flock.user_id != current_user.id %} &mdash; {{ flock.username }}{% endif %}
+            </p>
         </div>
         {% if bird.has_image %}
         <img src="{{ url_for('bird_image', bird_id=bird.id) }}" class="bird-image" alt="{{ bird.name or bird.ring_number }}">
@@ -35,6 +37,11 @@
         <dd>{{ bird.death_date or '—' }}</dd>
         {% endif %}
 
+        {% if bird.is_sold %}
+        <dt>Date Sold</dt>
+        <dd>{{ bird.sold_date or '—' }}</dd>
+        {% endif %}
+
         {% if bird.notes %}
         <dt>Notes</dt>
         <dd style="white-space:pre-wrap;">{{ bird.notes }}</dd>
@@ -43,15 +50,12 @@
 
     <div class="actions">
         {% if can_edit %}
-        <a href="{{ url_for('edit_bird', bird_id=bird.id) }}" class="btn btn-primary">Edit</a>
-        {% if owner.id == current_user.id %}
-        <form method="post" action="{{ url_for('delete_bird', bird_id=bird.id) }}" class="inline"
-              onsubmit="return confirm('Delete this bird permanently?')">
-            <button type="submit" class="btn btn-danger">Delete</button>
-        </form>
+        <a href="{{ url_for('edit_bird', bird_id=bird.id) }}" class="btn btn-primary btn-sm">Edit</a>
+        {% if flock.user_id == current_user.id %}
+        <a href="{{ url_for('delete_bird', bird_id=bird.id) }}" class="btn btn-danger btn-sm">Delete</a>
         {% endif %}
         {% endif %}
-        <a href="{{ url_for('view_flock', username=owner.username) }}" style="margin-left:auto;">Back to flock</a>
+        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" style="margin-left:auto;">Back to flock</a>
     </div>
 </div>
 

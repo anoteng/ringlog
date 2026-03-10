@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:540px; margin:0 auto;">
+    <h2 style="margin-bottom:0.25rem;">Delete {{ bird.name or bird.ring_number }}?</h2>
+    <p style="color:#888; margin-bottom:1.5rem;">Ring #{{ bird.ring_number }} &mdash; {{ flock.name }}</p>
+
+    <div style="background:#fff8e1; border-left:4px solid #f0ad4e; padding:0.85rem 1rem; border-radius:4px; margin-bottom:1.5rem;">
+        <strong>Before you delete</strong> — consider marking this bird as
+        <strong>deceased</strong> or <strong>sold</strong> instead.
+        That preserves the full history and notes, and frees up the ring number
+        for reuse if your flock settings allow it.<br><br>
+        <a href="{{ url_for('edit_bird', bird_id=bird.id) }}" class="btn btn-primary btn-sm">
+            Mark as dead / sold instead
+        </a>
+    </div>
+
+    <p style="color:#888; font-size:0.9rem; margin-bottom:1rem;">
+        Only delete if this bird was added by mistake. This action cannot be undone
+        and will permanently remove all notes and history.
+    </p>
+
+    <div style="display:flex; gap:0.75rem; align-items:center;">
+        <form method="post" action="{{ url_for('delete_bird', bird_id=bird.id) }}">
+            <button type="submit" class="btn btn-danger">Yes, delete permanently</button>
+        </form>
+        <a href="{{ url_for('view_bird', bird_id=bird.id) }}">Cancel</a>
+    </div>
+</div>
+{% endblock %}

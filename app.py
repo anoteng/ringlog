@@ -1,26 +1,89 @@
 """RingLog - Bird registry for ducks and hens."""
 
-import sqlite3
+import csv
+import io
 import os
 import re
+import zipfile
 from functools import wraps
+from datetime import date as _date
+
+import pymysql
+import pymysql.cursors
 from flask import (
     Flask, render_template, request, redirect, url_for, g, send_file, flash, session
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from io import BytesIO
-from datetime import date as _date
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
+DB_CONFIG = dict(
+    host=os.environ.get("DB_HOST", "localhost"),
+    user=os.environ["DB_USER"],
+    password=os.environ["DB_PASS"],
+    database=os.environ["DB_NAME"],
+    charset="utf8mb4",
+    cursorclass=pymysql.cursors.DictCursor,
+)
+
+
+# ---------------------------------------------------------------------------
+# DB wrapper — sqlite3-compatible interface over PyMySQL
+# ---------------------------------------------------------------------------
+
+class _Conn:
+    """Wraps a PyMySQL connection to mimic sqlite3's db.execute() interface."""
+    def __init__(self, conn):
+        self._c = conn
+
+    def execute(self, sql, params=()):
+        cur = self._c.cursor()
+        cur.execute(sql.replace("?", "%s"), params or ())
+        return cur
+
+    def commit(self):
+        self._c.commit()
+
+    def close(self):
+        self._c.close()
+
+
+def get_db():
+    if "db" not in g:
+        g.db = _Conn(pymysql.connect(**DB_CONFIG))
+    return g.db
+
+
+@app.teardown_appcontext
+def close_db(exc):
+    db = g.pop("db", None)
+    if db:
+        db.close()
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _natural_key(s):
+    return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", s or "")]
+
+
+def slugify(name):
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
 
 @app.template_filter("age")
-def age_filter(birth_date_str):
-    if not birth_date_str:
+def age_filter(birth_date):
+    if not birth_date:
         return "—"
     try:
-        bd = _date.fromisoformat(birth_date_str)
+        bd = birth_date if isinstance(birth_date, _date) else _date.fromisoformat(str(birth_date))
         today = _date.today()
         months = (today.year - bd.year) * 12 + (today.month - bd.month)
         if months < 1:
@@ -28,168 +91,12 @@ def age_filter(birth_date_str):
         if months < 24:
             return f"{months} mo"
         return f"{months // 12} yr"
-    except ValueError:
+    except (ValueError, TypeError):
         return "—"
-DATABASE = os.path.join(os.path.dirname(__file__), "flockbook.db")
-
-
-def _natural_key(s):
-    return [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', s or '')]
 
 
 # ---------------------------------------------------------------------------
-# Database
-# ---------------------------------------------------------------------------
-
-def get_db():
-    if "db" not in g:
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
-    return g.db
-
-
-@app.teardown_appcontext
-def close_db(exc):
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
-
-
-def _db_has_column(db, table, column):
-    rows = db.execute(f"PRAGMA table_info({table})").fetchall()
-    return any(r["name"] == column for r in rows)
-
-
-def migrate_db():
-    """One-time migrations applied to existing databases."""
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    db.execute("PRAGMA foreign_keys = ON")
-
-    # Ensure users table exists before migration that depends on it
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            username      TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-            password_hash TEXT    NOT NULL,
-            created_at    TEXT    DEFAULT (date('now'))
-        )
-    """)
-    db.commit()
-
-    # If birds table exists but lacks user_id, recreate it with the new schema
-    tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    if "birds" in tables and not _db_has_column(db, "birds", "user_id"):
-        # Create a legacy user to own existing birds
-        legacy_pw = generate_password_hash(os.urandom(16).hex())
-        try:
-            db.execute(
-                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                ("legacy", legacy_pw)
-            )
-            db.commit()
-        except sqlite3.IntegrityError:
-            pass
-        legacy_user = db.execute("SELECT id FROM users WHERE username = 'legacy'").fetchone()
-        legacy_id = legacy_user["id"]
-
-        db.execute("ALTER TABLE birds RENAME TO birds_old")
-        db.execute("""
-            CREATE TABLE birds (
-                id                INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                ring_number       TEXT    NOT NULL,
-                name              TEXT,
-                species           TEXT    NOT NULL CHECK(species IN ('duck', 'hen')),
-                breed             TEXT,
-                breed_mix         TEXT,
-                sex               TEXT    CHECK(sex IN ('male', 'female', 'unknown')),
-                birth_date        TEXT,
-                birth_approximate INTEGER DEFAULT 0,
-                notes             TEXT,
-                is_dead           INTEGER DEFAULT 0,
-                death_date        TEXT,
-                image             BLOB,
-                image_mime        TEXT,
-                created_at        TEXT    DEFAULT (date('now')),
-                UNIQUE(user_id, ring_number)
-            )
-        """)
-        db.execute(f"""
-            INSERT INTO birds
-                SELECT id, {legacy_id}, ring_number, name, species, breed, breed_mix,
-                       sex, birth_date, birth_approximate, notes, is_dead, death_date,
-                       image, image_mime, created_at
-            FROM birds_old
-        """)
-        db.execute("DROP TABLE birds_old")
-        db.commit()
-
-    db.close()
-
-
-def init_db():
-    db = sqlite3.connect(DATABASE)
-    db.execute("PRAGMA foreign_keys = ON")
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            username      TEXT    NOT NULL UNIQUE COLLATE NOCASE,
-            password_hash TEXT    NOT NULL,
-            created_at    TEXT    DEFAULT (date('now'))
-        )
-    """)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS birds (
-            id                INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            ring_number       TEXT    NOT NULL,
-            name              TEXT,
-            species           TEXT    NOT NULL CHECK(species IN ('duck', 'hen')),
-            breed             TEXT,
-            breed_mix         TEXT,
-            sex               TEXT    CHECK(sex IN ('male', 'female', 'unknown')),
-            birth_date        TEXT,
-            birth_approximate INTEGER DEFAULT 0,
-            notes             TEXT,
-            is_dead           INTEGER DEFAULT 0,
-            death_date        TEXT,
-            image             BLOB,
-            image_mime        TEXT,
-            created_at        TEXT    DEFAULT (date('now')),
-            UNIQUE(user_id, ring_number)
-        )
-    """)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS flock_shares (
-            id             INTEGER PRIMARY KEY AUTOINCREMENT,
-            owner_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            grantee_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            can_edit       INTEGER NOT NULL DEFAULT 0,
-            created_at     TEXT    DEFAULT (date('now')),
-            UNIQUE(owner_id, grantee_id)
-        )
-    """)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS bird_notes (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            bird_id    INTEGER NOT NULL REFERENCES birds(id) ON DELETE CASCADE,
-            note_date  TEXT    NOT NULL,
-            content    TEXT    NOT NULL,
-            created_at TEXT    DEFAULT (datetime('now'))
-        )
-    """)
-    db.commit()
-    db.close()
-
-
-migrate_db()
-init_db()
-
-
-# ---------------------------------------------------------------------------
-# Auth helpers
+# Auth
 # ---------------------------------------------------------------------------
 
 @app.before_request
@@ -213,19 +120,71 @@ def login_required(f):
     return decorated
 
 
-def get_permission(owner_id):
-    """Return 'edit', 'view', or None for current user relative to owner_id."""
+# ---------------------------------------------------------------------------
+# Flock access
+# ---------------------------------------------------------------------------
+
+def get_permission(flock_id):
+    """Return 'edit', 'view', or None for g.user on the given flock."""
     if not g.user:
         return None
-    if g.user["id"] == owner_id:
-        return "edit"
-    row = get_db().execute(
-        "SELECT can_edit FROM flock_shares WHERE owner_id = ? AND grantee_id = ?",
-        (owner_id, g.user["id"])
-    ).fetchone()
-    if not row:
+    db = get_db()
+    flock = db.execute("SELECT user_id FROM flocks WHERE id = ?", (flock_id,)).fetchone()
+    if not flock:
         return None
-    return "edit" if row["can_edit"] else "view"
+    if g.user["id"] == flock["user_id"]:
+        return "edit"
+    share = db.execute(
+        "SELECT can_edit FROM flock_shares WHERE flock_id = ? AND grantee_id = ?",
+        (flock_id, g.user["id"])
+    ).fetchone()
+    if not share:
+        return None
+    return "edit" if share["can_edit"] else "view"
+
+
+def ring_number_taken(flock, ring_number, exclude_bird_id=None):
+    """Check if ring_number is already in use in the flock.
+    If flock.allow_ring_reuse, only living birds are checked."""
+    db = get_db()
+    sql = "SELECT id FROM birds WHERE flock_id = ? AND ring_number = ?"
+    params = [flock["id"], ring_number]
+    if flock["allow_ring_reuse"]:
+        sql += " AND is_dead = 0 AND is_sold = 0"
+    if exclude_bird_id:
+        sql += " AND id != ?"
+        params.append(exclude_bird_id)
+    return db.execute(sql, params).fetchone() is not None
+
+
+def resolve_flock(username, flock_name):
+    """Look up a flock by owner username + flock name (case-insensitive)."""
+    return get_db().execute(
+        """SELECT f.*, u.username
+           FROM flocks f JOIN users u ON u.id = f.user_id
+           WHERE u.username = ? AND LOWER(f.name) = LOWER(?)""",
+        (username, flock_name)
+    ).fetchone()
+
+
+def user_flocks(user_id):
+    """All flocks owned by a user."""
+    return get_db().execute(
+        "SELECT * FROM flocks WHERE user_id = ? ORDER BY name", (user_id,)
+    ).fetchall()
+
+
+def shared_flocks_for(user_id):
+    """Flocks shared with a user (not owned by them)."""
+    return get_db().execute(
+        """SELECT f.*, u.username, fs.can_edit
+           FROM flock_shares fs
+           JOIN flocks f ON f.id = fs.flock_id
+           JOIN users u ON u.id = f.user_id
+           WHERE fs.grantee_id = ?
+           ORDER BY u.username, f.name""",
+        (user_id,)
+    ).fetchall()
 
 
 # ---------------------------------------------------------------------------
@@ -235,12 +194,16 @@ def get_permission(owner_id):
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if g.user:
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-        confirm = request.form.get("confirm", "")
-        if not username or len(username) < 3:
+        username       = request.form.get("username", "").strip()
+        email          = request.form.get("email", "").strip() or None
+        password       = request.form.get("password", "")
+        confirm        = request.form.get("confirm", "")
+        accept_terms   = request.form.get("accept_terms")
+        if not accept_terms:
+            flash("You must accept the Terms of Use to register.", "error")
+        elif not username or len(username) < 3:
             flash("Username must be at least 3 characters.", "error")
         elif not username.replace("_", "").isalnum():
             flash("Username may only contain letters, numbers, and underscores.", "error")
@@ -252,35 +215,37 @@ def register():
             try:
                 db = get_db()
                 db.execute(
-                    "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                    (username, generate_password_hash(password))
+                    "INSERT INTO users (username, email, password_hash, terms_accepted_at) VALUES (?, ?, ?, NOW())",
+                    (username, email, generate_password_hash(password))
                 )
                 db.commit()
                 user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
                 session.clear()
                 session["user_id"] = user["id"]
                 flash(f"Welcome, {user['username']}!", "success")
-                return redirect(url_for("index"))
-            except sqlite3.IntegrityError:
-                flash("Username already taken.", "error")
+                return redirect(url_for("flocks"))
+            except pymysql.IntegrityError as e:
+                if "email" in str(e).lower():
+                    flash("That email address is already registered.", "error")
+                else:
+                    flash("Username already taken.", "error")
     return render_template("register.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if g.user:
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        db = get_db()
-        user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        user = get_db().execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
         if user and check_password_hash(user["password_hash"], password):
             session.clear()
             session["user_id"] = user["id"]
             next_url = request.args.get("next", "")
             if not next_url.startswith("/"):
-                next_url = url_for("index")
+                next_url = url_for("flocks")
             flash(f"Welcome back, {user['username']}!", "success")
             return redirect(next_url)
         flash("Invalid username or password.", "error")
@@ -294,80 +259,212 @@ def logout():
 
 
 # ---------------------------------------------------------------------------
-# Flock routes
+# Flock list / create
 # ---------------------------------------------------------------------------
 
 @app.route("/")
-@login_required
 def index():
-    return redirect(url_for("view_flock", username=g.user["username"]))
+    if g.user:
+        return redirect(url_for("flocks"))
+    return render_template("landing.html")
 
 
-@app.route("/flock/<username>")
+@app.route("/terms")
+def terms():
+    return render_template("terms.html")
+
+
+@app.route("/flocks", methods=["GET", "POST"])
 @login_required
-def view_flock(username):
+def flocks():
     db = get_db()
-    owner = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-    if not owner:
-        flash("User not found.", "error")
-        return redirect(url_for("index"))
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip() or None
+        if not name:
+            flash("Flock name is required.", "error")
+        else:
+            try:
+                db.execute(
+                    "INSERT INTO flocks (user_id, name, description) VALUES (?, ?, ?)",
+                    (g.user["id"], name, description)
+                )
+                db.commit()
+                flash(f"Flock '{name}' created.", "success")
+                return redirect(url_for("view_flock", username=g.user["username"], flock_name=name))
+            except pymysql.IntegrityError:
+                flash("You already have a flock with that name.", "error")
 
-    perm = get_permission(owner["id"])
+    my_flocks = user_flocks(g.user["id"])
+    shared    = shared_flocks_for(g.user["id"])
+
+    # Bird counts per flock
+    counts = {}
+    for f in my_flocks:
+        row = db.execute("SELECT COUNT(*) AS n FROM birds WHERE flock_id = ?", (f["id"],)).fetchone()
+        counts[f["id"]] = row["n"]
+
+    return render_template("flocks.html", my_flocks=my_flocks, shared=shared, counts=counts)
+
+
+@app.route("/flock/<username>/<flock_name>/delete", methods=["GET", "POST"])
+@login_required
+def delete_flock(username, flock_name):
+    flock = resolve_flock(username, flock_name)
+    if not flock or flock["user_id"] != g.user["id"]:
+        flash("Access denied.", "error")
+        return redirect(url_for("flocks"))
+
+    db = get_db()
+    bird_count = db.execute(
+        "SELECT COUNT(*) AS n FROM birds WHERE flock_id = ?", (flock["id"],)
+    ).fetchone()["n"]
+
+    if request.method == "POST":
+        db.execute("DELETE FROM flocks WHERE id = ?", (flock["id"],))
+        db.commit()
+        flash(f"Flock '{flock['name']}' deleted.", "success")
+        return redirect(url_for("flocks"))
+
+    return render_template("delete_flock_confirm.html", flock=flock, bird_count=bird_count)
+
+
+# ---------------------------------------------------------------------------
+# Flock view
+# ---------------------------------------------------------------------------
+
+@app.route("/flock/<username>/<flock_name>")
+@login_required
+def view_flock(username, flock_name):
+    flock = resolve_flock(username, flock_name)
+    if not flock:
+        flash("Flock not found.", "error")
+        return redirect(url_for("flocks"))
+
+    perm = get_permission(flock["id"])
     if not perm:
         flash("You don't have access to that flock.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
 
+    db = get_db()
     filter_species = request.args.get("species", "")
-    filter_status = request.args.get("status", "alive")
+    filter_status  = request.args.get("status", "alive")
 
     query = """SELECT id, ring_number, name, species, breed, breed_mix, sex,
-                      birth_date, birth_approximate, is_dead,
-                      image IS NOT NULL as has_image
-               FROM birds WHERE user_id = ?"""
-    params = [owner["id"]]
+                      birth_date, birth_approximate, is_dead, is_sold,
+                      image IS NOT NULL AS has_image
+               FROM birds WHERE flock_id = ?"""
+    params = [flock["id"]]
     if filter_species:
         query += " AND species = ?"
         params.append(filter_species)
     if filter_status == "alive":
-        query += " AND is_dead = 0"
+        query += " AND is_dead = 0 AND is_sold = 0"
     elif filter_status == "dead":
         query += " AND is_dead = 1"
-    birds = sorted(
-        db.execute(query, params).fetchall(),
-        key=lambda b: _natural_key(b['ring_number'])
-    )
+    elif filter_status == "sold":
+        query += " AND is_sold = 1"
 
-    shared_flocks = db.execute("""
-        SELECT u.username FROM flock_shares fs
-        JOIN users u ON u.id = fs.owner_id
-        WHERE fs.grantee_id = ?
-    """, (g.user["id"],)).fetchall()
+    birds = sorted(db.execute(query, params).fetchall(), key=lambda b: _natural_key(b["ring_number"]))
+    shared = shared_flocks_for(g.user["id"])
 
     return render_template(
         "index.html",
+        flock=flock,
         birds=birds,
         filter_species=filter_species,
         filter_status=filter_status,
-        owner=owner,
         can_edit=(perm == "edit"),
-        is_own_flock=(owner["id"] == g.user["id"]),
-        shared_flocks=shared_flocks,
+        is_own_flock=(flock["user_id"] == g.user["id"]),
+        shared_flocks=shared,
+        my_flocks=user_flocks(g.user["id"]),
     )
 
 
-@app.route("/add", methods=["GET", "POST"])
-@app.route("/add/<owner_username>", methods=["GET", "POST"])
-@login_required
-def add_bird(owner_username=None):
-    db = get_db()
-    if owner_username:
-        owner = db.execute("SELECT * FROM users WHERE username = ?", (owner_username,)).fetchone()
-        if not owner or get_permission(owner["id"]) != "edit":
-            flash("Access denied.", "error")
-            return redirect(url_for("index"))
-    else:
-        owner = g.user
+# ---------------------------------------------------------------------------
+# Flock export
+# ---------------------------------------------------------------------------
 
+@app.route("/flock/<username>/<flock_name>/export")
+@login_required
+def export_flock(username, flock_name):
+    flock = resolve_flock(username, flock_name)
+    if not flock:
+        flash("Flock not found.", "error")
+        return redirect(url_for("flocks"))
+    if not get_permission(flock["id"]):
+        flash("Access denied.", "error")
+        return redirect(url_for("flocks"))
+
+    db = get_db()
+    birds = db.execute(
+        """SELECT id, ring_number, name, species, breed, breed_mix, sex,
+                  birth_date, birth_approximate, notes,
+                  is_dead, death_date, is_sold, sold_date, created_at
+           FROM birds WHERE flock_id = ? ORDER BY ring_number""",
+        (flock["id"],)
+    ).fetchall()
+
+    bird_ids = [b["id"] for b in birds]
+    notes = []
+    if bird_ids:
+        placeholders = ",".join(["%s"] * len(bird_ids))
+        notes = db._c.cursor()
+        notes.execute(
+            f"SELECT bn.id, bn.bird_id, b.ring_number, bn.note_date, bn.content, bn.created_at "
+            f"FROM bird_notes bn JOIN birds b ON b.id = bn.bird_id "
+            f"WHERE bn.bird_id IN ({placeholders}) ORDER BY bn.bird_id, bn.note_date DESC",
+            bird_ids
+        )
+        notes = notes.fetchall()
+
+    # Build birds.csv
+    bird_fields = ["ring_number", "name", "species", "breed", "breed_mix", "sex",
+                   "birth_date", "birth_approximate", "is_dead", "death_date",
+                   "is_sold", "sold_date", "notes", "created_at"]
+    birds_buf = io.StringIO()
+    w = csv.DictWriter(birds_buf, fieldnames=bird_fields, extrasaction="ignore")
+    w.writeheader()
+    for b in birds:
+        w.writerow({k: b.get(k, "") for k in bird_fields})
+
+    # Build notes.csv
+    note_fields = ["ring_number", "note_date", "content", "created_at"]
+    notes_buf = io.StringIO()
+    w2 = csv.DictWriter(notes_buf, fieldnames=note_fields, extrasaction="ignore")
+    w2.writeheader()
+    for n in notes:
+        w2.writerow({k: n.get(k, "") for k in note_fields})
+
+    # Pack into ZIP
+    zip_buf = io.BytesIO()
+    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("birds.csv", birds_buf.getvalue())
+        zf.writestr("notes.csv", notes_buf.getvalue())
+    zip_buf.seek(0)
+
+    safe_name = re.sub(r"[^a-z0-9_-]", "_", flock["name"].lower())
+    return send_file(
+        zip_buf,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"{safe_name}_export.zip",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Bird CRUD
+# ---------------------------------------------------------------------------
+
+@app.route("/flock/<username>/<flock_name>/add", methods=["GET", "POST"])
+@login_required
+def add_bird(username, flock_name):
+    flock = resolve_flock(username, flock_name)
+    if not flock or get_permission(flock["id"]) != "edit":
+        flash("Access denied.", "error")
+        return redirect(url_for("flocks"))
+
+    db = get_db()
     if request.method == "POST":
         image_data, image_mime = None, None
         file = request.files.get("image")
@@ -375,49 +472,50 @@ def add_bird(owner_username=None):
             image_data = file.read()
             image_mime = file.content_type
 
-        breed = request.form.get("breed", "").strip()
+        breed     = request.form.get("breed", "").strip()
         breed_mix = request.form.get("breed_mix", "").strip() if breed == "hybrid" else ""
 
-        try:
+        ring = request.form["ring_number"].strip()
+        if ring_number_taken(flock, ring):
+            flash("Ring number already in use in this flock.", "error")
+        else:
             db.execute(
                 """INSERT INTO birds
-                   (user_id, ring_number, name, species, breed, breed_mix, sex,
+                   (flock_id, ring_number, name, species, breed, breed_mix, sex,
                     birth_date, birth_approximate, notes, image, image_mime)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    owner["id"],
-                    request.form["ring_number"].strip(),
+                    flock["id"], ring,
                     request.form.get("name", "").strip() or None,
                     request.form["species"],
-                    breed or None,
-                    breed_mix or None,
+                    breed or None, breed_mix or None,
                     request.form.get("sex", "unknown"),
-                    request.form.get("birth_date", "").strip() or None,
+                    request.form.get("birth_date") or None,
                     1 if request.form.get("birth_approximate") else 0,
                     request.form.get("notes", "").strip() or None,
-                    image_data,
-                    image_mime,
+                    image_data, image_mime,
                 ),
             )
             db.commit()
             flash("Bird registered!", "success")
-            return redirect(url_for("view_flock", username=owner["username"]))
-        except sqlite3.IntegrityError:
-            flash("Ring number already exists in this flock.", "error")
+            return redirect(url_for("view_flock", username=username, flock_name=flock_name))
 
-    return render_template("form.html", bird=None, owner=owner)
+    return render_template("form.html", bird=None, flock=flock)
 
 
-@app.route("/edit/<int:bird_id>", methods=["GET", "POST"])
+@app.route("/bird/<int:bird_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_bird(bird_id):
     db = get_db()
     bird = db.execute("SELECT * FROM birds WHERE id = ?", (bird_id,)).fetchone()
-    if not bird or get_permission(bird["user_id"]) != "edit":
+    if not bird or get_permission(bird["flock_id"]) != "edit":
         flash("Access denied.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
 
-    owner = db.execute("SELECT * FROM users WHERE id = ?", (bird["user_id"],)).fetchone()
+    flock = db.execute(
+        "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id = f.user_id WHERE f.id = ?",
+        (bird["flock_id"],)
+    ).fetchone()
 
     if request.method == "POST":
         image_data = bird["image"]
@@ -429,40 +527,43 @@ def edit_bird(bird_id):
             image_data = file.read()
             image_mime = file.content_type
 
-        breed = request.form.get("breed", "").strip()
+        breed     = request.form.get("breed", "").strip()
         breed_mix = request.form.get("breed_mix", "").strip() if breed == "hybrid" else ""
-        is_dead = 1 if request.form.get("is_dead") else 0
-        death_date = (request.form.get("death_date", "").strip() or None) if is_dead else None
+        is_dead   = 1 if request.form.get("is_dead") else 0
+        is_sold   = 1 if request.form.get("is_sold") else 0
+        death_date = (request.form.get("death_date") or None) if is_dead else None
+        sold_date  = (request.form.get("sold_date") or None) if is_sold else None
+        # A bird can only be dead or sold, not both
+        if is_dead:
+            is_sold, sold_date = 0, None
+        elif is_sold:
+            is_dead, death_date = 0, None
 
-        try:
+        ring = request.form["ring_number"].strip()
+        if ring_number_taken(flock, ring, exclude_bird_id=bird_id):
+            flash("Ring number already in use in this flock.", "error")
+        else:
             db.execute(
                 """UPDATE birds SET ring_number=?, name=?, species=?, breed=?, breed_mix=?,
                    sex=?, birth_date=?, birth_approximate=?, notes=?, is_dead=?, death_date=?,
-                   image=?, image_mime=? WHERE id=?""",
+                   is_sold=?, sold_date=?, image=?, image_mime=? WHERE id=?""",
                 (
-                    request.form["ring_number"].strip(),
+                    ring,
                     request.form.get("name", "").strip() or None,
                     request.form["species"],
-                    breed or None,
-                    breed_mix or None,
+                    breed or None, breed_mix or None,
                     request.form.get("sex", "unknown"),
-                    request.form.get("birth_date", "").strip() or None,
+                    request.form.get("birth_date") or None,
                     1 if request.form.get("birth_approximate") else 0,
                     request.form.get("notes", "").strip() or None,
-                    is_dead,
-                    death_date,
-                    image_data,
-                    image_mime,
-                    bird_id,
+                    is_dead, death_date, is_sold, sold_date, image_data, image_mime, bird_id,
                 ),
             )
             db.commit()
             flash("Bird updated!", "success")
             return redirect(url_for("view_bird", bird_id=bird_id))
-        except sqlite3.IntegrityError:
-            flash("Ring number already exists in this flock.", "error")
 
-    return render_template("form.html", bird=bird, owner=owner)
+    return render_template("form.html", bird=bird, flock=flock)
 
 
 @app.route("/bird/<int:bird_id>")
@@ -470,73 +571,87 @@ def edit_bird(bird_id):
 def view_bird(bird_id):
     db = get_db()
     bird = db.execute(
-        "SELECT *, image IS NOT NULL as has_image FROM birds WHERE id = ?", (bird_id,)
+        "SELECT *, image IS NOT NULL AS has_image FROM birds WHERE id = ?", (bird_id,)
     ).fetchone()
     if not bird:
         flash("Bird not found.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
 
-    perm = get_permission(bird["user_id"])
+    perm = get_permission(bird["flock_id"])
     if not perm:
         flash("Access denied.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
 
-    owner = db.execute("SELECT * FROM users WHERE id = ?", (bird["user_id"],)).fetchone()
+    flock = db.execute(
+        "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id = f.user_id WHERE f.id = ?",
+        (bird["flock_id"],)
+    ).fetchone()
     notes = db.execute(
         "SELECT * FROM bird_notes WHERE bird_id = ? ORDER BY note_date DESC, created_at DESC",
         (bird_id,)
     ).fetchall()
-    return render_template("view.html", bird=bird, can_edit=(perm == "edit"), owner=owner,
+    return render_template("view.html", bird=bird, flock=flock, can_edit=(perm == "edit"),
                            notes=notes, today=_date.today().isoformat())
 
 
 @app.route("/bird/<int:bird_id>/image")
 def bird_image(bird_id):
     db = get_db()
-    bird = db.execute("SELECT image, image_mime, user_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
+    bird = db.execute("SELECT image, image_mime, flock_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
     if not bird or not bird["image"]:
         return "", 404
-    if not get_permission(bird["user_id"]):
+    if not get_permission(bird["flock_id"]):
         return "", 403
     return send_file(BytesIO(bird["image"]), mimetype=bird["image_mime"])
 
 
-@app.route("/delete/<int:bird_id>", methods=["POST"])
+@app.route("/bird/<int:bird_id>/delete", methods=["GET", "POST"])
 @login_required
 def delete_bird(bird_id):
     db = get_db()
-    bird = db.execute("SELECT user_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
+    bird = db.execute("SELECT * FROM birds WHERE id = ?", (bird_id,)).fetchone()
     if not bird:
         flash("Bird not found.", "error")
-        return redirect(url_for("index"))
-    # Only the owner can delete
-    if not g.user or g.user["id"] != bird["user_id"]:
+        return redirect(url_for("flocks"))
+
+    flock = db.execute(
+        "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id = f.user_id WHERE f.id = ?",
+        (bird["flock_id"],)
+    ).fetchone()
+
+    if not g.user or g.user["id"] != flock["user_id"]:
         flash("Only the flock owner can delete birds.", "error")
         return redirect(url_for("view_bird", bird_id=bird_id))
 
-    owner = db.execute("SELECT username FROM users WHERE id = ?", (bird["user_id"],)).fetchone()
+    if request.method == "GET":
+        return render_template("delete_confirm.html", bird=bird, flock=flock)
+
     db.execute("DELETE FROM birds WHERE id = ?", (bird_id,))
     db.commit()
     flash("Bird deleted.", "success")
-    return redirect(url_for("view_flock", username=owner["username"]))
+    return redirect(url_for("view_flock", username=flock["username"], flock_name=flock["name"]))
 
+
+# ---------------------------------------------------------------------------
+# Notes
+# ---------------------------------------------------------------------------
 
 @app.route("/bird/<int:bird_id>/note", methods=["POST"])
 @login_required
 def add_note(bird_id):
     db = get_db()
-    bird = db.execute("SELECT user_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
-    if not bird or get_permission(bird["user_id"]) != "edit":
+    bird = db.execute("SELECT flock_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
+    if not bird or get_permission(bird["flock_id"]) != "edit":
         flash("Access denied.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
 
     note_date = request.form.get("note_date", "").strip()
-    content = request.form.get("content", "").strip()
+    content   = request.form.get("content", "").strip()
     if not note_date or not content:
         flash("Date and content are required.", "error")
     else:
         db.execute(
-            "INSERT INTO bird_notes (bird_id, note_date, content) VALUES (?, ?, ?)",
+            "INSERT INTO bird_notes (bird_id, note_date, content) VALUES (?,?,?)",
             (bird_id, note_date, content)
         )
         db.commit()
@@ -547,10 +662,10 @@ def add_note(bird_id):
 @login_required
 def delete_note(bird_id, note_id):
     db = get_db()
-    bird = db.execute("SELECT user_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
-    if not bird or get_permission(bird["user_id"]) != "edit":
+    bird = db.execute("SELECT flock_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
+    if not bird or get_permission(bird["flock_id"]) != "edit":
         flash("Access denied.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("flocks"))
 
     db.execute("DELETE FROM bird_notes WHERE id = ? AND bird_id = ?", (note_id, bird_id))
     db.commit()
@@ -565,28 +680,45 @@ def delete_note(bird_id, note_id):
 @login_required
 def settings():
     db = get_db()
+    my_flocks = user_flocks(g.user["id"])
 
     if request.method == "POST":
         action = request.form.get("action")
 
-        if action == "grant":
-            username = request.form.get("username", "").strip()
-            can_edit = 1 if request.form.get("can_edit") else 0
+        if action == "update_email":
+            email = request.form.get("email", "").strip() or None
+            try:
+                db.execute("UPDATE users SET email = ? WHERE id = ?", (email, g.user["id"]))
+                db.commit()
+                flash("Email address updated.", "success")
+            except pymysql.IntegrityError:
+                flash("That email address is already registered to another account.", "error")
+            return redirect(url_for("settings"))
+
+        elif action == "grant":
+            flock_id  = request.form.get("flock_id", type=int)
+            username  = request.form.get("username", "").strip()
+            can_edit  = 1 if request.form.get("can_edit") else 0
+            # Verify flock belongs to current user
+            flock = db.execute("SELECT id FROM flocks WHERE id = ? AND user_id = ?",
+                               (flock_id, g.user["id"])).fetchone()
             target = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-            if not target:
+            if not flock:
+                flash("Flock not found.", "error")
+            elif not target:
                 flash("User not found.", "error")
             elif target["id"] == g.user["id"]:
-                flash("You can't share your flock with yourself.", "error")
+                flash("You can't share with yourself.", "error")
             else:
                 try:
                     db.execute(
-                        "INSERT INTO flock_shares (owner_id, grantee_id, can_edit) VALUES (?, ?, ?)",
-                        (g.user["id"], target["id"], can_edit)
+                        "INSERT INTO flock_shares (flock_id, grantee_id, can_edit) VALUES (?,?,?)",
+                        (flock_id, target["id"], can_edit)
                     )
-                except sqlite3.IntegrityError:
+                except pymysql.IntegrityError:
                     db.execute(
-                        "UPDATE flock_shares SET can_edit = ? WHERE owner_id = ? AND grantee_id = ?",
-                        (can_edit, g.user["id"], target["id"])
+                        "UPDATE flock_shares SET can_edit=? WHERE flock_id=? AND grantee_id=?",
+                        (can_edit, flock_id, target["id"])
                     )
                 db.commit()
                 perm_label = "view & edit" if can_edit else "view"
@@ -595,25 +727,40 @@ def settings():
         elif action == "revoke":
             share_id = request.form.get("share_id", type=int)
             db.execute(
-                "DELETE FROM flock_shares WHERE id = ? AND owner_id = ?",
+                """DELETE fs FROM flock_shares fs
+                   JOIN flocks f ON f.id = fs.flock_id
+                   WHERE fs.id = ? AND f.user_id = ?""",
                 (share_id, g.user["id"])
             )
             db.commit()
             flash("Share removed.", "success")
 
-    my_shares = db.execute("""
-        SELECT fs.id, fs.can_edit, u.username
-        FROM flock_shares fs JOIN users u ON u.id = fs.grantee_id
-        WHERE fs.owner_id = ? ORDER BY u.username
-    """, (g.user["id"],)).fetchall()
+        elif action == "toggle_reuse":
+            flock_id  = request.form.get("flock_id", type=int)
+            allow     = 1 if request.form.get("allow_ring_reuse") else 0
+            db.execute(
+                "UPDATE flocks SET allow_ring_reuse = ? WHERE id = ? AND user_id = ?",
+                (allow, flock_id, g.user["id"])
+            )
+            db.commit()
+            flash("Ring number policy updated.", "success")
 
-    shared_with_me = db.execute("""
-        SELECT u.username, fs.can_edit
-        FROM flock_shares fs JOIN users u ON u.id = fs.owner_id
-        WHERE fs.grantee_id = ? ORDER BY u.username
-    """, (g.user["id"],)).fetchall()
+    # Shares per flock
+    flock_shares = {}
+    for f in my_flocks:
+        flock_shares[f["id"]] = db.execute(
+            """SELECT fs.id, fs.can_edit, u.username
+               FROM flock_shares fs JOIN users u ON u.id = fs.grantee_id
+               WHERE fs.flock_id = ? ORDER BY u.username""",
+            (f["id"],)
+        ).fetchall()
 
-    return render_template("settings.html", my_shares=my_shares, shared_with_me=shared_with_me)
+    shared_with_me = shared_flocks_for(g.user["id"])
+
+    return render_template("settings.html",
+                           my_flocks=my_flocks,
+                           flock_shares=flock_shares,
+                           shared_with_me=shared_with_me)
 
 
 if __name__ == "__main__":

@@ -1,18 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% if not is_own_flock or shared_flocks %}
+{% set all_flocks = my_flocks | list %}
+{% if all_flocks | length > 1 or shared_flocks %}
 <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
-    <a href="{{ url_for('view_flock', username=current_user.username) }}"
-       class="btn btn-sm {{ 'btn-primary' if is_own_flock else '' }}"
-       style="{{ '' if is_own_flock else 'background:#888;color:white;' }}">
-        My Flock
+    {% for f in all_flocks %}
+    <a href="{{ url_for('view_flock', username=current_user.username, flock_name=f.name) }}"
+       class="btn btn-sm {{ 'btn-primary' if flock.id == f.id else '' }}"
+       style="{{ '' if flock.id == f.id else 'background:#888;color:white;' }}">
+        {{ f.name }}
     </a>
-    {% for sf in shared_flocks %}
-    <a href="{{ url_for('view_flock', username=sf.username) }}"
-       class="btn btn-sm {{ 'btn-primary' if owner.username == sf.username else '' }}"
-       style="{{ '' if owner.username == sf.username else 'background:#888;color:white;' }}">
-        {{ sf.username }}'s Flock
+    {% endfor %}
+    {% for f in shared_flocks %}
+    <a href="{{ url_for('view_flock', username=f.username, flock_name=f.name) }}"
+       class="btn btn-sm {{ 'btn-primary' if flock.id == f.id else '' }}"
+       style="{{ '' if flock.id == f.id else 'background:#888;color:white;' }}">
+        {{ f.username }}/{{ f.name }}
     </a>
     {% endfor %}
 </div>
@@ -21,15 +24,15 @@
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h2>
-            {% if is_own_flock %}My Flock{% else %}{{ owner.username }}'s Flock{% endif %}
+            {% if not is_own_flock %}{{ flock.username }}/{% endif %}{{ flock.name }}
         </h2>
-        {% if can_edit %}
-        {% if is_own_flock %}
-        <a href="{{ url_for('add_bird') }}" class="btn btn-primary">+ Add Bird</a>
-        {% else %}
-        <a href="{{ url_for('add_bird', owner_username=owner.username) }}" class="btn btn-primary">+ Add Bird</a>
-        {% endif %}
-        {% endif %}
+        <div style="display:flex; gap:0.5rem;">
+            <a href="{{ url_for('export_flock', username=flock.username, flock_name=flock.name) }}"
+               class="btn btn-sm" style="background:#eee; color:#333;" title="Download all bird data as CSV">&#x2b07; Export</a>
+            {% if can_edit %}
+            <a href="{{ url_for('add_bird', username=flock.username, flock_name=flock.name) }}" class="btn btn-primary">+ Add Bird</a>
+            {% endif %}
+        </div>
     </div>
 
     <div style="display:flex; gap:0.75rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap;">
@@ -39,11 +42,18 @@
                 <option value="">All</option>
                 <option value="duck" {{ 'selected' if filter_species == 'duck' }}>Ducks</option>
                 <option value="hen" {{ 'selected' if filter_species == 'hen' }}>Hens</option>
+                <option value="goose" {{ 'selected' if filter_species == 'goose' }}>Geese</option>
+                <option value="turkey" {{ 'selected' if filter_species == 'turkey' }}>Turkeys</option>
+                <option value="quail" {{ 'selected' if filter_species == 'quail' }}>Quail</option>
+                <option value="pigeon" {{ 'selected' if filter_species == 'pigeon' }}>Pigeons</option>
+                <option value="guinea fowl" {{ 'selected' if filter_species == 'guinea fowl' }}>Guinea Fowl</option>
+                <option value="peafowl" {{ 'selected' if filter_species == 'peafowl' }}>Peafowl</option>
             </select>
             <label>Status:</label>
             <select name="status" onchange="this.form.submit()">
                 <option value="alive" {{ 'selected' if filter_status == 'alive' }}>Alive</option>
                 <option value="dead" {{ 'selected' if filter_status == 'dead' }}>Dead</option>
+                <option value="sold" {{ 'selected' if filter_status == 'sold' }}>Sold</option>
                 <option value="all" {{ 'selected' if filter_status == 'all' }}>All</option>
             </select>
         </form>
@@ -89,14 +99,17 @@
         </thead>
         <tbody>
             {% for bird in birds %}
-            <tr class="{{ 'dead' if bird.is_dead }}">
+            <tr class="{{ 'dead' if bird.is_dead or bird.is_sold }}">
                 <td>
                     {% if bird.has_image %}
                     <img src="{{ url_for('bird_image', bird_id=bird.id) }}" class="thumb" alt="">
                     {% endif %}
                 </td>
                 <td><a href="{{ url_for('view_bird', bird_id=bird.id) }}">{{ bird.ring_number }}</a></td>
-                <td>{{ bird.name or '—' }} {% if bird.is_dead %}<span class="badge dead">dead</span>{% endif %}</td>
+                <td>{{ bird.name or '—' }}
+                    {% if bird.is_dead %}<span class="badge dead">dead</span>{% endif %}
+                    {% if bird.is_sold %}<span class="badge sold">sold</span>{% endif %}
+                </td>
                 <td><span class="badge {{ bird.species }}">{{ bird.species }}</span></td>
                 <td>{{ bird.breed or '—' }}{% if bird.breed == 'hybrid' and bird.breed_mix %} ({{ bird.breed_mix }}){% endif %}</td>
                 <td>{{ bird.sex or '—' }}</td>
@@ -124,8 +137,7 @@
     #bird-table th.sortable div { margin-top: 0.3rem; }
     #bird-table .col-filter {
         width: 100%; padding: 0.2rem 0.35rem; border: 1px solid #ddd;
-        border-radius: 3px; font-size: 0.75rem; font-weight: normal;
-        cursor: text;
+        border-radius: 3px; font-size: 0.75rem; font-weight: normal; cursor: text;
     }
 </style>
 
@@ -140,7 +152,6 @@
     let sortCol = 1, sortAsc = true;
 
     function cmp(a, b) {
-        // Empty values always sort last
         if (a === '' && b !== '') return 1;
         if (b === '' && a !== '') return -1;
         return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
@@ -155,7 +166,6 @@
     function doSort(col) {
         if (sortCol === col) sortAsc = !sortAsc;
         else { sortCol = col; sortAsc = true; }
-
         const rows = Array.from(tbody.querySelectorAll('tr'));
         rows.sort((a, b) => (sortAsc ? 1 : -1) * cmp(cellValue(a, col), cellValue(b, col)));
         rows.forEach(r => tbody.appendChild(r));
@@ -176,10 +186,8 @@
             col: parseInt(el.closest('th').dataset.col),
             val: el.value.toLowerCase()
         }));
-
         const hasFilter = search || colFilters.some(f => f.val);
         clearBtn.style.display = hasFilter ? '' : 'none';
-
         let visible = 0;
         Array.from(tbody.querySelectorAll('tr')).forEach(row => {
             const matchSearch = !search || row.textContent.toLowerCase().includes(search);
@@ -192,30 +200,22 @@
             row.style.display = show ? '' : 'none';
             if (show) visible++;
         });
-
         if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
     }
 
-    // Attach sort handlers
     table.querySelectorAll('th[data-col]').forEach(th => {
         th.querySelector('.sort-label').addEventListener('click', () => doSort(parseInt(th.dataset.col)));
     });
-
-    // Attach filter handlers (stop click from bubbling to sort)
     table.querySelectorAll('.col-filter').forEach(input => {
         input.addEventListener('input', doFilter);
         input.addEventListener('click', e => e.stopPropagation());
     });
-
     searchInput.addEventListener('input', doFilter);
-
     clearBtn.addEventListener('click', () => {
         searchInput.value = '';
         table.querySelectorAll('.col-filter').forEach(i => i.value = '');
         doFilter();
     });
-
-    // Initial sort by ring number
     updateHeaders();
 })();
 </script>

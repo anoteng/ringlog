@@ -1,38 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="card" style="margin-bottom:1rem;">
-    <h2 style="margin-bottom:1.25rem;">Share my flock</h2>
+    <h2 style="margin-bottom:1rem;">Account</h2>
     <form method="post">
-        <input type="hidden" name="action" value="grant">
-        <div class="form-row">
-            <div class="form-group">
-                <label for="username">Username to share with</label>
-                <input type="text" id="username" name="username" required placeholder="their username">
-            </div>
-            <div class="form-group" style="display:flex; align-items:end; padding-bottom:0.5rem;">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="can_edit" name="can_edit">
-                    <label for="can_edit" style="font-weight:normal;">Allow editing</label>
-                </div>
-            </div>
+        <input type="hidden" name="action" value="update_email">
+        <div class="form-group" style="max-width:360px;">
+            <label for="email">Email address <span style="font-weight:normal; color:#888;">(optional)</span></label>
+            <input type="email" id="email" name="email"
+                   value="{{ current_user.email or '' }}" placeholder="you@example.com">
+            <small style="color:#888;">Used for password recovery only. Without it we cannot recover a lost password.</small>
         </div>
-        <button type="submit" class="btn btn-primary">Share</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save</button>
     </form>
 </div>
 
-{% if my_shares %}
+{% for flock in my_flocks %}
 <div class="card" style="margin-bottom:1rem;">
-    <h2 style="margin-bottom:1rem;">People with access to my flock</h2>
+    <h2 style="margin-bottom:1rem;">{{ flock.name }}</h2>
+
+    <form method="post" style="margin-bottom:1rem;">
+        <input type="hidden" name="action" value="grant">
+        <input type="hidden" name="flock_id" value="{{ flock.id }}">
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom:0.5rem;">
+                <label>Share with user</label>
+                <input type="text" name="username" required placeholder="their username">
+            </div>
+            <div class="form-group" style="display:flex; align-items:end; padding-bottom:0.5rem; margin-bottom:0.5rem;">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="can_edit_{{ flock.id }}" name="can_edit">
+                    <label for="can_edit_{{ flock.id }}" style="font-weight:normal;">Allow editing</label>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Share</button>
+    </form>
+
+    <form method="post" style="margin-bottom:1rem; padding:0.75rem; background:#f9f6f2; border-radius:6px;">
+        <input type="hidden" name="action" value="toggle_reuse">
+        <input type="hidden" name="flock_id" value="{{ flock.id }}">
+        <div class="checkbox-group">
+            <input type="checkbox" id="reuse_{{ flock.id }}" name="allow_ring_reuse"
+                   {{ 'checked' if flock.allow_ring_reuse }} onchange="this.form.submit()">
+            <label for="reuse_{{ flock.id }}" style="font-weight:normal;">
+                Allow ring number re-use for deceased / sold birds
+            </label>
+        </div>
+    </form>
+
+    {% if flock_shares[flock.id] %}
     <table>
         <thead>
-            <tr>
-                <th>Username</th>
-                <th>Permission</th>
-                <th></th>
-            </tr>
+            <tr><th>User</th><th>Permission</th><th></th></tr>
         </thead>
         <tbody>
-            {% for share in my_shares %}
+            {% for share in flock_shares[flock.id] %}
             <tr>
                 <td>{{ share.username }}</td>
                 <td>{{ 'View & Edit' if share.can_edit else 'View only' }}</td>
@@ -41,41 +64,43 @@
                         <input type="hidden" name="action" value="revoke">
                         <input type="hidden" name="share_id" value="{{ share.id }}">
                         <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Remove access for {{ share.username }}?')">Revoke</button>
+                                onclick="return confirm('Remove access for {{ share.username }}?')">&times; Revoke</button>
                     </form>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p style="color:#888; font-size:0.9rem;">Not shared with anyone.</p>
+    {% endif %}
 </div>
-{% endif %}
+{% else %}
+<div class="card">
+    <p style="color:#888; text-align:center; padding:1rem;">
+        You have no flocks yet. <a href="{{ url_for('flocks') }}">Create one</a>.
+    </p>
+</div>
+{% endfor %}
 
 {% if shared_with_me %}
 <div class="card">
     <h2 style="margin-bottom:1rem;">Flocks shared with me</h2>
     <table>
         <thead>
-            <tr>
-                <th>Owner</th>
-                <th>My permission</th>
-                <th></th>
-            </tr>
+            <tr><th>Owner</th><th>Flock</th><th>Permission</th><th></th></tr>
         </thead>
         <tbody>
-            {% for sf in shared_with_me %}
+            {% for f in shared_with_me %}
             <tr>
-                <td>{{ sf.username }}</td>
-                <td>{{ 'View & Edit' if sf.can_edit else 'View only' }}</td>
-                <td><a href="{{ url_for('view_flock', username=sf.username) }}">View flock &rarr;</a></td>
+                <td>{{ f.username }}</td>
+                <td>{{ f.name }}</td>
+                <td>{{ 'View & Edit' if f.can_edit else 'View only' }}</td>
+                <td><a href="{{ url_for('view_flock', username=f.username, flock_name=f.name) }}">View &rarr;</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-{% endif %}
-
-{% if not my_shares and not shared_with_me %}
-<p style="color:#888; text-align:center; padding:1rem;">No active shares yet.</p>
 {% endif %}
 {% endblock %}
