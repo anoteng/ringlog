@@ -2,6 +2,9 @@
 {% block content %}
 <div class="card">
     <h2>{{ 'Edit Bird' if bird else 'Register New Bird' }}</h2>
+    {% if owner.id != current_user.id %}
+    <p style="color:#888; font-size:0.9rem; margin-top:0.25rem;">Adding to {{ owner.username }}'s flock</p>
+    {% endif %}
     <form method="post" enctype="multipart/form-data" style="margin-top:1rem;">
         <div class="form-row">
             <div class="form-group">
@@ -91,7 +94,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">{{ 'Save Changes' if bird else 'Register Bird' }}</button>
-        <a href="{{ url_for('index') }}" style="margin-left:1rem;">Cancel</a>
+        <a href="{{ url_for('view_flock', username=owner.username) }}" style="margin-left:1rem;">Cancel</a>
     </form>
 </div>
 

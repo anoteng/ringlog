@@ -1,37 +1,90 @@
 {% extends "base.html" %}
 {% block content %}
+
+{% if not is_own_flock or shared_flocks %}
+<div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+    <a href="{{ url_for('view_flock', username=current_user.username) }}"
+       class="btn btn-sm {{ 'btn-primary' if is_own_flock else '' }}"
+       style="{{ '' if is_own_flock else 'background:#888;color:white;' }}">
+        My Flock
+    </a>
+    {% for sf in shared_flocks %}
+    <a href="{{ url_for('view_flock', username=sf.username) }}"
+       class="btn btn-sm {{ 'btn-primary' if owner.username == sf.username else '' }}"
+       style="{{ '' if owner.username == sf.username else 'background:#888;color:white;' }}">
+        {{ sf.username }}'s Flock
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <h2>My Flock</h2>
+        <h2>
+            {% if is_own_flock %}My Flock{% else %}{{ owner.username }}'s Flock{% endif %}
+        </h2>
+        {% if can_edit %}
+        {% if is_own_flock %}
         <a href="{{ url_for('add_bird') }}" class="btn btn-primary">+ Add Bird</a>
+        {% else %}
+        <a href="{{ url_for('add_bird', owner_username=owner.username) }}" class="btn btn-primary">+ Add Bird</a>
+        {% endif %}
+        {% endif %}
     </div>
 
-    <form class="filters" method="get">
-        <label>Species:</label>
-        <select name="species" onchange="this.form.submit()">
-            <option value="">All</option>
-            <option value="duck" {{ 'selected' if filter_species == 'duck' }}>Ducks</option>
-            <option value="hen" {{ 'selected' if filter_species == 'hen' }}>Hens</option>
-        </select>
-        <label>Status:</label>
-        <select name="status" onchange="this.form.submit()">
-            <option value="alive" {{ 'selected' if filter_status == 'alive' }}>Alive</option>
-            <option value="dead" {{ 'selected' if filter_status == 'dead' }}>Dead</option>
-            <option value="all" {{ 'selected' if filter_status == 'all' }}>All</option>
-        </select>
-    </form>
+    <div style="display:flex; gap:0.75rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap;">
+        <form class="filters" method="get" style="margin:0;">
+            <label>Species:</label>
+            <select name="species" onchange="this.form.submit()">
+                <option value="">All</option>
+                <option value="duck" {{ 'selected' if filter_species == 'duck' }}>Ducks</option>
+                <option value="hen" {{ 'selected' if filter_species == 'hen' }}>Hens</option>
+            </select>
+            <label>Status:</label>
+            <select name="status" onchange="this.form.submit()">
+                <option value="alive" {{ 'selected' if filter_status == 'alive' }}>Alive</option>
+                <option value="dead" {{ 'selected' if filter_status == 'dead' }}>Dead</option>
+                <option value="all" {{ 'selected' if filter_status == 'all' }}>All</option>
+            </select>
+        </form>
+        <input id="bird-search" type="search" placeholder="Search…"
+               style="padding:0.4rem 0.6rem; border:1px solid #ccc; border-radius:4px; font-size:0.9rem; min-width:160px;">
+        <button id="clear-filters" class="btn btn-sm" style="background:#eee; color:#555; display:none;">Clear filters</button>
+    </div>
 
     {% if birds %}
-    <table>
+    <div style="overflow-x:auto;">
+    <table id="bird-table">
         <thead>
             <tr>
-                <th></th>
-                <th>Ring #</th>
-                <th>Name</th>
-                <th>Species</th>
-                <th>Breed</th>
-                <th>Sex</th>
-                <th>Born</th>
+                <th style="width:44px;"></th>
+                <th class="sortable" data-col="1">
+                    <span class="sort-label">Ring #</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                </th>
+                <th class="sortable" data-col="2">
+                    <span class="sort-label">Name</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                </th>
+                <th class="sortable" data-col="3">
+                    <span class="sort-label">Species</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                </th>
+                <th class="sortable" data-col="4">
+                    <span class="sort-label">Breed</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                </th>
+                <th class="sortable" data-col="5">
+                    <span class="sort-label">Sex</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                </th>
+                <th class="sortable" data-col="6">
+                    <span class="sort-label">Born</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                </th>
+                <th class="sortable" data-col="7">
+                    <span class="sort-label">Age</span><span class="sort-icon"> ⇅</span>
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -48,12 +101,122 @@
                 <td>{{ bird.breed or '—' }}{% if bird.breed == 'hybrid' and bird.breed_mix %} ({{ bird.breed_mix }}){% endif %}</td>
                 <td>{{ bird.sex or '—' }}</td>
                 <td>{{ ('~' if bird.birth_approximate else '') }}{{ bird.birth_date or '—' }}</td>
+                <td data-sort="{{ bird.birth_date or '' }}">{{ bird.birth_date | age }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    </div>
+    <p id="no-results" style="display:none; text-align:center; padding:1.5rem; color:#888;">No birds match your filters.</p>
     {% else %}
-    <p style="text-align:center; padding:2rem; color:#888;">No birds registered yet. Add your first bird!</p>
+    <p style="text-align:center; padding:2rem; color:#888;">
+        {% if is_own_flock %}No birds registered yet. Add your first bird!
+        {% else %}This flock has no birds yet.{% endif %}
+    </p>
     {% endif %}
 </div>
+
+<style>
+    #bird-table th.sortable { white-space: nowrap; }
+    #bird-table th.sortable .sort-label { cursor: pointer; user-select: none; }
+    #bird-table th.sortable .sort-label:hover { color: #5b7a3a; }
+    #bird-table th.sortable .sort-icon { color: #aaa; font-size: 0.75rem; }
+    #bird-table th.sortable div { margin-top: 0.3rem; }
+    #bird-table .col-filter {
+        width: 100%; padding: 0.2rem 0.35rem; border: 1px solid #ddd;
+        border-radius: 3px; font-size: 0.75rem; font-weight: normal;
+        cursor: text;
+    }
+</style>
+
+<script>
+(function () {
+    const table = document.getElementById('bird-table');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const searchInput = document.getElementById('bird-search');
+    const clearBtn = document.getElementById('clear-filters');
+    const noResults = document.getElementById('no-results');
+    let sortCol = 1, sortAsc = true;
+
+    function cmp(a, b) {
+        // Empty values always sort last
+        if (a === '' && b !== '') return 1;
+        if (b === '' && a !== '') return -1;
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    function cellValue(row, col) {
+        const cell = row.cells[col];
+        if (!cell) return '';
+        return (cell.dataset.sort !== undefined ? cell.dataset.sort : cell.textContent).trim();
+    }
+
+    function doSort(col) {
+        if (sortCol === col) sortAsc = !sortAsc;
+        else { sortCol = col; sortAsc = true; }
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort((a, b) => (sortAsc ? 1 : -1) * cmp(cellValue(a, col), cellValue(b, col)));
+        rows.forEach(r => tbody.appendChild(r));
+        updateHeaders();
+    }
+
+    function updateHeaders() {
+        table.querySelectorAll('th[data-col]').forEach(th => {
+            const col = parseInt(th.dataset.col);
+            th.querySelector('.sort-icon').textContent =
+                sortCol === col ? (sortAsc ? ' ▲' : ' ▼') : ' ⇅';
+        });
+    }
+
+    function doFilter() {
+        const search = searchInput.value.toLowerCase();
+        const colFilters = Array.from(table.querySelectorAll('th[data-col] .col-filter')).map(el => ({
+            col: parseInt(el.closest('th').dataset.col),
+            val: el.value.toLowerCase()
+        }));
+
+        const hasFilter = search || colFilters.some(f => f.val);
+        clearBtn.style.display = hasFilter ? '' : 'none';
+
+        let visible = 0;
+        Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+            const matchSearch = !search || row.textContent.toLowerCase().includes(search);
+            const matchCols = colFilters.every(f => {
+                if (!f.val) return true;
+                const cell = row.cells[f.col];
+                return cell && cell.textContent.toLowerCase().includes(f.val);
+            });
+            const show = matchSearch && matchCols;
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
+    }
+
+    // Attach sort handlers
+    table.querySelectorAll('th[data-col]').forEach(th => {
+        th.querySelector('.sort-label').addEventListener('click', () => doSort(parseInt(th.dataset.col)));
+    });
+
+    // Attach filter handlers (stop click from bubbling to sort)
+    table.querySelectorAll('.col-filter').forEach(input => {
+        input.addEventListener('input', doFilter);
+        input.addEventListener('click', e => e.stopPropagation());
+    });
+
+    searchInput.addEventListener('input', doFilter);
+
+    clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        table.querySelectorAll('.col-filter').forEach(i => i.value = '');
+        doFilter();
+    });
+
+    // Initial sort by ring number
+    updateHeaders();
+})();
+</script>
 {% endblock %}

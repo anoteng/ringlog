@@ -10,11 +10,14 @@
         .container { max-width: 900px; margin: 0 auto; padding: 1rem; }
 
         header { background: #5b7a3a; color: white; padding: 1rem 0; margin-bottom: 1.5rem; }
-        header .container { display: flex; align-items: center; justify-content: space-between; }
+        header .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
         header h1 { font-size: 1.5rem; }
         header h1 span { font-size: 1.8rem; }
-        header nav a { color: white; text-decoration: none; margin-left: 1rem; font-weight: 500; }
+        header nav { display: flex; align-items: center; gap: 0.25rem 1rem; flex-wrap: wrap; }
+        header nav a { color: white; text-decoration: none; font-weight: 500; }
         header nav a:hover { text-decoration: underline; }
+        header nav .sep { color: rgba(255,255,255,0.4); }
+        header nav .username { color: rgba(255,255,255,0.85); font-size: 0.85rem; }
 
         .flash { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 500; }
         .flash.success { background: #d4edda; color: #155724; }
@@ -41,6 +44,8 @@
         .btn-danger { background: #c0392b; color: white; }
         .btn-danger:hover { background: #a93226; }
         .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
+        .btn-ghost { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5); padding: 0.25rem 0.7rem; font-size: 0.85rem; }
+        .btn-ghost:hover { background: rgba(255,255,255,0.15); }
 
         form.inline { display: inline; }
 
@@ -63,7 +68,11 @@
         .detail-grid dt { font-weight: 600; color: #555; }
         .detail-grid dd { margin: 0; }
 
-        .actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
+        .actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; align-items: center; }
+
+        .auth-card { max-width: 400px; margin: 3rem auto; }
+        .auth-card h2 { margin-bottom: 1.5rem; }
+        .auth-card .hint { text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666; }
 
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
@@ -77,8 +86,19 @@
         <div class="container">
             <h1><span>&#x1f426;</span> RingLog</h1>
             <nav>
-                <a href="{{ url_for('index') }}">Flock</a>
-                <a href="{{ url_for('add_bird') }}">+ Add Bird</a>
+                {% if current_user %}
+                    <a href="{{ url_for('view_flock', username=current_user.username) }}">My Flock</a>
+                    <a href="{{ url_for('add_bird') }}">+ Add Bird</a>
+                    <a href="{{ url_for('settings') }}">Settings</a>
+                    <span class="sep">|</span>
+                    <span class="username">{{ current_user.username }}</span>
+                    <form method="post" action="{{ url_for('logout') }}" class="inline">
+                        <button type="submit" class="btn btn-ghost">Log out</button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Log in</a>
+                    <a href="{{ url_for('register') }}">Register</a>
+                {% endif %}
             </nav>
         </div>
     </header>
@@ -90,5 +110,8 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </div>
+    <footer style="text-align:center; padding:2rem 1rem; color:#888; font-size:0.9rem;">
+        Enjoying RingLog? <a href="https://buymeacoffee.com/anoteng" target="_blank" rel="noopener" style="color:#5b7a3a; font-weight:500;">Buy me a coffee ☕</a> to support the project.
+    </footer>
 </body>
 </html>

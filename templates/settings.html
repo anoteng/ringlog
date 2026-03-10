@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1.25rem;">Share my flock</h2>
+    <form method="post">
+        <input type="hidden" name="action" value="grant">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="username">Username to share with</label>
+                <input type="text" id="username" name="username" required placeholder="their username">
+            </div>
+            <div class="form-group" style="display:flex; align-items:end; padding-bottom:0.5rem;">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="can_edit" name="can_edit">
+                    <label for="can_edit" style="font-weight:normal;">Allow editing</label>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Share</button>
+    </form>
+</div>
+
+{% if my_shares %}
+<div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;">People with access to my flock</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Permission</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for share in my_shares %}
+            <tr>
+                <td>{{ share.username }}</td>
+                <td>{{ 'View & Edit' if share.can_edit else 'View only' }}</td>
+                <td>
+                    <form method="post" class="inline">
+                        <input type="hidden" name="action" value="revoke">
+                        <input type="hidden" name="share_id" value="{{ share.id }}">
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Remove access for {{ share.username }}?')">Revoke</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if shared_with_me %}
+<div class="card">
+    <h2 style="margin-bottom:1rem;">Flocks shared with me</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Owner</th>
+                <th>My permission</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sf in shared_with_me %}
+            <tr>
+                <td>{{ sf.username }}</td>
+                <td>{{ 'View & Edit' if sf.can_edit else 'View only' }}</td>
+                <td><a href="{{ url_for('view_flock', username=sf.username) }}">View flock &rarr;</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if not my_shares and not shared_with_me %}
+<p style="color:#888; text-align:center; padding:1rem;">No active shares yet.</p>
+{% endif %}
+{% endblock %}

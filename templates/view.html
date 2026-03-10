@@ -11,6 +11,9 @@
             {% if bird.name %}
             <p style="color:#888;">Ring #{{ bird.ring_number }}</p>
             {% endif %}
+            {% if owner.id != current_user.id %}
+            <p style="color:#888; font-size:0.85rem;">Owner: {{ owner.username }}</p>
+            {% endif %}
         </div>
         {% if bird.has_image %}
         <img src="{{ url_for('bird_image', bird_id=bird.id) }}" class="bird-image" alt="{{ bird.name or bird.ring_number }}">
@@ -39,12 +42,55 @@
     </dl>
 
     <div class="actions">
+        {% if can_edit %}
         <a href="{{ url_for('edit_bird', bird_id=bird.id) }}" class="btn btn-primary">Edit</a>
+        {% if owner.id == current_user.id %}
         <form method="post" action="{{ url_for('delete_bird', bird_id=bird.id) }}" class="inline"
               onsubmit="return confirm('Delete this bird permanently?')">
             <button type="submit" class="btn btn-danger">Delete</button>
         </form>
-        <a href="{{ url_for('index') }}" style="margin-left:auto;">Back to flock</a>
+        {% endif %}
+        {% endif %}
+        <a href="{{ url_for('view_flock', username=owner.username) }}" style="margin-left:auto;">Back to flock</a>
     </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom:1rem;">Notes</h3>
+
+    {% if notes %}
+    <div style="margin-bottom:1.5rem;">
+        {% for note in notes %}
+        <div style="display:flex; gap:1rem; padding:0.6rem 0; border-bottom:1px solid #eee; align-items:start;">
+            <span style="color:#888; font-size:0.85rem; white-space:nowrap; padding-top:0.1rem;">{{ note.note_date }}</span>
+            <span style="flex:1; white-space:pre-wrap;">{{ note.content }}</span>
+            {% if can_edit %}
+            <form method="post" action="{{ url_for('delete_note', bird_id=bird.id, note_id=note.id) }}" class="inline">
+                <button type="submit" class="btn btn-sm btn-danger" title="Delete note"
+                        onclick="return confirm('Delete this note?')">&times;</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if can_edit %}
+    <form method="post" action="{{ url_for('add_note', bird_id=bird.id) }}" style="display:flex; gap:0.75rem; align-items:end; flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;">
+            <label style="font-size:0.85rem;">Date</label>
+            <input type="date" name="note_date" required value="{{ today }}" style="width:auto;">
+        </div>
+        <div class="form-group" style="margin:0; flex:1; min-width:200px;">
+            <label style="font-size:0.85rem;">Note</label>
+            <input type="text" name="content" required placeholder="Add a note…">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:1px;">Add</button>
+    </form>
+    {% endif %}
+
+    {% if not notes and not can_edit %}
+    <p style="color:#888; font-size:0.9rem;">No notes yet.</p>
+    {% endif %}
 </div>
 {% endblock %}
