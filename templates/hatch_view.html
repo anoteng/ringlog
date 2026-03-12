@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}{{ hatch.name or ('Hatch #' ~ hatch.id) }} — RingLog{% endblock %}
+{% block content %}
+
+{% set status_label = {"incubating": "Incubating", "lockdown": "Lockdown — stop turning, raise humidity", "hatching": "Hatching!", "complete": "Complete"} %}
+{% set status_color = {"incubating": "#856404", "lockdown": "#0c5460", "hatching": "#155724", "complete": "#6c757d"} %}
+{% set status_bg    = {"incubating": "#fff3cd", "lockdown": "#d1ecf1", "hatching": "#d4edda", "complete": "#e2e3e5"} %}
+
+{% macro fmt(dt) %}{{ dt.strftime('%a %d %b %Y, %H:%M') }}{% endmacro %}
+{% macro fmtd(dt) %}{{ dt.strftime('%a %d %b %Y') }}{% endmacro %}
+
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+    <h2>{{ hatch.name or ('Hatch #' ~ hatch.id) }}</h2>
+    <div style="display:flex; gap:0.5rem;">
+        {% if perm in ('owner', 'edit') %}
+        <a href="{{ url_for('edit_hatch', hatch_id=hatch.id) }}" class="btn btn-sm" style="background:#eee;color:#333;">Edit</a>
+        {% endif %}
+        {% if perm == 'owner' %}
+        <form method="post" action="{{ url_for('delete_hatch', hatch_id=hatch.id) }}" class="inline"
+              onsubmit="return confirm('Delete this hatch? This cannot be undone.')">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{# Status banner #}
+<div style="background:{{ status_bg[tl.status] }}; color:{{ status_color[tl.status] }};
+            border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem;
+            display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+    <span style="font-weight:700; font-size:1.1rem;">{{ status_label[tl.status] }}</span>
+    {% if tl.status in ('incubating', 'lockdown') %}
+    <span style="font-size:1.5rem; font-weight:700;">{{ tl.days_remaining }} day{{ 's' if tl.days_remaining != 1 }} to hatch</span>
+    {% elif tl.status == 'hatching' %}
+    <span style="font-size:1.5rem;">🐣</span>
+    {% endif %}
+</div>
+
+{# Progress bar #}
+<div style="background:#e9ecef; border-radius:99px; height:10px; margin-bottom:1.5rem; overflow:hidden;">
+    <div style="background:{{ status_color[tl.status] }}; width:{{ tl.progress_pct }}%; height:100%; border-radius:99px; transition:width 0.3s;"></div>
+</div>
+
+{# Timeline #}
+<div class="card" style="margin-bottom:1rem;">
+    <h3 style="margin-bottom:1rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">Timeline</h3>
+    <div style="display:grid; gap:0.75rem;">
+        {% set steps = [
+            ('🥚', 'Eggs set', tl.start, tl.status in ('incubating','lockdown','hatching','complete')),
+            ('🔒', 'Lockdown (day ' ~ hatch.lockdown_day ~ ')', tl.lockdown, tl.status in ('lockdown','hatching','complete')),
+            ('🐣', 'First pip expected', tl.first_pip, tl.status in ('hatching','complete')),
+            ('🐥', 'Hatch date', tl.hatch_dt, tl.status == 'complete'),
+        ] %}
+        {% for icon, label, dt, done in steps %}
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+            <span style="font-size:1.3rem; width:2rem; text-align:center;">{{ icon }}</span>
+            <div style="flex:1;">
+                <div style="font-weight:{{ '600' if done else '400' }}; color:{{ '#333' if done else '#999' }};">{{ label }}</div>
+                <div style="font-size:0.85rem; color:#666;">{{ fmt(dt) }}</div>
+            </div>
+            {% if done %}<span style="color:#5b7a3a; font-size:1.1rem;">✓</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{# Settings & outcome side by side #}
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+    <div class="card">
+        <h3 style="margin-bottom:0.75rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">Settings</h3>
+        <dl class="detail-grid">
+            <dt>Species</dt><dd style="text-transform:capitalize;">{{ hatch.species }}</dd>
+            <dt>Incubation</dt><dd>{{ hatch.incubation_days }} days</dd>
+            <dt>Humidity (inc.)</dt><dd>{{ hatch.humidity_incubation ~ ' %' if hatch.humidity_incubation else '—' }}</dd>
+            <dt>Humidity (lock.)</dt><dd>{{ hatch.humidity_lockdown ~ ' %' if hatch.humidity_lockdown else '—' }}</dd>
+        </dl>
+    </div>
+    <div class="card">
+        <h3 style="margin-bottom:0.75rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">Outcome</h3>
+        <dl class="detail-grid">
+            <dt>Eggs set</dt><dd>{{ hatch.egg_count or '—' }}</dd>
+            <dt>To lockdown</dt><dd>{{ hatch.eggs_brooder or '—' }}</dd>
+            <dt>Discarded</dt><dd>{{ hatch.eggs_discarded or '—' }}</dd>
+            <dt>Hatched</dt>
+            <dd>
+                {% if hatch.eggs_hatched is not none and hatch.eggs_hatched != '' %}
+                    {{ hatch.eggs_hatched }}
+                    {% if hatch.egg_count %}
+                        <span style="color:#888; font-size:0.85rem;">({{ (hatch.eggs_hatched / hatch.egg_count * 100) | round | int }}%)</span>
+                    {% endif %}
+                {% else %}—{% endif %}
+            </dd>
+        </dl>
+    </div>
+</div>
+
+{% if hatch.notes %}
+<div class="card">
+    <h3 style="margin-bottom:0.5rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">Notes</h3>
+    <p style="white-space:pre-wrap;">{{ hatch.notes }}</p>
+</div>
+{% endif %}
+
+{% if perm == 'owner' %}
+<div class="card">
+    <h3 style="margin-bottom:0.75rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">Sharing</h3>
+    {% if shares %}
+    <table style="margin-bottom:1rem;">
+        <thead><tr><th>User</th><th>Access</th><th></th></tr></thead>
+        <tbody>
+        {% for s in shares %}
+        <tr>
+            <td>{{ s.username }}</td>
+            <td>{{ 'View & edit' if s.can_edit else 'View only' }}</td>
+            <td>
+                <form method="post" action="{{ url_for('revoke_hatch_share', hatch_id=hatch.id, share_id=s.id) }}" class="inline">
+                    <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    <form method="post" action="{{ url_for('share_hatch', hatch_id=hatch.id) }}"
+          style="display:flex; gap:0.5rem; align-items:flex-end; flex-wrap:wrap;">
+        <div class="form-group" style="margin:0; flex:1; min-width:140px;">
+            <label style="font-size:0.85rem;">Username</label>
+            <input type="text" name="username" required placeholder="Username">
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label style="font-size:0.85rem;">&nbsp;</label>
+            <div class="checkbox-group" style="padding:0.5rem 0;">
+                <input type="checkbox" id="can_edit" name="can_edit">
+                <label for="can_edit" style="font-weight:normal; font-size:0.9rem;">Allow editing</label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:1px;">Share</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="actions">
+    <a href="{{ url_for('hatches') }}" style="color:#888;">← All hatches</a>
+</div>
+
+{% endblock %}

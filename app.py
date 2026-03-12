@@ -2,11 +2,14 @@
 
 import csv
 import io
+import json
 import os
 import re
+import secrets
+import urllib.request
 import zipfile
 from functools import wraps
-from datetime import date as _date
+from datetime import date as _date, datetime, timedelta
 
 import pymysql
 import pymysql.cursors
@@ -21,6 +24,9 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+
+MAIL_FROM    = os.environ.get("MAIL_FROM", "ringlog@noteng.no")
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 
 DB_CONFIG = dict(
     host=os.environ.get("DB_HOST", "localhost"),
@@ -188,6 +194,32 @@ def shared_flocks_for(user_id):
 
 
 # ---------------------------------------------------------------------------
+# Email
+# ---------------------------------------------------------------------------
+
+def send_email(to, subject, body):
+    payload = json.dumps({
+        "sender":  {"email": MAIL_FROM, "name": "RingLog"},
+        "to":      [{"email": to}],
+        "subject": subject,
+        "textContent": body,
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=payload,
+        headers={
+            "api-key": BREVO_API_KEY,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        if resp.status not in (200, 201):
+            raise RuntimeError(f"Brevo API error {resp.status}")
+
+
+# ---------------------------------------------------------------------------
 # Auth routes
 # ---------------------------------------------------------------------------
 
@@ -256,6 +288,80 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if g.user:
+        return redirect(url_for("flocks"))
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        if email:
+            db = get_db()
+            user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            if user:
+                token = secrets.token_urlsafe(32)
+                expires = datetime.now() + timedelta(hours=2)
+                db.execute("DELETE FROM password_resets WHERE user_id = ?", (user["id"],))
+                db.execute(
+                    "INSERT INTO password_resets (user_id, token, expires_at) VALUES (?,?,?)",
+                    (user["id"], token, expires)
+                )
+                db.commit()
+                reset_url = url_for("reset_password", token=token, _external=True)
+                try:
+                    send_email(
+                        to=email,
+                        subject="RingLog — password reset",
+                        body=(
+                            f"Hi {user['username']},\n\n"
+                            f"Click the link below to reset your password. "
+                            f"The link is valid for 2 hours.\n\n"
+                            f"{reset_url}\n\n"
+                            f"If you didn't request this, you can ignore this email.\n\n"
+                            f"— RingLog"
+                        ),
+                    )
+                except Exception:
+                    flash("Failed to send email. Please try again later.", "error")
+                    return render_template("forgot_password.html")
+        # Always show the same message to avoid user enumeration
+        flash("If that email address is registered, a reset link has been sent.", "success")
+        return redirect(url_for("login"))
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if g.user:
+        return redirect(url_for("flocks"))
+    db = get_db()
+    row = db.execute(
+        "SELECT * FROM password_resets WHERE token = ? AND expires_at > NOW()",
+        (token,)
+    ).fetchone()
+    if not row:
+        flash("This reset link is invalid or has expired.", "error")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm  = request.form.get("confirm", "")
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "error")
+        elif password != confirm:
+            flash("Passwords do not match.", "error")
+        else:
+            db.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (generate_password_hash(password), row["user_id"])
+            )
+            db.execute("DELETE FROM password_resets WHERE token = ?", (token,))
+            db.commit()
+            flash("Password updated. You can now log in.", "success")
+            return redirect(url_for("login"))
+
+    return render_template("reset_password.html", token=token)
 
 
 # ---------------------------------------------------------------------------
@@ -761,6 +867,279 @@ def settings():
                            my_flocks=my_flocks,
                            flock_shares=flock_shares,
                            shared_with_me=shared_with_me)
+
+
+# ---------------------------------------------------------------------------
+# Hatches
+# ---------------------------------------------------------------------------
+
+SPECIES_PRESETS = {
+    "chicken": {"incubation_days": 21, "lockdown_day": 18, "humidity_incubation": 45, "humidity_lockdown": 68},
+    "duck":    {"incubation_days": 28, "lockdown_day": 25, "humidity_incubation": 55, "humidity_lockdown": 72},
+    "muscovy": {"incubation_days": 35, "lockdown_day": 31, "humidity_incubation": 55, "humidity_lockdown": 72},
+    "custom":  {"incubation_days": 21, "lockdown_day": 18, "humidity_incubation": 45, "humidity_lockdown": 68},
+}
+
+
+def hatch_timeline(h):
+    start = h["start_datetime"]
+    if isinstance(start, str):
+        start = datetime.fromisoformat(start)
+    lockdown  = start + timedelta(days=int(h["lockdown_day"]))
+    first_pip = start + timedelta(days=int(h["incubation_days"]) - 1)
+    hatch_dt  = start + timedelta(days=int(h["incubation_days"]))
+    now = datetime.now()
+    if now < lockdown:
+        status = "incubating"
+    elif now < first_pip:
+        status = "lockdown"
+    elif now <= hatch_dt + timedelta(days=2):
+        status = "hatching"
+    else:
+        status = "complete"
+    total   = int(h["incubation_days"])
+    elapsed = max(0, min(total, (now - start).days))
+    return {
+        "start":          start,
+        "lockdown":       lockdown,
+        "first_pip":      first_pip,
+        "hatch_dt":       hatch_dt,
+        "status":         status,
+        "days_remaining": max(0, (hatch_dt.date() - now.date()).days),
+        "progress_pct":   round(elapsed / total * 100),
+    }
+
+
+@app.route("/hatches")
+@login_required
+def hatches():
+    db = get_db()
+    rows = db.execute(
+        "SELECT * FROM hatches WHERE user_id = ? ORDER BY start_datetime DESC",
+        (g.user["id"],)
+    ).fetchall()
+    items = [{"hatch": r, "tl": hatch_timeline(r)} for r in rows]
+    shared_rows = shared_hatches_for(g.user["id"])
+    shared_items = [{"hatch": r, "tl": hatch_timeline(r)} for r in shared_rows]
+    return render_template("hatches.html", items=items, shared_items=shared_items)
+
+
+@app.route("/hatch/new", methods=["GET", "POST"])
+@login_required
+def new_hatch():
+    if request.method == "POST":
+        return _save_hatch(None)
+    return render_template("hatch_form.html", hatch=None, presets=SPECIES_PRESETS)
+
+
+@app.route("/hatch/<int:hatch_id>")
+@login_required
+def view_hatch(hatch_id):
+    perm = get_hatch_permission(hatch_id)
+    if not perm:
+        flash("Hatch not found.", "error")
+        return redirect(url_for("hatches"))
+    db = get_db()
+    hatch = db.execute("SELECT * FROM hatches WHERE id = ?", (hatch_id,)).fetchone()
+    shares = []
+    if perm == "owner":
+        shares = db.execute(
+            """SELECT hs.id, hs.can_edit, u.username FROM hatch_shares hs
+               JOIN users u ON u.id = hs.grantee_id
+               WHERE hs.hatch_id = ? ORDER BY u.username""",
+            (hatch_id,)
+        ).fetchall()
+    return render_template("hatch_view.html", hatch=hatch, tl=hatch_timeline(hatch),
+                           perm=perm, shares=shares)
+
+
+@app.route("/hatch/<int:hatch_id>/share", methods=["POST"])
+@login_required
+def share_hatch(hatch_id):
+    hatch = _get_own_hatch(hatch_id)
+    if not hatch:
+        flash("Access denied.", "error")
+        return redirect(url_for("hatches"))
+    username = request.form.get("username", "").strip()
+    db = get_db()
+    target = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    if not target:
+        flash("User not found.", "error")
+    elif target["id"] == g.user["id"]:
+        flash("You can't share with yourself.", "error")
+    else:
+        can_edit = 1 if request.form.get("can_edit") else 0
+        try:
+            db.execute(
+                "INSERT INTO hatch_shares (hatch_id, grantee_id, can_edit) VALUES (?,?,?)",
+                (hatch_id, target["id"], can_edit)
+            )
+        except pymysql.IntegrityError:
+            db.execute(
+                "UPDATE hatch_shares SET can_edit=? WHERE hatch_id=? AND grantee_id=?",
+                (can_edit, hatch_id, target["id"])
+            )
+        db.commit()
+        perm_label = "view & edit" if can_edit else "view"
+        flash(f"Hatch shared with {target['username']} ({perm_label}).", "success")
+    return redirect(url_for("view_hatch", hatch_id=hatch_id))
+
+
+@app.route("/hatch/<int:hatch_id>/share/<int:share_id>/revoke", methods=["POST"])
+@login_required
+def revoke_hatch_share(hatch_id, share_id):
+    hatch = _get_own_hatch(hatch_id)
+    if hatch:
+        get_db().execute(
+            "DELETE FROM hatch_shares WHERE id = ? AND hatch_id = ?",
+            (share_id, hatch_id)
+        )
+        get_db().commit()
+        flash("Share removed.", "success")
+    return redirect(url_for("view_hatch", hatch_id=hatch_id))
+
+
+@app.route("/hatch/<int:hatch_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_hatch(hatch_id):
+    if get_hatch_permission(hatch_id) not in ("owner", "edit"):
+        flash("Access denied.", "error")
+        return redirect(url_for("hatches"))
+    hatch = get_db().execute("SELECT * FROM hatches WHERE id = ?", (hatch_id,)).fetchone()
+    if not hatch:
+        flash("Hatch not found.", "error")
+        return redirect(url_for("hatches"))
+    if request.method == "POST":
+        return _save_hatch(hatch_id)
+    perm = get_hatch_permission(hatch_id)
+    return render_template("hatch_form.html", hatch=hatch, presets=SPECIES_PRESETS, perm=perm)
+
+
+@app.route("/hatch/<int:hatch_id>/delete", methods=["POST"])
+@login_required
+def delete_hatch(hatch_id):
+    hatch = _get_own_hatch(hatch_id)
+    if hatch:
+        get_db().execute("DELETE FROM hatches WHERE id = ?", (hatch_id,))
+        get_db().commit()
+        flash("Hatch deleted.", "success")
+    return redirect(url_for("hatches"))
+
+
+def _get_own_hatch(hatch_id):
+    return get_db().execute(
+        "SELECT * FROM hatches WHERE id = ? AND user_id = ?",
+        (hatch_id, g.user["id"])
+    ).fetchone()
+
+
+def get_hatch_permission(hatch_id):
+    """Return 'owner', 'edit', 'view', or None for g.user on the given hatch."""
+    if not g.user:
+        return None
+    db = get_db()
+    h = db.execute("SELECT user_id FROM hatches WHERE id = ?", (hatch_id,)).fetchone()
+    if not h:
+        return None
+    if g.user["id"] == h["user_id"]:
+        return "owner"
+    share = db.execute(
+        "SELECT can_edit FROM hatch_shares WHERE hatch_id = ? AND grantee_id = ?",
+        (hatch_id, g.user["id"])
+    ).fetchone()
+    if not share:
+        return None
+    return "edit" if share["can_edit"] else "view"
+
+
+def shared_hatches_for(user_id):
+    return get_db().execute(
+        """SELECT h.*, u.username AS owner_username, hs.can_edit
+           FROM hatch_shares hs
+           JOIN hatches h ON h.id = hs.hatch_id
+           JOIN users u ON u.id = h.user_id
+           WHERE hs.grantee_id = ?
+           ORDER BY h.start_datetime DESC""",
+        (user_id,)
+    ).fetchall()
+
+
+def _save_hatch(hatch_id):
+    f = request.form
+    species = f.get("species", "chicken")
+    preset  = SPECIES_PRESETS.get(species, SPECIES_PRESETS["chicken"])
+    try:
+        incubation_days = int(f.get("incubation_days") or preset["incubation_days"])
+        lockdown_day    = int(f.get("lockdown_day") or preset["lockdown_day"])
+    except ValueError:
+        flash("Incubation days and lockdown day must be numbers.", "error")
+        return redirect(request.url)
+
+    def _int(key):
+        v = f.get(key, "").strip()
+        return int(v) if v else None
+
+    def _float(key):
+        v = f.get(key, "").strip()
+        return float(v) if v else None
+
+    db = get_db()
+    if hatch_id is None:
+        db.execute(
+            """INSERT INTO hatches
+               (user_id, name, species, start_datetime, incubation_days, lockdown_day,
+                humidity_incubation, humidity_lockdown, egg_count,
+                eggs_brooder, eggs_discarded, eggs_hatched, notes)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (g.user["id"], f.get("name","").strip() or None, species,
+             f["start_datetime"], incubation_days, lockdown_day,
+             _float("humidity_incubation"), _float("humidity_lockdown"),
+             _int("egg_count"), _int("eggs_brooder"), _int("eggs_discarded"),
+             _int("eggs_hatched"), f.get("notes","").strip() or None)
+        )
+        db.commit()
+        flash("Hatch started!", "success")
+        new_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+        return redirect(url_for("view_hatch", hatch_id=new_id))
+    else:
+        db.execute(
+            """UPDATE hatches SET
+               name=?, species=?, start_datetime=?, incubation_days=?, lockdown_day=?,
+               humidity_incubation=?, humidity_lockdown=?, egg_count=?,
+               eggs_brooder=?, eggs_discarded=?, eggs_hatched=?, notes=?
+               WHERE id=? AND user_id=?""",
+            (f.get("name","").strip() or None, species, f["start_datetime"],
+             incubation_days, lockdown_day,
+             _float("humidity_incubation"), _float("humidity_lockdown"),
+             _int("egg_count"), _int("eggs_brooder"), _int("eggs_discarded"),
+             _int("eggs_hatched"), f.get("notes","").strip() or None,
+             hatch_id, g.user["id"])
+        )
+        db.commit()
+        flash("Hatch updated.", "success")
+        return redirect(url_for("view_hatch", hatch_id=hatch_id))
+
+
+@app.route("/robots.txt")
+def robots():
+    return app.response_class(
+        "User-agent: *\nAllow: /\nDisallow: /settings\nDisallow: /flocks\nDisallow: /flock/\nDisallow: /bird/\nSitemap: https://ringlog.no/sitemap.xml\n",
+        mimetype="text/plain",
+    )
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        "<url><loc>https://ringlog.no/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>"
+        "<url><loc>https://ringlog.no/register</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>"
+        "<url><loc>https://ringlog.no/login</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>"
+        "<url><loc>https://ringlog.no/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>"
+        "</urlset>"
+    )
+    return app.response_class(xml, mimetype="application/xml")
 
 
 if __name__ == "__main__":

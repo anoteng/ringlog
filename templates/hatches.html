@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Hatches — RingLog{% endblock %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h2>Hatching plans</h2>
+    <a href="{{ url_for('new_hatch') }}" class="btn btn-primary">+ New hatch</a>
+</div>
+
+{% if not items and not shared_items %}
+<div class="card" style="text-align:center; color:#666; padding:2.5rem;">
+    No hatches yet. <a href="{{ url_for('new_hatch') }}">Start one</a>.
+</div>
+{% else %}
+
+{% set status_label = {"incubating": "Incubating", "lockdown": "Lockdown", "hatching": "Hatching!", "complete": "Complete"} %}
+{% set status_color = {"incubating": "#856404", "lockdown": "#0c5460", "hatching": "#155724", "complete": "#6c757d"} %}
+{% set status_bg    = {"incubating": "#fff3cd", "lockdown": "#d1ecf1", "hatching": "#d4edda", "complete": "#e2e3e5"} %}
+
+{% macro hatch_table(rows, show_owner=false) %}
+<div class="card" style="padding:0; overflow:hidden; margin-bottom:1rem;">
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            {% if show_owner %}<th>Owner</th>{% endif %}
+            <th>Species</th>
+            <th>Started</th>
+            <th>Hatch date</th>
+            <th>Status</th>
+            <th>Eggs</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for item in rows %}
+    {% set h = item.hatch %}
+    {% set tl = item.tl %}
+    <tr>
+        <td><a href="{{ url_for('view_hatch', hatch_id=h.id) }}">{{ h.name or ('Hatch #' ~ h.id) }}</a></td>
+        {% if show_owner %}<td>{{ h.owner_username }}</td>{% endif %}
+        <td style="text-transform:capitalize;">{{ h.species }}</td>
+        <td>{{ h.start_datetime.strftime('%Y-%m-%d') if h.start_datetime.strftime is defined else h.start_datetime[:10] }}</td>
+        <td>{{ tl.hatch_dt.strftime('%Y-%m-%d') }}</td>
+        <td>
+            <span class="badge" style="background:{{ status_bg[tl.status] }}; color:{{ status_color[tl.status] }};">
+                {{ status_label[tl.status] }}
+            </span>
+            {% if tl.status in ('incubating','lockdown') %}
+            <span style="font-size:0.8rem; color:#888;"> {{ tl.days_remaining }}d left</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if h.egg_count %}{{ h.egg_count }}{% if h.eggs_hatched %} / {{ h.eggs_hatched }} hatched{% endif %}{% else %}—{% endif %}
+        </td>
+        <td><a href="{{ url_for('view_hatch', hatch_id=h.id) }}" class="btn btn-sm" style="background:#eee;color:#333;">View</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endmacro %}
+
+{% if items %}
+{{ hatch_table(items) }}
+{% endif %}
+
+{% if shared_items %}
+<h3 style="margin:1.5rem 0 0.5rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">Shared with me</h3>
+{{ hatch_table(shared_items, show_owner=true) }}
+{% endif %}
+
+{% endif %}
+{% endblock %}
