@@ -1120,6 +1120,195 @@ def _save_hatch(hatch_id):
         return redirect(url_for("view_hatch", hatch_id=hatch_id))
 
 
+# ---------------------------------------------------------------------------
+# Flock log
+# ---------------------------------------------------------------------------
+
+def _editable_flocks():
+    """All flocks the current user can edit (own + edit-shares)."""
+    db = get_db()
+    own = db.execute(
+        "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id = f.user_id WHERE f.user_id = ? ORDER BY f.name",
+        (g.user["id"],)
+    ).fetchall()
+    shared = db.execute(
+        """SELECT f.*, u.username FROM flock_shares fs
+           JOIN flocks f ON f.id = fs.flock_id
+           JOIN users u ON u.id = f.user_id
+           WHERE fs.grantee_id = ? AND fs.can_edit = 1 ORDER BY f.name""",
+        (g.user["id"],)
+    ).fetchall()
+    return list(own) + list(shared)
+
+
+@app.route("/log", methods=["GET", "POST"])
+@login_required
+def daily_log():
+    db = get_db()
+    log_date = request.args.get("date") or request.form.get("date") or _date.today().isoformat()
+
+    flocks = _editable_flocks()
+    flock_ids = [f["id"] for f in flocks]
+
+    if request.method == "POST" and request.form.get("action") == "log":
+        for flock in flocks:
+            fid = flock["id"]
+            eggs = request.form.get(f"eggs_{fid}", "").strip() or None
+            light = request.form.get(f"light_{fid}", "").strip() or None
+            bedding = 1 if request.form.get(f"bedding_{fid}") else 0
+            notes = request.form.get(f"notes_{fid}", "").strip() or None
+            if eggs is not None or light is not None or bedding or notes:
+                db.execute(
+                    """INSERT INTO flock_log (flock_id, user_id, log_date, eggs_collected, light_hours, bedding_changed, notes)
+                       VALUES (?,?,?,?,?,?,?)
+                       ON DUPLICATE KEY UPDATE eggs_collected=VALUES(eggs_collected),
+                         light_hours=VALUES(light_hours), bedding_changed=VALUES(bedding_changed),
+                         notes=VALUES(notes), user_id=VALUES(user_id)""",
+                    (fid, g.user["id"], log_date, eggs, light, bedding, notes)
+                )
+        db.commit()
+        flash("Log saved.", "success")
+        return redirect(url_for("daily_log", date=log_date))
+
+    # Load existing entries for the selected date
+    existing = {}
+    if flock_ids:
+        placeholders = ",".join(["%s"] * len(flock_ids))
+        rows = db._c.cursor()
+        rows.execute(
+            f"SELECT * FROM flock_log WHERE log_date = %s AND flock_id IN ({placeholders})",
+            [log_date] + flock_ids
+        )
+        for row in rows.fetchall():
+            existing[row["flock_id"]] = row
+
+    return render_template("daily_log.html", flocks=flocks, log_date=log_date, existing=existing)
+
+
+@app.route("/flock/<username>/<flock_name>/log", methods=["GET", "POST"])
+@login_required
+def flock_log(username, flock_name):
+    flock = resolve_flock(username, flock_name)
+    if not flock or get_permission(flock["id"]) not in ("edit", None):
+        # allow view permission to see the log, just not post
+        pass
+    if not flock:
+        flash("Flock not found.", "error")
+        return redirect(url_for("flocks"))
+    perm = get_permission(flock["id"])
+    if not perm:
+        flash("Access denied.", "error")
+        return redirect(url_for("flocks"))
+
+    db = get_db()
+    can_edit = (perm == "edit")
+
+    if request.method == "POST" and can_edit:
+        action = request.form.get("action")
+
+        if action == "log":
+            log_date = request.form.get("log_date", "").strip()
+            eggs  = request.form.get("eggs_collected", "").strip() or None
+            light = request.form.get("light_hours", "").strip() or None
+            bedding = 1 if request.form.get("bedding_changed") else 0
+            notes = request.form.get("notes", "").strip() or None
+            db.execute(
+                """INSERT INTO flock_log (flock_id, user_id, log_date, eggs_collected, light_hours, bedding_changed, notes)
+                   VALUES (?,?,?,?,?,?,?)
+                   ON DUPLICATE KEY UPDATE eggs_collected=VALUES(eggs_collected),
+                     light_hours=VALUES(light_hours), bedding_changed=VALUES(bedding_changed),
+                     notes=VALUES(notes), user_id=VALUES(user_id)""",
+                (flock["id"], g.user["id"], log_date, eggs, light, bedding, notes)
+            )
+            db.commit()
+            flash("Entry saved.", "success")
+
+        elif action == "delete_log":
+            entry_id = request.form.get("entry_id", type=int)
+            db.execute("DELETE FROM flock_log WHERE id = ? AND flock_id = ?", (entry_id, flock["id"]))
+            db.commit()
+            flash("Entry deleted.", "success")
+
+        elif action == "stash":
+            found_date = request.form.get("found_date", "").strip()
+            egg_count  = request.form.get("egg_count", "").strip()
+            notes = request.form.get("stash_notes", "").strip() or None
+            if found_date and egg_count:
+                db.execute(
+                    "INSERT INTO flock_stash (flock_id, user_id, found_date, egg_count, notes) VALUES (?,?,?,?,?)",
+                    (flock["id"], g.user["id"], found_date, int(egg_count), notes)
+                )
+                db.commit()
+                flash("Stash logged.", "success")
+
+        elif action == "delete_stash":
+            stash_id = request.form.get("stash_id", type=int)
+            db.execute("DELETE FROM flock_stash WHERE id = ? AND flock_id = ?", (stash_id, flock["id"]))
+            db.commit()
+            flash("Stash entry deleted.", "success")
+
+        return redirect(url_for("flock_log", username=username, flock_name=flock_name))
+
+    logs = db.execute(
+        "SELECT * FROM flock_log WHERE flock_id = ? ORDER BY log_date DESC LIMIT 90",
+        (flock["id"],)
+    ).fetchall()
+    stashes = db.execute(
+        "SELECT * FROM flock_stash WHERE flock_id = ? ORDER BY found_date DESC",
+        (flock["id"],)
+    ).fetchall()
+    today = _date.today().isoformat()
+    today_entry = db.execute(
+        "SELECT * FROM flock_log WHERE flock_id = ? AND log_date = ?",
+        (flock["id"], today)
+    ).fetchone()
+
+    return render_template("flock_log.html", flock=flock, logs=logs, stashes=stashes,
+                           today=today, today_entry=today_entry, can_edit=can_edit)
+
+
+@app.route("/flock/<username>/<flock_name>/report")
+@login_required
+def flock_report(username, flock_name):
+    flock = resolve_flock(username, flock_name)
+    if not flock:
+        flash("Flock not found.", "error")
+        return redirect(url_for("flocks"))
+    perm = get_permission(flock["id"])
+    if not perm:
+        flash("Access denied.", "error")
+        return redirect(url_for("flocks"))
+
+    db = get_db()
+    days = request.args.get("days", 30, type=int)
+    if days not in (30, 60, 90, 180, 365):
+        days = 30
+
+    logs = db.execute(
+        """SELECT log_date, eggs_collected, light_hours, bedding_changed
+           FROM flock_log WHERE flock_id = ? AND log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+           ORDER BY log_date""",
+        (flock["id"], days)
+    ).fetchall()
+
+    stashes = db.execute(
+        """SELECT found_date, SUM(egg_count) AS total
+           FROM flock_stash WHERE flock_id = ? AND found_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+           GROUP BY found_date ORDER BY found_date""",
+        (flock["id"], days)
+    ).fetchall()
+
+    # Active bird count per day is approximated from bird records
+    active_count = db.execute(
+        """SELECT COUNT(*) AS n FROM birds
+           WHERE flock_id = ? AND is_dead = 0 AND is_sold = 0""",
+        (flock["id"],)
+    ).fetchone()["n"]
+
+    return render_template("flock_report.html", flock=flock, logs=logs, stashes=stashes,
+                           days=days, active_count=active_count)
+
+
 @app.route("/robots.txt")
 def robots():
     return app.response_class(

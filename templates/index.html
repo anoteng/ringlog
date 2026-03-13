@@ -22,15 +22,17 @@
 {% endif %}
 
 <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <h2>
-            {% if not is_own_flock %}{{ flock.username }}/{% endif %}{{ flock.name }}
-        </h2>
-        <div style="display:flex; gap:0.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem;">
+        <h2>{% if not is_own_flock %}{{ flock.username }}/{% endif %}{{ flock.name }}</h2>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <a href="{{ url_for('flock_report', username=flock.username, flock_name=flock.name) }}"
+               class="btn btn-sm" style="background:#eee; color:#333;">📈 Report</a>
+            <a href="{{ url_for('flock_log', username=flock.username, flock_name=flock.name) }}"
+               class="btn btn-sm" style="background:#eee; color:#333;">📋 Log</a>
             <a href="{{ url_for('export_flock', username=flock.username, flock_name=flock.name) }}"
-               class="btn btn-sm" style="background:#eee; color:#333;" title="Download all bird data as CSV">&#x2b07; Export</a>
+               class="btn btn-sm" style="background:#eee; color:#333;">&#x2b07; Export</a>
             {% if can_edit %}
-            <a href="{{ url_for('add_bird', username=flock.username, flock_name=flock.name) }}" class="btn btn-primary">+ Add Bird</a>
+            <a href="{{ url_for('add_bird', username=flock.username, flock_name=flock.name) }}" class="btn btn-sm btn-primary">+ Add Bird</a>
             {% endif %}
         </div>
     </div>
@@ -40,8 +42,8 @@
             <label>Species:</label>
             <select name="species" onchange="this.form.submit()">
                 <option value="">All</option>
+                <option value="chicken" {{ 'selected' if filter_species == 'chicken' }}>Chickens</option>
                 <option value="duck" {{ 'selected' if filter_species == 'duck' }}>Ducks</option>
-                <option value="hen" {{ 'selected' if filter_species == 'hen' }}>Hens</option>
                 <option value="goose" {{ 'selected' if filter_species == 'goose' }}>Geese</option>
                 <option value="turkey" {{ 'selected' if filter_species == 'turkey' }}>Turkeys</option>
                 <option value="quail" {{ 'selected' if filter_species == 'quail' }}>Quail</option>

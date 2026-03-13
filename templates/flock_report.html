@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Report — {{ flock.name }} — RingLog{% endblock %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+    <h2>{{ flock.name }} — Egg production report</h2>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+        {% for d in [30, 60, 90, 180, 365] %}
+        <a href="?days={{ d }}"
+           class="btn btn-sm"
+           style="{{ 'background:#5b7a3a;color:white;' if days == d else 'background:#eee;color:#333;' }}">
+            {{ d }}d
+        </a>
+        {% endfor %}
+        <a href="{{ url_for('flock_log', username=flock.username, flock_name=flock.name) }}"
+           class="btn btn-sm" style="background:#eee;color:#333; margin-left:0.5rem;">← Log</a>
+    </div>
+</div>
+
+{% if not logs %}
+<div class="card" style="text-align:center; color:#666; padding:2rem;">
+    No log data for this period. <a href="{{ url_for('flock_log', username=flock.username, flock_name=flock.name) }}">Start logging</a>.
+</div>
+{% else %}
+
+{# Summary cards #}
+{% set total_eggs = namespace(v=0) %}
+{% set days_with_eggs = namespace(v=0) %}
+{% set max_eggs = namespace(v=0) %}
+{% set light_days = namespace(v=0, total=0.0) %}
+{% for row in logs %}
+    {% if row.eggs_collected is not none %}
+        {% set total_eggs.v = total_eggs.v + row.eggs_collected %}
+        {% set days_with_eggs.v = days_with_eggs.v + 1 %}
+        {% if row.eggs_collected > max_eggs.v %}{% set max_eggs.v = row.eggs_collected %}{% endif %}
+    {% endif %}
+    {% if row.light_hours is not none %}
+        {% set light_days.v = light_days.v + 1 %}
+        {% set light_days.total = light_days.total + row.light_hours | float %}
+    {% endif %}
+{% endfor %}
+{% set avg_eggs = (total_eggs.v / days_with_eggs.v) | round(1) if days_with_eggs.v else 0 %}
+{% set avg_light = (light_days.total / light_days.v) | round(1) if light_days.v else '—' %}
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+    {% for label, value, sub in [
+        ('Total eggs', total_eggs.v, logs|length ~ ' days logged'),
+        ('Daily average', avg_eggs, 'eggs / day'),
+        ('Best day', max_eggs.v, 'eggs'),
+        ('Avg light', avg_light ~ ' h', 'per logged day'),
+        ('Active birds', active_count, 'in flock now'),
+    ] %}
+    <div class="card" style="text-align:center; padding:1rem;">
+        <div style="font-size:1.6rem; font-weight:700; color:#5b7a3a;">{{ value }}</div>
+        <div style="font-size:0.8rem; font-weight:600; color:#555; margin-top:0.2rem;">{{ label }}</div>
+        <div style="font-size:0.75rem; color:#999;">{{ sub }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+{# Chart #}
+<div class="card" style="margin-bottom:1rem;">
+    <canvas id="eggChart" height="90"></canvas>
+</div>
+
+{# Stash overlay note #}
+{% if stashes %}
+<div style="font-size:0.85rem; color:#888; margin-bottom:1rem;">
+    ⚠ Stash finds ({{ stashes | sum(attribute='total') | int }} eggs across {{ stashes|length }} dates) are shown separately and excluded from the daily trend.
+</div>
+{% endif %}
+
+{# Data table #}
+<div class="card" style="padding:0; overflow:hidden;">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Eggs</th>
+                <th>7-day avg</th>
+                <th>Light (h)</th>
+                <th>Eggs / bird</th>
+                <th>Bedding</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in logs | reverse %}
+        <tr>
+            <td>{{ row.log_date }}</td>
+            <td>{{ row.eggs_collected if row.eggs_collected is not none else '—' }}</td>
+            <td>—</td>
+            <td>{{ row.light_hours if row.light_hours is not none else '—' }}</td>
+            <td>{{ (row.eggs_collected / active_count) | round(2) if row.eggs_collected and active_count else '—' }}</td>
+            <td>{{ '✓' if row.bedding_changed else '' }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const labels  = {{ logs | map(attribute='log_date') | map('string') | list | tojson }};
+const eggs    = {{ logs | map(attribute='eggs_collected') | list | tojson }};
+const light   = {{ logs | map(attribute='light_hours') | list | tojson }};
+const stashDates = {{ stashes | map(attribute='found_date') | map('string') | list | tojson }};
+const stashTotals = {{ stashes | map(attribute='total') | list | tojson }};
+
+// 7-day rolling average
+function rollingAvg(data, window) {
+    return data.map((_, i) => {
+        const slice = data.slice(Math.max(0, i - window + 1), i + 1).filter(v => v !== null);
+        return slice.length ? +(slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(1) : null;
+    });
+}
+const avg7 = rollingAvg(eggs, 7);
+
+// Stash as scatter points on the same date axis
+const stashPoints = stashDates.map((d, i) => ({x: d, y: stashTotals[i]}));
+
+const ctx = document.getElementById('eggChart');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels,
+        datasets: [
+            {
+                label: 'Eggs collected',
+                data: eggs,
+                backgroundColor: 'rgba(91,122,58,0.25)',
+                borderColor: 'rgba(91,122,58,0.6)',
+                borderWidth: 1,
+                order: 3,
+            },
+            {
+                label: '7-day average',
+                data: avg7,
+                type: 'line',
+                borderColor: '#5b7a3a',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.3,
+                fill: false,
+                order: 1,
+            },
+            {
+                label: 'Light hours',
+                data: light,
+                type: 'line',
+                borderColor: '#f0a500',
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.3,
+                fill: false,
+                yAxisID: 'y2',
+                order: 2,
+            },
+        ],
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    afterBody(items) {
+                        const label = items[0]?.label;
+                        const idx = stashDates.indexOf(label);
+                        if (idx >= 0) return [`Stash find: ${stashTotals[idx]} eggs`];
+                        return [];
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { ticks: { maxTicksLimit: 12, maxRotation: 45 } },
+            y:  { title: { display: true, text: 'Eggs' }, beginAtZero: true },
+            y2: { title: { display: true, text: 'Light (h)' }, position: 'right',
+                  min: 0, max: 24, grid: { drawOnChartArea: false } },
+        },
+    },
+});
+</script>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Log — {{ flock.name }} — RingLog{% endblock %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+    <h2>{{ flock.name }} — Log</h2>
+    <div style="display:flex; gap:0.5rem;">
+        <a href="{{ url_for('flock_report', username=flock.username, flock_name=flock.name) }}" class="btn btn-sm" style="background:#eee;color:#333;">📈 Report</a>
+        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" class="btn btn-sm" style="background:#eee;color:#333;">← Flock</a>
+    </div>
+</div>
+
+{% if can_edit %}
+{# Daily entry form #}
+<div class="card" style="margin-bottom:1rem;">
+    <h3 style="margin-bottom:0.75rem;">Add / update entry</h3>
+    <form method="post">
+        <input type="hidden" name="action" value="log">
+        <div class="form-row" style="grid-template-columns: 140px 100px 100px 140px 1fr;">
+            <div class="form-group" style="margin:0;">
+                <label>Date</label>
+                <input type="date" name="log_date" value="{{ today }}" required>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>Eggs</label>
+                <input type="number" name="eggs_collected" min="0"
+                       value="{{ today_entry.eggs_collected if today_entry and today_entry.eggs_collected is not none else '' }}">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>Light (h)</label>
+                <input type="number" name="light_hours" min="0" max="24" step="0.5"
+                       value="{{ today_entry.light_hours if today_entry and today_entry.light_hours is not none else '' }}">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>&nbsp;</label>
+                <div class="checkbox-group" style="padding:0.5rem 0;">
+                    <input type="checkbox" id="bedding_changed" name="bedding_changed"
+                           {{ 'checked' if today_entry and today_entry.bedding_changed }}>
+                    <label for="bedding_changed" style="font-weight:normal;">Bedding changed</label>
+                </div>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>Notes</label>
+                <input type="text" name="notes" value="{{ today_entry.notes or '' if today_entry else '' }}">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-top:0.75rem;">Save entry</button>
+    </form>
+</div>
+{% endif %}
+
+{# Log history #}
+{% if logs %}
+<div class="card" style="padding:0; overflow:hidden; margin-bottom:1rem;">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Eggs</th>
+                <th>Light (h)</th>
+                <th>Bedding</th>
+                <th>Notes</th>
+                {% if can_edit %}<th></th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+        {% set total_eggs = namespace(v=0) %}
+        {% for entry in logs %}
+        {% if entry.eggs_collected %}{% set total_eggs.v = total_eggs.v + entry.eggs_collected %}{% endif %}
+        <tr>
+            <td>{{ entry.log_date }}</td>
+            <td>{{ entry.eggs_collected if entry.eggs_collected is not none else '—' }}</td>
+            <td>{{ entry.light_hours if entry.light_hours is not none else '—' }}</td>
+            <td>{{ '✓' if entry.bedding_changed else '' }}</td>
+            <td style="color:#666; font-size:0.9rem;">{{ entry.notes or '' }}</td>
+            {% if can_edit %}
+            <td style="white-space:nowrap;">
+                <button type="button" class="btn btn-sm" style="background:#eee;color:#333;"
+                        onclick="fillForm('{{ entry.log_date }}', '{{ entry.eggs_collected if entry.eggs_collected is not none else '' }}', '{{ entry.light_hours if entry.light_hours is not none else '' }}', {{ 1 if entry.bedding_changed else 0 }}, {{ entry.notes | tojson if entry.notes else '""' }})">Edit</button>
+                <form method="post" class="inline">
+                    <input type="hidden" name="action" value="delete_log">
+                    <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Delete this entry?')">Delete</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="font-weight:600; background:#f9f9f6;">
+                <td>Total ({{ logs|length }} days)</td>
+                <td>{{ total_eggs.v }}</td>
+                <td colspan="{{ 4 if can_edit else 3 }}"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% else %}
+<div class="card" style="color:#666; margin-bottom:1rem;">No log entries yet.</div>
+{% endif %}
+
+{# Stash section #}
+<h3 style="margin:1.5rem 0 0.5rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">Stash finds</h3>
+<p style="font-size:0.9rem; color:#888; margin-bottom:0.75rem;">Eggs found hidden — lay date unknown.</p>
+
+{% if can_edit %}
+<div class="card" style="margin-bottom:1rem;">
+    <form method="post" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
+        <input type="hidden" name="action" value="stash">
+        <div class="form-group" style="margin:0;">
+            <label>Date found</label>
+            <input type="date" name="found_date" value="{{ today }}" required>
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label>Egg count</label>
+            <input type="number" name="egg_count" min="1" required style="width:90px;">
+        </div>
+        <div class="form-group" style="margin:0; flex:1; min-width:160px;">
+            <label>Notes <span style="font-weight:normal;color:#888;">(optional)</span></label>
+            <input type="text" name="stash_notes" placeholder="Location, condition…">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:1px;">Add stash</button>
+    </form>
+</div>
+{% endif %}
+
+{% if stashes %}
+<div class="card" style="padding:0; overflow:hidden;">
+    <table>
+        <thead>
+            <tr>
+                <th>Date found</th>
+                <th>Eggs</th>
+                <th>Notes</th>
+                {% if can_edit %}<th></th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for s in stashes %}
+        <tr>
+            <td>{{ s.found_date }}</td>
+            <td>{{ s.egg_count }}</td>
+            <td style="color:#666; font-size:0.9rem;">{{ s.notes or '' }}</td>
+            {% if can_edit %}
+            <td>
+                <form method="post" class="inline">
+                    <input type="hidden" name="action" value="delete_stash">
+                    <input type="hidden" name="stash_id" value="{{ s.id }}">
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Delete this stash entry?')">Delete</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card" style="color:#666;">No stash finds logged.</div>
+{% endif %}
+
+{% if can_edit %}
+<script>
+function fillForm(date, eggs, light, bedding, notes) {
+    document.querySelector('[name="log_date"]').value = date;
+    document.querySelector('[name="eggs_collected"]').value = eggs;
+    document.querySelector('[name="light_hours"]').value = light;
+    document.querySelector('[name="bedding_changed"]').checked = bedding === 1;
+    document.querySelector('[name="notes"]').value = notes;
+    document.querySelector('[name="log_date"]').closest('.card').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+</script>
+{% endif %}
+{% endblock %}

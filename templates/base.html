@@ -40,7 +40,7 @@
 
         .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
         .badge.duck { background: #fff3cd; color: #856404; }
-        .badge.hen { background: #d4edda; color: #155724; }
+        .badge.chicken { background: #d4edda; color: #155724; }
         .badge.dead { background: #e2e3e5; color: #383d41; }
         .badge.sold { background: #cce5ff; color: #004085; }
 
@@ -96,6 +96,7 @@
             <nav>
                 {% if current_user %}
                     <a href="{{ url_for('flocks') }}">My Flocks</a>
+                    <a href="{{ url_for('daily_log') }}">Daily Log</a>
                     <a href="{{ url_for('hatches') }}">Hatches</a>
                     <a href="{{ url_for('settings') }}">Settings</a>
                     <span class="sep">|</span>

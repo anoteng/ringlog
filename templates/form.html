@@ -22,8 +22,8 @@
             <div class="form-group">
                 <label for="species">Species *</label>
                 <select id="species" name="species" required>
+                    <option value="chicken" {{ 'selected' if bird and bird.species == 'chicken' }}>Chicken</option>
                     <option value="duck" {{ 'selected' if bird and bird.species == 'duck' }}>Duck</option>
-                    <option value="hen" {{ 'selected' if bird and bird.species == 'hen' }}>Hen</option>
                     <option value="goose" {{ 'selected' if bird and bird.species == 'goose' }}>Goose</option>
                     <option value="turkey" {{ 'selected' if bird and bird.species == 'turkey' }}>Turkey</option>
                     <option value="quail" {{ 'selected' if bird and bird.species == 'quail' }}>Quail</option>
