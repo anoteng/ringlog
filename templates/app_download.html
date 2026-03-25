@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RingLog — Android App</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f5f0eb; color: #333; line-height: 1.6; }
+        .hero { width: 100%; max-height: 280px; object-fit: cover; object-position: center; display: block; }
+        .container { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 2rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+        p { color: #555; margin-bottom: 1rem; }
+        .dl-btn { display: inline-flex; align-items: center; gap: 0.6rem; background: #5b7a3a; color: white;
+                  text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 600;
+                  margin-top: 0.5rem; }
+        .dl-btn:hover { background: #4a6630; }
+        .dl-btn svg { flex-shrink: 0; }
+        .note { font-size: 0.85rem; color: #888; margin-top: 1rem; }
+        ul { padding-left: 1.2rem; color: #555; }
+        ul li { margin-bottom: 0.35rem; }
+        .steps { counter-reset: step; }
+        .steps li { list-style: none; counter-increment: step; padding-left: 0.5rem; margin-bottom: 0.5rem; }
+        .steps li::before { content: counter(step) ". "; font-weight: 700; color: #5b7a3a; }
+        footer { text-align: center; padding: 2rem 1rem; color: #aaa; font-size: 0.85rem; }
+        footer a { color: #5b7a3a; }
+    </style>
+</head>
+<body>
+    <img src="/static/promo.png" alt="RingLog — Free flock manager for hobby poultry keepers" class="hero">
+
+    <div class="container">
+        <div class="card">
+            <h2>RingLog for Android</h2>
+            <p>Track your flock, log eggs, and monitor hatches — right from your phone.</p>
+            <a href="/app/ringlog.apk" class="dl-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+                    <path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/>
+                </svg>
+                Download APK
+            </a>
+            <p class="note">Android 8.0 (Oreo) or newer required. &nbsp;·&nbsp; Debug build — for direct sideloading.</p>
+        </div>
+
+        <div class="card">
+            <h2>Play Store upload (AAB)</h2>
+            <p>Signed release bundle for uploading to Google Play Console.</p>
+            <a href="/app/ringlog.aab" class="dl-btn" style="background:#555;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+                    <path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-7 2h14v2H5v-2z"/>
+                </svg>
+                Download AAB
+            </a>
+            <p class="note">Not installable directly on a device — upload to Play Console only.</p>
+        </div>
+
+        <div class="card">
+            <h2>How to install</h2>
+            <ol class="steps">
+                <li>Download the APK file above to your Android device.</li>
+                <li>Open your device <strong>Settings → Apps → Special app access → Install unknown apps</strong> and allow your browser or file manager to install APKs.</li>
+                <li>Open the downloaded <code>ringlog.apk</code> file and tap <strong>Install</strong>.</li>
+                <li>Log in with your existing RingLog account.</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>What's included</h2>
+            <ul>
+                <li>View all your flocks and birds</li>
+                <li>Daily egg log with light hours and bedding tracking</li>
+                <li>Hatch progress with timeline and progress bar</li>
+                <li>Bird detail with notes and photos</li>
+                <li>Access to shared flocks</li>
+            </ul>
+            <p class="note" style="margin-bottom:0;">Full management (creating flocks, editing settings, reports) is available at <a href="/">ringlog.no</a>.</p>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/">← Back to RingLog</a>
+    </footer>
+</body>
+</html>

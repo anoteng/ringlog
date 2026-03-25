@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Report — {{ flock.name }} — RingLog{% endblock %}
+{% block title %}{{ _('Report') }} — {{ flock.name }} — RingLog{% endblock %}
 {% block content %}
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
-    <h2>{{ flock.name }} — Egg production report</h2>
+    <h2>{{ flock.name }} — {{ _('Egg production report') }}</h2>
     <div style="display:flex; gap:0.5rem; align-items:center;">
         {% for d in [30, 60, 90, 180, 365] %}
         <a href="?days={{ d }}"
@@ -13,13 +13,13 @@
         </a>
         {% endfor %}
         <a href="{{ url_for('flock_log', username=flock.username, flock_name=flock.name) }}"
-           class="btn btn-sm" style="background:#eee;color:#333; margin-left:0.5rem;">← Log</a>
+           class="btn btn-sm" style="background:#eee;color:#333; margin-left:0.5rem;">← {{ _('Log') }}</a>
     </div>
 </div>
 
 {% if not logs %}
 <div class="card" style="text-align:center; color:#666; padding:2rem;">
-    No log data for this period. <a href="{{ url_for('flock_log', username=flock.username, flock_name=flock.name) }}">Start logging</a>.
+    {{ _('No log data for this period.') }} <a href="{{ url_for('flock_log', username=flock.username, flock_name=flock.name) }}">{{ _('Start logging') }}</a>.
 </div>
 {% else %}
 
@@ -44,11 +44,11 @@
 
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1rem; margin-bottom:1.5rem;">
     {% for label, value, sub in [
-        ('Total eggs', total_eggs.v, logs|length ~ ' days logged'),
-        ('Daily average', avg_eggs, 'eggs / day'),
-        ('Best day', max_eggs.v, 'eggs'),
-        ('Avg light', avg_light ~ ' h', 'per logged day'),
-        ('Active birds', active_count, 'in flock now'),
+        (_('Total eggs'), total_eggs.v, (logs|length)|string ~ ' ' ~ _('days logged')),
+        (_('Daily average'), avg_eggs, _('eggs / day')),
+        (_('Best day'), max_eggs.v, _('eggs')),
+        (_('Avg light'), avg_light ~ ' h', _('per logged day')),
+        (_('Active birds'), active_count, _('in flock now')),
     ] %}
     <div class="card" style="text-align:center; padding:1rem;">
         <div style="font-size:1.6rem; font-weight:700; color:#5b7a3a;">{{ value }}</div>
@@ -66,7 +66,7 @@
 {# Stash overlay note #}
 {% if stashes %}
 <div style="font-size:0.85rem; color:#888; margin-bottom:1rem;">
-    ⚠ Stash finds ({{ stashes | sum(attribute='total') | int }} eggs across {{ stashes|length }} dates) are shown separately and excluded from the daily trend.
+    ⚠ {{ _('Stash finds (%(eggs)d eggs across %(n)d dates) are shown separately and excluded from the daily trend.', eggs=stashes|sum(attribute='total')|int, n=stashes|length) }}
 </div>
 {% endif %}
 
@@ -75,12 +75,12 @@
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Eggs</th>
-                <th>7-day avg</th>
-                <th>Light (h)</th>
-                <th>Eggs / bird</th>
-                <th>Bedding</th>
+                <th>{{ _('Date') }}</th>
+                <th>{{ _('Eggs') }}</th>
+                <th>{{ _('7-day avg') }}</th>
+                <th>{{ _('Light (h)') }}</th>
+                <th>{{ _('Eggs / hen') }}</th>
+                <th>{{ _('Bedding') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -90,7 +90,7 @@
             <td>{{ row.eggs_collected if row.eggs_collected is not none else '—' }}</td>
             <td>—</td>
             <td>{{ row.light_hours if row.light_hours is not none else '—' }}</td>
-            <td>{{ (row.eggs_collected / active_count) | round(2) if row.eggs_collected and active_count else '—' }}</td>
+            <td>{{ (row.eggs_collected / laying_count) | round(2) if row.eggs_collected and laying_count else '—' }}</td>
             <td>{{ '✓' if row.bedding_changed else '' }}</td>
         </tr>
         {% endfor %}
@@ -126,7 +126,7 @@ new Chart(ctx, {
         labels,
         datasets: [
             {
-                label: 'Eggs collected',
+                label: '{{ _("Eggs collected") }}',
                 data: eggs,
                 backgroundColor: 'rgba(91,122,58,0.25)',
                 borderColor: 'rgba(91,122,58,0.6)',
@@ -134,7 +134,7 @@ new Chart(ctx, {
                 order: 3,
             },
             {
-                label: '7-day average',
+                label: '{{ _("7-day average") }}',
                 data: avg7,
                 type: 'line',
                 borderColor: '#5b7a3a',
@@ -145,7 +145,7 @@ new Chart(ctx, {
                 order: 1,
             },
             {
-                label: 'Light hours',
+                label: '{{ _("Light hours") }}',
                 data: light,
                 type: 'line',
                 borderColor: '#f0a500',
@@ -168,7 +168,7 @@ new Chart(ctx, {
                     afterBody(items) {
                         const label = items[0]?.label;
                         const idx = stashDates.indexOf(label);
-                        if (idx >= 0) return [`Stash find: ${stashTotals[idx]} eggs`];
+                        if (idx >= 0) return [`{{ _("Stash find") }}: ${stashTotals[idx]} {{ _("eggs") }}`];
                         return [];
                     }
                 }
@@ -176,8 +176,8 @@ new Chart(ctx, {
         },
         scales: {
             x: { ticks: { maxTicksLimit: 12, maxRotation: 45 } },
-            y:  { title: { display: true, text: 'Eggs' }, beginAtZero: true },
-            y2: { title: { display: true, text: 'Light (h)' }, position: 'right',
+            y:  { title: { display: true, text: '{{ _("Eggs") }}' }, beginAtZero: true },
+            y2: { title: { display: true, text: '{{ _("Light (h)") }}' }, position: 'right',
                   min: 0, max: 24, grid: { drawOnChartArea: false } },
         },
     },

@@ -1,0 +1,7 @@
+-keep class no.ringlog.app.data.api.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**

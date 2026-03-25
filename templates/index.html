@@ -26,42 +26,42 @@
         <h2>{% if not is_own_flock %}{{ flock.username }}/{% endif %}{{ flock.name }}</h2>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
             <a href="{{ url_for('flock_report', username=flock.username, flock_name=flock.name) }}"
-               class="btn btn-sm" style="background:#eee; color:#333;">📈 Report</a>
+               class="btn btn-sm" style="background:#eee; color:#333;">&#x1f4c8; {{ _('Report') }}</a>
             <a href="{{ url_for('flock_log', username=flock.username, flock_name=flock.name) }}"
-               class="btn btn-sm" style="background:#eee; color:#333;">📋 Log</a>
+               class="btn btn-sm" style="background:#eee; color:#333;">&#x1f4cb; {{ _('Log') }}</a>
             <a href="{{ url_for('export_flock', username=flock.username, flock_name=flock.name) }}"
-               class="btn btn-sm" style="background:#eee; color:#333;">&#x2b07; Export</a>
+               class="btn btn-sm" style="background:#eee; color:#333;">&#x2b07; {{ _('Export') }}</a>
             {% if can_edit %}
-            <a href="{{ url_for('add_bird', username=flock.username, flock_name=flock.name) }}" class="btn btn-sm btn-primary">+ Add Bird</a>
+            <a href="{{ url_for('add_bird', username=flock.username, flock_name=flock.name) }}" class="btn btn-sm btn-primary">+ {{ _('Add Bird') }}</a>
             {% endif %}
         </div>
     </div>
 
     <div style="display:flex; gap:0.75rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap;">
         <form class="filters" method="get" style="margin:0;">
-            <label>Species:</label>
+            <label>{{ _('Species:') }}</label>
             <select name="species" onchange="this.form.submit()">
-                <option value="">All</option>
-                <option value="chicken" {{ 'selected' if filter_species == 'chicken' }}>Chickens</option>
-                <option value="duck" {{ 'selected' if filter_species == 'duck' }}>Ducks</option>
-                <option value="goose" {{ 'selected' if filter_species == 'goose' }}>Geese</option>
-                <option value="turkey" {{ 'selected' if filter_species == 'turkey' }}>Turkeys</option>
-                <option value="quail" {{ 'selected' if filter_species == 'quail' }}>Quail</option>
-                <option value="pigeon" {{ 'selected' if filter_species == 'pigeon' }}>Pigeons</option>
-                <option value="guinea fowl" {{ 'selected' if filter_species == 'guinea fowl' }}>Guinea Fowl</option>
-                <option value="peafowl" {{ 'selected' if filter_species == 'peafowl' }}>Peafowl</option>
+                <option value="">{{ _('All') }}</option>
+                <option value="chicken" {{ 'selected' if filter_species == 'chicken' }}>{{ _('Chickens') }}</option>
+                <option value="duck" {{ 'selected' if filter_species == 'duck' }}>{{ _('Ducks') }}</option>
+                <option value="goose" {{ 'selected' if filter_species == 'goose' }}>{{ _('Geese') }}</option>
+                <option value="turkey" {{ 'selected' if filter_species == 'turkey' }}>{{ _('Turkeys') }}</option>
+                <option value="quail" {{ 'selected' if filter_species == 'quail' }}>{{ _('Quail') }}</option>
+                <option value="pigeon" {{ 'selected' if filter_species == 'pigeon' }}>{{ _('Pigeons') }}</option>
+                <option value="guinea fowl" {{ 'selected' if filter_species == 'guinea fowl' }}>{{ _('Guinea Fowl') }}</option>
+                <option value="peafowl" {{ 'selected' if filter_species == 'peafowl' }}>{{ _('Peafowl') }}</option>
             </select>
-            <label>Status:</label>
+            <label>{{ _('Status:') }}</label>
             <select name="status" onchange="this.form.submit()">
-                <option value="alive" {{ 'selected' if filter_status == 'alive' }}>Alive</option>
-                <option value="dead" {{ 'selected' if filter_status == 'dead' }}>Dead</option>
-                <option value="sold" {{ 'selected' if filter_status == 'sold' }}>Sold</option>
-                <option value="all" {{ 'selected' if filter_status == 'all' }}>All</option>
+                <option value="alive" {{ 'selected' if filter_status == 'alive' }}>{{ _('Alive') }}</option>
+                <option value="dead" {{ 'selected' if filter_status == 'dead' }}>{{ _('Dead') }}</option>
+                <option value="sold" {{ 'selected' if filter_status == 'sold' }}>{{ _('Sold') }}</option>
+                <option value="all" {{ 'selected' if filter_status == 'all' }}>{{ _('All') }}</option>
             </select>
         </form>
-        <input id="bird-search" type="search" placeholder="Search…"
+        <input id="bird-search" type="search" placeholder="{{ _('Search…') }}"
                style="padding:0.4rem 0.6rem; border:1px solid #ccc; border-radius:4px; font-size:0.9rem; min-width:160px;">
-        <button id="clear-filters" class="btn btn-sm" style="background:#eee; color:#555; display:none;">Clear filters</button>
+        <button id="clear-filters" class="btn btn-sm" style="background:#eee; color:#555; display:none;">{{ _('Clear filters') }}</button>
     </div>
 
     {% if birds %}
@@ -71,31 +71,31 @@
             <tr>
                 <th style="width:44px;"></th>
                 <th class="sortable" data-col="1">
-                    <span class="sort-label">Ring #</span><span class="sort-icon"> ⇅</span>
-                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                    <span class="sort-label">{{ _('Ring #') }}</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="{{ _('Filter…') }}"></div>
                 </th>
                 <th class="sortable" data-col="2">
-                    <span class="sort-label">Name</span><span class="sort-icon"> ⇅</span>
-                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                    <span class="sort-label">{{ _('Name') }}</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="{{ _('Filter…') }}"></div>
                 </th>
                 <th class="sortable" data-col="3">
-                    <span class="sort-label">Species</span><span class="sort-icon"> ⇅</span>
-                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                    <span class="sort-label">{{ _('Species') }}</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="{{ _('Filter…') }}"></div>
                 </th>
                 <th class="sortable" data-col="4">
-                    <span class="sort-label">Breed</span><span class="sort-icon"> ⇅</span>
-                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                    <span class="sort-label">{{ _('Breed') }}</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="{{ _('Filter…') }}"></div>
                 </th>
                 <th class="sortable" data-col="5">
-                    <span class="sort-label">Sex</span><span class="sort-icon"> ⇅</span>
-                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                    <span class="sort-label">{{ _('Sex') }}</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="{{ _('Filter…') }}"></div>
                 </th>
                 <th class="sortable" data-col="6">
-                    <span class="sort-label">Born</span><span class="sort-icon"> ⇅</span>
-                    <div><input class="col-filter" type="search" placeholder="Filter…"></div>
+                    <span class="sort-label">{{ _('Born') }}</span><span class="sort-icon"> ⇅</span>
+                    <div><input class="col-filter" type="search" placeholder="{{ _('Filter…') }}"></div>
                 </th>
                 <th class="sortable" data-col="7">
-                    <span class="sort-label">Age</span><span class="sort-icon"> ⇅</span>
+                    <span class="sort-label">{{ _('Age') }}</span><span class="sort-icon"> ⇅</span>
                 </th>
             </tr>
         </thead>
@@ -109,12 +109,12 @@
                 </td>
                 <td><a href="{{ url_for('view_bird', bird_id=bird.id) }}">{{ bird.ring_number }}</a></td>
                 <td>{{ bird.name or '—' }}
-                    {% if bird.is_dead %}<span class="badge dead">dead</span>{% endif %}
-                    {% if bird.is_sold %}<span class="badge sold">sold</span>{% endif %}
+                    {% if bird.is_dead %}<span class="badge dead">{{ _('dead') }}</span>{% endif %}
+                    {% if bird.is_sold %}<span class="badge sold">{{ _('sold') }}</span>{% endif %}
                 </td>
-                <td><span class="badge {{ bird.species }}">{{ bird.species }}</span></td>
+                <td><span class="badge {{ bird.species }}">{{ _(bird.species | title) }}</span></td>
                 <td>{{ bird.breed or '—' }}{% if bird.breed == 'hybrid' and bird.breed_mix %} ({{ bird.breed_mix }}){% endif %}</td>
-                <td>{{ bird.sex or '—' }}</td>
+                <td>{{ _(bird.sex | title) if bird.sex else '—' }}</td>
                 <td>{{ ('~' if bird.birth_approximate else '') }}{{ bird.birth_date or '—' }}</td>
                 <td data-sort="{{ bird.birth_date or '' }}">{{ bird.birth_date | age }}</td>
             </tr>
@@ -122,11 +122,11 @@
         </tbody>
     </table>
     </div>
-    <p id="no-results" style="display:none; text-align:center; padding:1.5rem; color:#888;">No birds match your filters.</p>
+    <p id="no-results" style="display:none; text-align:center; padding:1.5rem; color:#888;">{{ _('No birds match your filters.') }}</p>
     {% else %}
     <p style="text-align:center; padding:2rem; color:#888;">
-        {% if is_own_flock %}No birds registered yet. Add your first bird!
-        {% else %}This flock has no birds yet.{% endif %}
+        {% if is_own_flock %}{{ _('No birds registered yet. Add your first bird!') }}
+        {% else %}{{ _('This flock has no birds yet.') }}{% endif %}
     </p>
     {% endif %}
 </div>

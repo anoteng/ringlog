@@ -2,16 +2,16 @@
 {% block content %}
 
 <div class="card" style="margin-bottom:1rem;">
-    <h2 style="margin-bottom:1rem;">Account</h2>
+    <h2 style="margin-bottom:1rem;">{{ _('Account') }}</h2>
     <form method="post">
         <input type="hidden" name="action" value="update_email">
         <div class="form-group" style="max-width:360px;">
-            <label for="email">Email address <span style="font-weight:normal; color:#888;">(optional)</span></label>
+            <label for="email">{{ _('Email address') }} <span style="font-weight:normal; color:#888;">({{ _('optional') }})</span></label>
             <input type="email" id="email" name="email"
                    value="{{ current_user.email or '' }}" placeholder="you@example.com">
-            <small style="color:#888;">Used for password recovery only. Without it we cannot recover a lost password.</small>
+            <small style="color:#888;">{{ _('Used for password recovery only. Without it we cannot recover a lost password.') }}</small>
         </div>
-        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+        <button type="submit" class="btn btn-primary btn-sm">{{ _('Save') }}</button>
     </form>
 </div>
 
@@ -24,17 +24,17 @@
         <input type="hidden" name="flock_id" value="{{ flock.id }}">
         <div class="form-row">
             <div class="form-group" style="margin-bottom:0.5rem;">
-                <label>Share with user</label>
-                <input type="text" name="username" required placeholder="their username">
+                <label>{{ _('Share with user') }}</label>
+                <input type="text" name="username" required placeholder="{{ _('their username') }}">
             </div>
             <div class="form-group" style="display:flex; align-items:end; padding-bottom:0.5rem; margin-bottom:0.5rem;">
                 <div class="checkbox-group">
                     <input type="checkbox" id="can_edit_{{ flock.id }}" name="can_edit">
-                    <label for="can_edit_{{ flock.id }}" style="font-weight:normal;">Allow editing</label>
+                    <label for="can_edit_{{ flock.id }}" style="font-weight:normal;">{{ _('Allow editing') }}</label>
                 </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-sm">Share</button>
+        <button type="submit" class="btn btn-primary btn-sm">{{ _('Share') }}</button>
     </form>
 
     <form method="post" style="margin-bottom:1rem; padding:0.75rem; background:#f9f6f2; border-radius:6px;">
@@ -44,7 +44,7 @@
             <input type="checkbox" id="reuse_{{ flock.id }}" name="allow_ring_reuse"
                    {{ 'checked' if flock.allow_ring_reuse }} onchange="this.form.submit()">
             <label for="reuse_{{ flock.id }}" style="font-weight:normal;">
-                Allow ring number re-use for deceased / sold birds
+                {{ _('Allow ring number re-use for deceased / sold birds') }}
             </label>
         </div>
     </form>
@@ -52,19 +52,19 @@
     {% if flock_shares[flock.id] %}
     <table>
         <thead>
-            <tr><th>User</th><th>Permission</th><th></th></tr>
+            <tr><th>{{ _('User') }}</th><th>{{ _('Permission') }}</th><th></th></tr>
         </thead>
         <tbody>
             {% for share in flock_shares[flock.id] %}
             <tr>
                 <td>{{ share.username }}</td>
-                <td>{{ 'View & Edit' if share.can_edit else 'View only' }}</td>
+                <td>{{ _('View & Edit') if share.can_edit else _('View only') }}</td>
                 <td>
                     <form method="post" class="inline">
                         <input type="hidden" name="action" value="revoke">
                         <input type="hidden" name="share_id" value="{{ share.id }}">
                         <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Remove access for {{ share.username }}?')">&times; Revoke</button>
+                                onclick="return confirm('{{ _('Remove access for %(u)s?', u=share.username) }}')">&times; {{ _('Revoke') }}</button>
                     </form>
                 </td>
             </tr>
@@ -72,31 +72,31 @@
         </tbody>
     </table>
     {% else %}
-    <p style="color:#888; font-size:0.9rem;">Not shared with anyone.</p>
+    <p style="color:#888; font-size:0.9rem;">{{ _('Not shared with anyone.') }}</p>
     {% endif %}
 </div>
 {% else %}
 <div class="card">
     <p style="color:#888; text-align:center; padding:1rem;">
-        You have no flocks yet. <a href="{{ url_for('flocks') }}">Create one</a>.
+        {{ _('You have no flocks yet.') }} <a href="{{ url_for('flocks') }}">{{ _('Create one') }}</a>.
     </p>
 </div>
 {% endfor %}
 
 {% if shared_with_me %}
 <div class="card">
-    <h2 style="margin-bottom:1rem;">Flocks shared with me</h2>
+    <h2 style="margin-bottom:1rem;">{{ _('Flocks shared with me') }}</h2>
     <table>
         <thead>
-            <tr><th>Owner</th><th>Flock</th><th>Permission</th><th></th></tr>
+            <tr><th>{{ _('Owner') }}</th><th>{{ _('Flock') }}</th><th>{{ _('Permission') }}</th><th></th></tr>
         </thead>
         <tbody>
             {% for f in shared_with_me %}
             <tr>
                 <td>{{ f.username }}</td>
                 <td>{{ f.name }}</td>
-                <td>{{ 'View & Edit' if f.can_edit else 'View only' }}</td>
-                <td><a href="{{ url_for('view_flock', username=f.username, flock_name=f.name) }}">View &rarr;</a></td>
+                <td>{{ _('View & Edit') if f.can_edit else _('View only') }}</td>
+                <td><a href="{{ url_for('view_flock', username=f.username, flock_name=f.name) }}">{{ _('View') }} &rarr;</a></td>
             </tr>
             {% endfor %}
         </tbody>

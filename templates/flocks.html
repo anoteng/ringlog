@@ -3,25 +3,25 @@
 
 <div class="card" style="margin-bottom:1rem;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-        <h2>My Flocks</h2>
+        <h2>{{ _('My Flocks') }}</h2>
         <button class="btn btn-primary btn-sm" onclick="document.getElementById('new-flock-form').style.display=''">
-            + New Flock
+            + {{ _('New Flock') }}
         </button>
     </div>
 
     <div id="new-flock-form" style="display:none; border-top:1px solid #eee; padding-top:1rem; margin-bottom:1rem;">
         <form method="post" style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:end;">
             <div class="form-group" style="margin:0; flex:1; min-width:160px;">
-                <label style="font-size:0.85rem;">Flock name *</label>
-                <input type="text" name="name" required placeholder="e.g. Ducks, Hens, Backyard">
+                <label style="font-size:0.85rem;">{{ _('Flock name') }} *</label>
+                <input type="text" name="name" required placeholder="{{ _('e.g. Ducks, Hens, Backyard') }}">
             </div>
             <div class="form-group" style="margin:0; flex:2; min-width:200px;">
-                <label style="font-size:0.85rem;">Description</label>
-                <input type="text" name="description" placeholder="Optional">
+                <label style="font-size:0.85rem;">{{ _('Description') }}</label>
+                <input type="text" name="description" placeholder="{{ _('Optional') }}">
             </div>
-            <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:1px;">Create</button>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:1px;">{{ _('Create') }}</button>
             <button type="button" class="btn btn-sm" style="background:#eee;color:#555;margin-bottom:1px;"
-                    onclick="this.closest('#new-flock-form').style.display='none'">Cancel</button>
+                    onclick="this.closest('#new-flock-form').style.display='none'">{{ _('Cancel') }}</button>
         </form>
     </div>
 
@@ -29,10 +29,10 @@
     <table>
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Birds</th>
-                <th>Created</th>
+                <th>{{ _('Name') }}</th>
+                <th>{{ _('Description') }}</th>
+                <th>{{ _('Birds') }}</th>
+                <th>{{ _('Created') }}</th>
                 <th></th>
             </tr>
         </thead>
@@ -44,27 +44,27 @@
                 <td>{{ counts[f.id] }}</td>
                 <td style="color:#888; font-size:0.85rem;">{{ f.created_at }}</td>
                 <td style="display:flex; gap:0.5rem;">
-                    <a href="{{ url_for('view_flock', username=current_user.username, flock_name=f.name) }}" class="btn btn-sm btn-primary">Open</a>
-                    <a href="{{ url_for('delete_flock', username=current_user.username, flock_name=f.name) }}" class="btn btn-sm btn-danger">Delete</a>
+                    <a href="{{ url_for('view_flock', username=current_user.username, flock_name=f.name) }}" class="btn btn-sm btn-primary">{{ _('Open') }}</a>
+                    <a href="{{ url_for('delete_flock', username=current_user.username, flock_name=f.name) }}" class="btn btn-sm btn-danger">{{ _('Delete') }}</a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <p style="text-align:center; padding:2rem; color:#888;">No flocks yet. Create your first flock above!</p>
+    <p style="text-align:center; padding:2rem; color:#888;">{{ _('No flocks yet. Create your first flock above!') }}</p>
     {% endif %}
 </div>
 
 {% if shared %}
 <div class="card">
-    <h2 style="margin-bottom:1rem;">Shared with me</h2>
+    <h2 style="margin-bottom:1rem;">{{ _('Shared with me') }}</h2>
     <table>
         <thead>
             <tr>
-                <th>Owner</th>
-                <th>Flock</th>
-                <th>Permission</th>
+                <th>{{ _('Owner') }}</th>
+                <th>{{ _('Flock') }}</th>
+                <th>{{ _('Permission') }}</th>
                 <th></th>
             </tr>
         </thead>
@@ -73,8 +73,8 @@
             <tr>
                 <td>{{ f.username }}</td>
                 <td>{{ f.name }}</td>
-                <td>{{ 'View & Edit' if f.can_edit else 'View only' }}</td>
-                <td><a href="{{ url_for('view_flock', username=f.username, flock_name=f.name) }}" class="btn btn-sm btn-primary">Open</a></td>
+                <td>{{ _('View & Edit') if f.can_edit else _('View only') }}</td>
+                <td><a href="{{ url_for('view_flock', username=f.username, flock_name=f.name) }}" class="btn btn-sm btn-primary">{{ _('Open') }}</a></td>
             </tr>
             {% endfor %}
         </tbody>

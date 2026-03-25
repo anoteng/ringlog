@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card" style="max-width:540px; margin:0 auto;">
-    <h2 style="margin-bottom:0.25rem;">Delete flock "{{ flock.name }}"?</h2>
-    <p style="color:#888; margin-bottom:1.5rem;">This action cannot be undone.</p>
+    <h2 style="margin-bottom:0.25rem;">{{ _('Delete flock "%(name)s"?', name=flock.name) }}</h2>
+    <p style="color:#888; margin-bottom:1.5rem;">{{ _('This action cannot be undone.') }}</p>
 
     {% if bird_count > 0 %}
     <div style="background:#f8d7da; border-left:4px solid #c0392b; padding:0.85rem 1rem; border-radius:4px; margin-bottom:1.5rem;">
-        <strong>This flock contains {{ bird_count }} bird{{ 's' if bird_count != 1 }}.</strong>
-        Deleting it will permanently remove all birds, notes, and history in this flock.
+        <strong>{{ ngettext('This flock contains %(num)d bird.', 'This flock contains %(num)d birds.', bird_count) }}</strong>
+        {{ _('Deleting it will permanently remove all birds, notes, and history in this flock.') }}
     </div>
     {% endif %}
 
     <div style="display:flex; gap:0.75rem; align-items:center;">
         <form method="post">
-            <button type="submit" class="btn btn-danger">Yes, delete permanently</button>
+            <button type="submit" class="btn btn-danger">{{ _('Yes, delete permanently') }}</button>
         </form>
-        <a href="{{ url_for('flocks') }}">Cancel</a>
+        <a href="{{ url_for('flocks') }}">{{ _('Cancel') }}</a>
     </div>
 </div>
 {% endblock %}

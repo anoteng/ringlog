@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Privacy Policy') }} — RingLog{% endblock %}
+{% block content %}
+<div class="card" style="max-width:700px; margin:0 auto;">
+    <h2 style="margin-bottom:0.25rem;">{{ _('Privacy Policy') }}</h2>
+    <p style="color:#999; font-size:0.85rem; margin-bottom:1.5rem;">{{ _('Last updated: March 2025') }}</p>
+
+    <p>{{ _('RingLog is a free hobby tool run by a single person. This policy explains what data is stored and how it is used.') }}</p>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('What data we store') }}</h3>
+    <ul style="padding-left:1.2rem; color:#555; line-height:1.8;">
+        <li>{{ _('Your username, e-mail address, and hashed password.') }}</li>
+        <li>{{ _('Bird records you enter: ring numbers, names, species, breed, sex, birth dates, notes, and photos.') }}</li>
+        <li>{{ _('Daily egg logs, light hours, and bedding notes you record for your flocks.') }}</li>
+        <li>{{ _('Hatching plans and incubation records you create.') }}</li>
+    </ul>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('How we use your data') }}</h3>
+    <p>{{ _('Your data is used solely to provide the RingLog service to you. It is never sold, shared with third parties, or used for advertising.') }}</p>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('Flock sharing') }}</h3>
+    <p>{{ _('If you share a flock with another RingLog user, that user will be able to see — and depending on permissions, edit — the bird records in that flock. You can revoke access at any time from your settings.') }}</p>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('Data retention') }}</h3>
+    <p>{{ _('You can delete your birds, flocks, and account at any time. Accounts that have been inactive for more than 6 months may be deleted without prior notice.') }}</p>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('Cookies') }}</h3>
+    <p>{{ _('RingLog uses a single session cookie to keep you logged in, and an optional language preference cookie. No tracking or advertising cookies are used.') }}</p>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('Your rights') }}</h3>
+    <p>{{ _('You have the right to access, correct, or delete all personal data stored about you. To request this, contact us by e-mail or simply delete your account and data directly in the app.') }}</p>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('Contact') }}</h3>
+    <p style="margin-bottom:0;">{{ _('Questions or requests regarding your data can be sent to') }}
+        <a href="mailto:contact@ringlog.no">contact@ringlog.no</a>.</p>
+</div>
+{% endblock %}

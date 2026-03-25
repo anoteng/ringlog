@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ get_locale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,12 +19,16 @@
         header { background: #5b7a3a; color: white; padding: 1rem 0; margin-bottom: 1.5rem; }
         header .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
         header h1 { font-size: 1.5rem; }
-        header h1 span { font-size: 1.8rem; }
+        header h1 img { height: 2rem; width: 2rem; border-radius: 4px; vertical-align: middle; margin-right: 0.3rem; }
         header nav { display: flex; align-items: center; gap: 0.25rem 1rem; flex-wrap: wrap; }
         header nav a { color: white; text-decoration: none; font-weight: 500; }
         header nav a:hover { text-decoration: underline; }
         header nav .sep { color: rgba(255,255,255,0.4); }
         header nav .username { color: rgba(255,255,255,0.85); font-size: 0.85rem; }
+        .lang-select { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 4px; padding: 0.2rem 0.4rem; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
+        .lang-select:hover { background: rgba(255,255,255,0.25); }
+        .lang-select option { background: #5b7a3a; color: white; }
 
         .flash { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 500; }
         .flash.success { background: #d4edda; color: #155724; }
@@ -92,22 +96,30 @@
 <body>
     <header>
         <div class="container">
-            <h1><span>&#x1f426;</span> RingLog</h1>
+            <h1><a href="{{ url_for('index') }}" style="color:white; text-decoration:none; display:flex; align-items:center; gap:0.4rem;"><img src="/static/logo.png" alt="RingLog"> RingLog</a></h1>
             <nav>
                 {% if current_user %}
-                    <a href="{{ url_for('flocks') }}">My Flocks</a>
-                    <a href="{{ url_for('daily_log') }}">Daily Log</a>
-                    <a href="{{ url_for('hatches') }}">Hatches</a>
-                    <a href="{{ url_for('settings') }}">Settings</a>
+                    <a href="{{ url_for('flocks') }}">{{ _('My Flocks') }}</a>
+                    <a href="{{ url_for('daily_log') }}">{{ _('Daily Log') }}</a>
+                    <a href="{{ url_for('hatches') }}">{{ _('Hatches') }}</a>
+                    <a href="{{ url_for('settings') }}">{{ _('Settings') }}</a>
                     <span class="sep">|</span>
                     <span class="username">{{ current_user.username }}</span>
                     <form method="post" action="{{ url_for('logout') }}" class="inline">
-                        <button type="submit" class="btn btn-ghost">Log out</button>
+                        <button type="submit" class="btn btn-ghost">{{ _('Log out') }}</button>
                     </form>
                 {% else %}
-                    <a href="{{ url_for('login') }}">Log in</a>
-                    <a href="{{ url_for('register') }}">Register</a>
+                    <a href="{{ url_for('login') }}">{{ _('Log in') }}</a>
+                    <a href="{{ url_for('register') }}">{{ _('Register') }}</a>
                 {% endif %}
+                <span class="sep">|</span>
+                <form method="get" action="{{ url_for('set_lang', lang='__LANG__') }}" id="lang-form">
+                    <select class="lang-select" onchange="document.getElementById('lang-form').action=this.value; document.getElementById('lang-form').submit();">
+                        <option value="{{ url_for('set_lang', lang='en') }}" {{ 'selected' if get_locale()|string == 'en' }}>EN</option>
+                        <option value="{{ url_for('set_lang', lang='nb') }}" {{ 'selected' if get_locale()|string == 'nb' }}>NO</option>
+                        <option value="{{ url_for('set_lang', lang='nl') }}" {{ 'selected' if get_locale()|string == 'nl' }}>NL</option>
+                    </select>
+                </form>
             </nav>
         </div>
     </header>
@@ -119,8 +131,15 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </div>
-    <footer style="text-align:center; padding:2rem 1rem; color:#888; font-size:0.9rem;">
-        Enjoying RingLog? <a href="https://buymeacoffee.com/anoteng" target="_blank" rel="noopener" style="color:#5b7a3a; font-weight:500;">Buy me a coffee ☕</a> to support the project.
+    <footer style="text-align:center; padding:2rem 1rem 1rem; color:#888; font-size:0.9rem;">
+        <p style="margin-bottom:0.5rem;">
+            {{ _('Enjoying RingLog?') }} <a href="https://buymeacoffee.com/anoteng" target="_blank" rel="noopener" style="color:#5b7a3a; font-weight:500;">{{ _('Buy me a coffee ☕') }}</a> {{ _('to support the project.') }}
+        </p>
+        <p style="font-size:0.8rem;">
+            <a href="{{ url_for('privacy') }}" style="color:#aaa;">{{ _('Privacy Policy') }}</a>
+            &nbsp;·&nbsp;
+            <a href="{{ url_for('delete_account') }}" style="color:#aaa;">{{ _('Data Deletion') }}</a>
+        </p>
     </footer>
 </body>
 </html>

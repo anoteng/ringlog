@@ -1,0 +1,1426 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-03-19 11:36+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app.py:139
+msgid "Please log in to continue."
+msgstr ""
+
+#: app.py:253
+msgid "You must accept the Terms of Use to register."
+msgstr ""
+
+#: app.py:255
+msgid "Username must be at least 3 characters."
+msgstr ""
+
+#: app.py:257
+msgid "Username may only contain letters, numbers, and underscores."
+msgstr ""
+
+#: app.py:259 app.py:380
+msgid "Password must be at least 8 characters."
+msgstr ""
+
+#: app.py:261 app.py:382 templates/register.html:44
+msgid "Passwords do not match."
+msgstr ""
+
+#: app.py:273
+#, python-format
+msgid "Welcome, %(name)s!"
+msgstr ""
+
+#: app.py:277
+msgid "That email address is already registered."
+msgstr ""
+
+#: app.py:279
+msgid "Username already taken."
+msgstr ""
+
+#: app.py:297
+#, python-format
+msgid "Welcome back, %(name)s!"
+msgstr ""
+
+#: app.py:299
+msgid "Invalid username or password."
+msgstr ""
+
+#: app.py:355
+msgid "Failed to send email. Please try again later."
+msgstr ""
+
+#: app.py:358
+msgid "If that email address is registered, a reset link has been sent."
+msgstr ""
+
+#: app.py:373
+msgid "This reset link is invalid or has expired."
+msgstr ""
+
+#: app.py:390
+msgid "Password updated. You can now log in."
+msgstr ""
+
+#: app.py:420
+msgid "Flock name is required."
+msgstr ""
+
+#: app.py:428
+#, python-format
+msgid "Flock '%(name)s' created."
+msgstr ""
+
+#: app.py:431
+msgid "You already have a flock with that name."
+msgstr ""
+
+#: app.py:450 app.py:531 app.py:599 app.py:647 app.py:717 app.py:780 app.py:802
+#: app.py:990 app.py:1035 app.py:1245 app.py:1324
+msgid "Access denied."
+msgstr ""
+
+#: app.py:461
+#, python-format
+msgid "Flock '%(name)s' deleted."
+msgstr ""
+
+#: app.py:476 app.py:528 app.py:842 app.py:1241 app.py:1320
+msgid "Flock not found."
+msgstr ""
+
+#: app.py:481
+msgid "You don't have access to that flock."
+msgstr ""
+
+#: app.py:615 app.py:679
+msgid "Ring number already in use in this flock."
+msgstr ""
+
+#: app.py:635
+msgid "Bird registered!"
+msgstr ""
+
+#: app.py:698
+msgid "Bird updated!"
+msgstr ""
+
+#: app.py:712 app.py:749
+msgid "Bird not found."
+msgstr ""
+
+#: app.py:758
+msgid "Only the flock owner can delete birds."
+msgstr ""
+
+#: app.py:766
+msgid "Bird deleted."
+msgstr ""
+
+#: app.py:786
+msgid "Date and content are required."
+msgstr ""
+
+#: app.py:828
+msgid "Email address updated."
+msgstr ""
+
+#: app.py:830
+msgid "That email address is already registered to another account."
+msgstr ""
+
+#: app.py:844 app.py:996
+msgid "User not found."
+msgstr ""
+
+#: app.py:846 app.py:998
+msgid "You can't share with yourself."
+msgstr ""
+
+#: app.py:859 app.py:1012
+msgid "view & edit"
+msgstr ""
+
+#: app.py:859 app.py:1012
+msgid "view"
+msgstr ""
+
+#: app.py:860
+#, python-format
+msgid "Flock shared with %(username)s (%(perm)s)."
+msgstr ""
+
+#: app.py:871 app.py:1027
+msgid "Share removed."
+msgstr ""
+
+#: app.py:881
+msgid "Ring number policy updated."
+msgstr ""
+
+#: app.py:969 app.py:1039
+msgid "Hatch not found."
+msgstr ""
+
+#: app.py:1013
+#, python-format
+msgid "Hatch shared with %(username)s (%(perm)s)."
+msgstr ""
+
+#: app.py:1054
+msgid "Hatch deleted."
+msgstr ""
+
+#: app.py:1109
+msgid "Incubation days and lockdown day must be numbers."
+msgstr ""
+
+#: app.py:1145
+msgid "Hatch started!"
+msgstr ""
+
+#: app.py:1164
+msgid "Hatch updated."
+msgstr ""
+
+#: app.py:1215
+msgid "Log saved."
+msgstr ""
+
+#: app.py:1269
+msgid "Entry saved."
+msgstr ""
+
+#: app.py:1275
+msgid "Entry deleted."
+msgstr ""
+
+#: app.py:1287
+msgid "Stash logged."
+msgstr ""
+
+#: app.py:1293
+msgid "Stash entry deleted."
+msgstr ""
+
+#: templates/base.html:102 templates/flocks.html:6
+msgid "My Flocks"
+msgstr ""
+
+#: templates/base.html:103 templates/daily_log.html:2
+#: templates/daily_log.html:6
+msgid "Daily Log"
+msgstr ""
+
+#: templates/base.html:104 templates/hatches.html:2
+msgid "Hatches"
+msgstr ""
+
+#: templates/base.html:105 templates/hatch_view.html:75
+msgid "Settings"
+msgstr ""
+
+#: templates/base.html:109
+msgid "Log out"
+msgstr ""
+
+#: templates/base.html:112 templates/landing.html:54 templates/login.html:4
+#: templates/login.html:17 templates/register.html:36
+msgid "Log in"
+msgstr ""
+
+#: templates/base.html:113 templates/login.html:19
+msgid "Register"
+msgstr ""
+
+#: templates/base.html:136
+msgid "Enjoying RingLog?"
+msgstr ""
+
+#: templates/base.html:136
+msgid "Buy me a coffee ☕"
+msgstr ""
+
+#: templates/base.html:136
+msgid "to support the project."
+msgstr ""
+
+#: templates/daily_log.html:15
+msgid "You don't have any flocks yet."
+msgstr ""
+
+#: templates/daily_log.html:15 templates/settings.html:81
+msgid "Create one"
+msgstr ""
+
+#: templates/daily_log.html:25 templates/flock_log.html:9
+#: templates/flocks.html:66 templates/settings.html:91
+msgid "Flock"
+msgstr ""
+
+#: templates/daily_log.html:26 templates/flock_report.html:129
+msgid "Eggs collected"
+msgstr ""
+
+#: templates/daily_log.html:27
+msgid "Light (hours)"
+msgstr ""
+
+#: templates/daily_log.html:28 templates/flock_log.html:39
+msgid "Bedding changed"
+msgstr ""
+
+#: templates/daily_log.html:29 templates/flock_log.html:43
+#: templates/flock_log.html:62 templates/flock_log.html:121
+#: templates/flock_log.html:136 templates/form.html:98
+#: templates/hatch_form.html:88 templates/hatch_view.html:104
+#: templates/view.html:46 templates/view.html:63
+msgid "Notes"
+msgstr ""
+
+#: templates/daily_log.html:66 templates/settings.html:14
+msgid "Save"
+msgstr ""
+
+#: templates/daily_log.html:67
+msgid "Today"
+msgstr ""
+
+#: templates/delete_confirm.html:4
+#, python-format
+msgid "Delete %(name)s?"
+msgstr ""
+
+#: templates/delete_confirm.html:5
+#, python-format
+msgid "Ring #%(ring)s — %(flock)s"
+msgstr ""
+
+#: templates/delete_confirm.html:8
+msgid "Before you delete"
+msgstr ""
+
+#: templates/delete_confirm.html:8
+msgid "consider marking this bird as"
+msgstr ""
+
+#: templates/delete_confirm.html:9 templates/view.html:9
+msgid "deceased"
+msgstr ""
+
+#: templates/delete_confirm.html:9
+msgid "or"
+msgstr ""
+
+#: templates/delete_confirm.html:9 templates/index.html:113
+#: templates/view.html:10
+msgid "sold"
+msgstr ""
+
+#: templates/delete_confirm.html:9
+msgid "instead."
+msgstr ""
+
+#: templates/delete_confirm.html:10
+msgid ""
+"That preserves the full history and notes, and frees up the ring number "
+"for reuse if your flock settings allow it."
+msgstr ""
+
+#: templates/delete_confirm.html:12
+msgid "Mark as dead / sold instead"
+msgstr ""
+
+#: templates/delete_confirm.html:17
+msgid ""
+"Only delete if this bird was added by mistake. This action cannot be "
+"undone and will permanently remove all notes and history."
+msgstr ""
+
+#: templates/delete_confirm.html:22 templates/delete_flock_confirm.html:16
+msgid "Yes, delete permanently"
+msgstr ""
+
+#: templates/delete_confirm.html:24 templates/delete_flock_confirm.html:18
+#: templates/flocks.html:24 templates/form.html:117
+#: templates/hatch_form.html:95
+msgid "Cancel"
+msgstr ""
+
+#: templates/delete_flock_confirm.html:4
+#, python-format
+msgid "Delete flock \"%(name)s\"?"
+msgstr ""
+
+#: templates/delete_flock_confirm.html:5
+msgid "This action cannot be undone."
+msgstr ""
+
+#: templates/delete_flock_confirm.html:9
+#, python-format
+msgid "This flock contains %(num)d bird."
+msgid_plural "This flock contains %(num)d birds."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/delete_flock_confirm.html:10
+msgid ""
+"Deleting it will permanently remove all birds, notes, and history in this"
+" flock."
+msgstr ""
+
+#: templates/flock_log.html:2 templates/flock_log.html:6
+#: templates/flock_report.html:16 templates/index.html:31
+msgid "Log"
+msgstr ""
+
+#: templates/flock_log.html:8 templates/flock_report.html:2
+#: templates/index.html:29
+msgid "Report"
+msgstr ""
+
+#: templates/flock_log.html:16
+msgid "Add / update entry"
+msgstr ""
+
+#: templates/flock_log.html:21 templates/flock_log.html:58
+#: templates/flock_report.html:78 templates/view.html:85
+msgid "Date"
+msgstr ""
+
+#: templates/flock_log.html:25 templates/flock_log.html:59
+#: templates/flock_log.html:135 templates/flock_report.html:79
+#: templates/flock_report.html:179 templates/hatches.html:36
+msgid "Eggs"
+msgstr ""
+
+#: templates/flock_log.html:30 templates/flock_log.html:60
+#: templates/flock_report.html:81 templates/flock_report.html:180
+msgid "Light (h)"
+msgstr ""
+
+#: templates/flock_log.html:47
+msgid "Save entry"
+msgstr ""
+
+#: templates/flock_log.html:61 templates/flock_report.html:83
+msgid "Bedding"
+msgstr ""
+
+#: templates/flock_log.html:79 templates/hatch_view.html:21
+#: templates/view.html:53
+msgid "Edit"
+msgstr ""
+
+#: templates/flock_log.html:84
+msgid "Delete this entry?"
+msgstr ""
+
+#: templates/flock_log.html:84 templates/flock_log.html:152
+#: templates/flocks.html:48 templates/hatch_view.html:26 templates/view.html:55
+msgid "Delete"
+msgstr ""
+
+#: templates/flock_log.html:93
+#, python-format
+msgid "Total (%(n)d days)"
+msgstr ""
+
+#: templates/flock_log.html:101
+msgid "No log entries yet."
+msgstr ""
+
+#: templates/flock_log.html:105
+msgid "Stash finds"
+msgstr ""
+
+#: templates/flock_log.html:106
+msgid "Eggs found hidden — lay date unknown."
+msgstr ""
+
+#: templates/flock_log.html:113 templates/flock_log.html:134
+msgid "Date found"
+msgstr ""
+
+#: templates/flock_log.html:117
+msgid "Egg count"
+msgstr ""
+
+#: templates/flock_log.html:121 templates/hatch_form.html:11
+#: templates/register.html:13 templates/settings.html:9
+msgid "optional"
+msgstr ""
+
+#: templates/flock_log.html:122
+msgid "Location, condition…"
+msgstr ""
+
+#: templates/flock_log.html:124
+msgid "Add stash"
+msgstr ""
+
+#: templates/flock_log.html:152
+msgid "Delete this stash entry?"
+msgstr ""
+
+#: templates/flock_log.html:162
+msgid "No stash finds logged."
+msgstr ""
+
+#: templates/flock_report.html:6
+msgid "Egg production report"
+msgstr ""
+
+#: templates/flock_report.html:22
+msgid "No log data for this period."
+msgstr ""
+
+#: templates/flock_report.html:22
+msgid "Start logging"
+msgstr ""
+
+#: templates/flock_report.html:47
+msgid "Total eggs"
+msgstr ""
+
+#: templates/flock_report.html:47
+msgid "days logged"
+msgstr ""
+
+#: templates/flock_report.html:48
+msgid "Daily average"
+msgstr ""
+
+#: templates/flock_report.html:48
+msgid "eggs / day"
+msgstr ""
+
+#: templates/flock_report.html:49
+msgid "Best day"
+msgstr ""
+
+#: templates/flock_report.html:49 templates/flock_report.html:171
+msgid "eggs"
+msgstr ""
+
+#: templates/flock_report.html:50
+msgid "Avg light"
+msgstr ""
+
+#: templates/flock_report.html:50
+msgid "per logged day"
+msgstr ""
+
+#: templates/flock_report.html:51
+msgid "Active birds"
+msgstr ""
+
+#: templates/flock_report.html:51
+msgid "in flock now"
+msgstr ""
+
+#: templates/flock_report.html:69
+#, python-format
+msgid ""
+"Stash finds (%(eggs)d eggs across %(n)d dates) are shown separately and "
+"excluded from the daily trend."
+msgstr ""
+
+#: templates/flock_report.html:80
+msgid "7-day avg"
+msgstr ""
+
+#: templates/flock_report.html:82
+msgid "Eggs / hen"
+msgstr ""
+
+#: templates/flock_report.html:137
+msgid "7-day average"
+msgstr ""
+
+#: templates/flock_report.html:148
+msgid "Light hours"
+msgstr ""
+
+#: templates/flock_report.html:171
+msgid "Stash find"
+msgstr ""
+
+#: templates/flocks.html:8
+msgid "New Flock"
+msgstr ""
+
+#: templates/flocks.html:15
+msgid "Flock name"
+msgstr ""
+
+#: templates/flocks.html:16
+msgid "e.g. Ducks, Hens, Backyard"
+msgstr ""
+
+#: templates/flocks.html:19 templates/flocks.html:33
+msgid "Description"
+msgstr ""
+
+#: templates/flocks.html:20 templates/form.html:17
+msgid "Optional"
+msgstr ""
+
+#: templates/flocks.html:22
+msgid "Create"
+msgstr ""
+
+#: templates/flocks.html:32 templates/form.html:16 templates/hatch_form.html:11
+#: templates/hatches.html:30 templates/index.html:78
+msgid "Name"
+msgstr ""
+
+#: templates/flocks.html:34
+msgid "Birds"
+msgstr ""
+
+#: templates/flocks.html:35
+msgid "Created"
+msgstr ""
+
+#: templates/flocks.html:47 templates/flocks.html:77
+msgid "Open"
+msgstr ""
+
+#: templates/flocks.html:55
+msgid "No flocks yet. Create your first flock above!"
+msgstr ""
+
+#: templates/flocks.html:61 templates/hatches.html:74
+msgid "Shared with me"
+msgstr ""
+
+#: templates/flocks.html:65 templates/hatches.html:31
+#: templates/settings.html:91
+msgid "Owner"
+msgstr ""
+
+#: templates/flocks.html:67 templates/settings.html:55
+#: templates/settings.html:91
+msgid "Permission"
+msgstr ""
+
+#: templates/flocks.html:76 templates/settings.html:61
+#: templates/settings.html:98
+msgid "View & Edit"
+msgstr ""
+
+#: templates/flocks.html:76 templates/hatch_view.html:119
+#: templates/settings.html:61 templates/settings.html:98
+msgid "View only"
+msgstr ""
+
+#: templates/forgot_password.html:4
+msgid "Reset password"
+msgstr ""
+
+#: templates/forgot_password.html:5
+msgid "Enter your email address and we'll send you a reset link."
+msgstr ""
+
+#: templates/forgot_password.html:8 templates/settings.html:9
+msgid "Email address"
+msgstr ""
+
+#: templates/forgot_password.html:11
+msgid "Send reset link"
+msgstr ""
+
+#: templates/forgot_password.html:13
+msgid "Back to login"
+msgstr ""
+
+#: templates/form.html:4
+msgid "Edit Bird"
+msgstr ""
+
+#: templates/form.html:4
+msgid "Register New Bird"
+msgstr ""
+
+#: templates/form.html:6
+msgid "Flock:"
+msgstr ""
+
+#: templates/form.html:12
+msgid "Ring Number"
+msgstr ""
+
+#: templates/form.html:23 templates/hatch_form.html:16
+#: templates/hatch_view.html:77 templates/hatches.html:32
+#: templates/index.html:82
+msgid "Species"
+msgstr ""
+
+#: templates/form.html:25
+msgid "Chicken"
+msgstr ""
+
+#: templates/form.html:26
+msgid "Duck"
+msgstr ""
+
+#: templates/form.html:27
+msgid "Goose"
+msgstr ""
+
+#: templates/form.html:28
+msgid "Turkey"
+msgstr ""
+
+#: templates/form.html:29 templates/index.html:49
+msgid "Quail"
+msgstr ""
+
+#: templates/form.html:30
+msgid "Pigeon"
+msgstr ""
+
+#: templates/form.html:31 templates/index.html:51
+msgid "Guinea Fowl"
+msgstr ""
+
+#: templates/form.html:32 templates/index.html:52
+msgid "Peafowl"
+msgstr ""
+
+#: templates/form.html:36 templates/index.html:90 templates/view.html:26
+msgid "Sex"
+msgstr ""
+
+#: templates/form.html:38
+msgid "Unknown"
+msgstr ""
+
+#: templates/form.html:39
+msgid "Female"
+msgstr ""
+
+#: templates/form.html:40
+msgid "Male"
+msgstr ""
+
+#: templates/form.html:47 templates/index.html:86 templates/view.html:29
+msgid "Breed"
+msgstr ""
+
+#: templates/form.html:48
+msgid "e.g. Pekin, Muscovy, hybrid"
+msgstr ""
+
+#: templates/form.html:51
+msgid "Hybrid Mix"
+msgstr ""
+
+#: templates/form.html:52
+msgid "e.g. Pekin x Muscovy"
+msgstr ""
+
+#: templates/form.html:58 templates/view.html:32
+msgid "Date of Birth"
+msgstr ""
+
+#: templates/form.html:64
+msgid "Approximate date"
+msgstr ""
+
+#: templates/form.html:72 templates/hatches.html:35
+msgid "Status"
+msgstr ""
+
+#: templates/form.html:76
+msgid "Deceased"
+msgstr ""
+
+#: templates/form.html:81
+msgid "Sold / rehomed"
+msgstr ""
+
+#: templates/form.html:86 templates/view.html:36
+msgid "Date of Death"
+msgstr ""
+
+#: templates/form.html:90 templates/view.html:41
+msgid "Date Sold"
+msgstr ""
+
+#: templates/form.html:99
+msgid "Any additional notes..."
+msgstr ""
+
+#: templates/form.html:103
+msgid "Photo"
+msgstr ""
+
+#: templates/form.html:106
+msgid "Current photo"
+msgstr ""
+
+#: templates/form.html:110
+msgid "Remove current photo"
+msgstr ""
+
+#: templates/form.html:116
+msgid "Save Changes"
+msgstr ""
+
+#: templates/form.html:116
+msgid "Register Bird"
+msgstr ""
+
+#: templates/hatch_form.html:2 templates/hatch_form.html:6
+msgid "Edit hatch"
+msgstr ""
+
+#: templates/hatch_form.html:2 templates/hatches.html:7
+msgid "New hatch"
+msgstr ""
+
+#: templates/hatch_form.html:6
+msgid "New hatching plan"
+msgstr ""
+
+#: templates/hatch_form.html:12
+msgid "e.g. Spring batch 2026"
+msgstr ""
+
+#: templates/hatch_form.html:29
+msgid "Start date & time"
+msgstr ""
+
+#: templates/hatch_form.html:34 templates/hatch_view.html:54
+#: templates/hatch_view.html:86
+msgid "Eggs set"
+msgstr ""
+
+#: templates/hatch_form.html:36
+msgid "e.g. 12"
+msgstr ""
+
+#: templates/hatch_form.html:42
+msgid "Total incubation days"
+msgstr ""
+
+#: templates/hatch_form.html:47
+msgid "Lockdown on day"
+msgstr ""
+
+#: templates/hatch_form.html:55
+msgid "Humidity — incubation"
+msgstr ""
+
+#: templates/hatch_form.html:58
+msgid "e.g. 45"
+msgstr ""
+
+#: templates/hatch_form.html:61
+msgid "Humidity — lockdown"
+msgstr ""
+
+#: templates/hatch_form.html:64
+msgid "e.g. 68"
+msgstr ""
+
+#: templates/hatch_form.html:68 templates/hatch_view.html:84
+msgid "Outcome"
+msgstr ""
+
+#: templates/hatch_form.html:68
+msgid "fill in as the hatch progresses"
+msgstr ""
+
+#: templates/hatch_form.html:71
+msgid "Eggs to lockdown"
+msgstr ""
+
+#: templates/hatch_form.html:76
+msgid "Eggs discarded"
+msgstr ""
+
+#: templates/hatch_form.html:81 templates/hatch_view.html:89
+msgid "Hatched"
+msgstr ""
+
+#: templates/hatch_form.html:93
+msgid "Save changes"
+msgstr ""
+
+#: templates/hatch_form.html:93
+msgid "Start hatch"
+msgstr ""
+
+#: templates/hatch_view.html:2 templates/hatch_view.html:18
+#: templates/hatches.html:45
+msgid "Hatch #"
+msgstr ""
+
+#: templates/hatch_view.html:6 templates/hatches.html:17
+msgid "Incubating"
+msgstr ""
+
+#: templates/hatch_view.html:7
+msgid "Lockdown — stop turning, raise humidity"
+msgstr ""
+
+#: templates/hatch_view.html:8 templates/hatches.html:19
+msgid "Hatching!"
+msgstr ""
+
+#: templates/hatch_view.html:9 templates/hatches.html:20
+msgid "Complete"
+msgstr ""
+
+#: templates/hatch_view.html:25
+msgid "Delete this hatch? This cannot be undone."
+msgstr ""
+
+#: templates/hatch_view.html:38
+msgid "day to hatch"
+msgid_plural "days to hatch"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/hatch_view.html:51
+msgid "Timeline"
+msgstr ""
+
+#: templates/hatch_view.html:55
+#, python-format
+msgid "Lockdown (day %(d)s)"
+msgstr ""
+
+#: templates/hatch_view.html:56
+msgid "First pip expected"
+msgstr ""
+
+#: templates/hatch_view.html:57 templates/hatches.html:34
+msgid "Hatch date"
+msgstr ""
+
+#: templates/hatch_view.html:78
+msgid "Incubation"
+msgstr ""
+
+#: templates/hatch_view.html:78
+msgid "days"
+msgstr ""
+
+#: templates/hatch_view.html:79
+msgid "Humidity (inc.)"
+msgstr ""
+
+#: templates/hatch_view.html:80
+msgid "Humidity (lock.)"
+msgstr ""
+
+#: templates/hatch_view.html:87
+msgid "To lockdown"
+msgstr ""
+
+#: templates/hatch_view.html:88
+msgid "Discarded"
+msgstr ""
+
+#: templates/hatch_view.html:111
+msgid "Sharing"
+msgstr ""
+
+#: templates/hatch_view.html:114 templates/settings.html:55
+msgid "User"
+msgstr ""
+
+#: templates/hatch_view.html:114
+msgid "Access"
+msgstr ""
+
+#: templates/hatch_view.html:119
+msgid "View & edit"
+msgstr ""
+
+#: templates/hatch_view.html:122 templates/settings.html:67
+msgid "Revoke"
+msgstr ""
+
+#: templates/hatch_view.html:133 templates/hatch_view.html:134
+#: templates/login.html:10 templates/register.html:7
+msgid "Username"
+msgstr ""
+
+#: templates/hatch_view.html:140 templates/settings.html:33
+msgid "Allow editing"
+msgstr ""
+
+#: templates/hatch_view.html:143 templates/settings.html:37
+msgid "Share"
+msgstr ""
+
+#: templates/hatch_view.html:149
+msgid "All hatches"
+msgstr ""
+
+#: templates/hatches.html:6 templates/landing.html:33
+msgid "Hatching plans"
+msgstr ""
+
+#: templates/hatches.html:12
+msgid "No hatches yet."
+msgstr ""
+
+#: templates/hatches.html:12
+msgid "Start one"
+msgstr ""
+
+#: templates/hatches.html:18
+msgid "Lockdown"
+msgstr ""
+
+#: templates/hatches.html:33
+msgid "Started"
+msgstr ""
+
+#: templates/hatches.html:55
+msgid "d left"
+msgstr ""
+
+#: templates/hatches.html:59
+msgid "hatched"
+msgstr ""
+
+#: templates/hatches.html:61 templates/settings.html:99
+msgid "View"
+msgstr ""
+
+#: templates/index.html:33
+msgid "Export"
+msgstr ""
+
+#: templates/index.html:35
+msgid "Add Bird"
+msgstr ""
+
+#: templates/index.html:42
+msgid "Species:"
+msgstr ""
+
+#: templates/index.html:44 templates/index.html:59
+msgid "All"
+msgstr ""
+
+#: templates/index.html:45
+msgid "Chickens"
+msgstr ""
+
+#: templates/index.html:46
+msgid "Ducks"
+msgstr ""
+
+#: templates/index.html:47
+msgid "Geese"
+msgstr ""
+
+#: templates/index.html:48
+msgid "Turkeys"
+msgstr ""
+
+#: templates/index.html:50
+msgid "Pigeons"
+msgstr ""
+
+#: templates/index.html:54
+msgid "Status:"
+msgstr ""
+
+#: templates/index.html:56
+msgid "Alive"
+msgstr ""
+
+#: templates/index.html:57
+msgid "Dead"
+msgstr ""
+
+#: templates/index.html:58
+msgid "Sold"
+msgstr ""
+
+#: templates/index.html:62
+msgid "Search…"
+msgstr ""
+
+#: templates/index.html:64
+msgid "Clear filters"
+msgstr ""
+
+#: templates/index.html:74
+msgid "Ring #"
+msgstr ""
+
+#: templates/index.html:75 templates/index.html:79 templates/index.html:83
+#: templates/index.html:87 templates/index.html:91 templates/index.html:95
+msgid "Filter…"
+msgstr ""
+
+#: templates/index.html:94
+msgid "Born"
+msgstr ""
+
+#: templates/index.html:98
+msgid "Age"
+msgstr ""
+
+#: templates/index.html:112
+msgid "dead"
+msgstr ""
+
+#: templates/index.html:125
+msgid "No birds match your filters."
+msgstr ""
+
+#: templates/index.html:128
+msgid "No birds registered yet. Add your first bird!"
+msgstr ""
+
+#: templates/index.html:129
+msgid "This flock has no birds yet."
+msgstr ""
+
+#: templates/landing.html:2 templates/landing.html:4
+msgid "Free flock manager for hobby poultry keepers"
+msgstr ""
+
+#: templates/landing.html:3
+msgid ""
+"RingLog is a free tool for hobby and small-scale poultry keepers. Track "
+"ring numbers, log daily eggs and light hours, plan hatches, and monitor "
+"trends — for ducks, hens, geese, turkeys, quail, and more."
+msgstr ""
+
+#: templates/landing.html:5
+msgid ""
+"Bird registry, daily egg logging, hatching plans, egg production trends, "
+"flock sharing, and more. Free, no ads, mobile friendly."
+msgstr ""
+
+#: templates/landing.html:11
+msgid ""
+"A free flock manager for hobby and small-scale poultry keepers — from "
+"bird registry to egg production trends."
+msgstr ""
+
+#: templates/landing.html:18
+msgid "Bird registry"
+msgstr ""
+
+#: templates/landing.html:19
+msgid ""
+"Record ring numbers, species, breed, sex, birth date, and a photo for "
+"each bird. Supports ducks, hens, geese, turkeys, quail, and more."
+msgstr ""
+
+#: templates/landing.html:23
+msgid "Daily egg log"
+msgstr ""
+
+#: templates/landing.html:24
+msgid ""
+"Log eggs collected, hours of light, and bedding changes across all your "
+"flocks in one quick daily entry. Log hidden stash finds separately."
+msgstr ""
+
+#: templates/landing.html:28
+msgid "Production trends"
+msgstr ""
+
+#: templates/landing.html:29
+msgid ""
+"Charts showing egg production over time, 7-day rolling averages, and "
+"correlation with hours of light. Monitor your flock's performance at a "
+"glance."
+msgstr ""
+
+#: templates/landing.html:34
+msgid ""
+"Plan and track incubation with species presets for chickens, ducks, and "
+"muscovy. Timeline view with lockdown and pip dates, humidity guidance, "
+"and hatch outcome tracking."
+msgstr ""
+
+#: templates/landing.html:38
+msgid "Bird notes"
+msgstr ""
+
+#: templates/landing.html:39
+msgid "Keep a dated log of observations, health events, and milestones per bird."
+msgstr ""
+
+#: templates/landing.html:43 templates/privacy.html:21
+msgid "Flock sharing"
+msgstr ""
+
+#: templates/landing.html:44
+msgid ""
+"Share your flock with a partner or helper — read-only or with edit "
+"access. Works for both bird records and hatching plans."
+msgstr ""
+
+#: templates/landing.html:50
+msgid ""
+"Made for <strong>hobby keepers and small-scale flock owners</strong>. "
+"Free to use, no ads, no fluff."
+msgstr ""
+
+#: templates/landing.html:53
+msgid "Create a free account"
+msgstr ""
+
+#: templates/login.html:14 templates/register.html:18
+msgid "Password"
+msgstr ""
+
+#: templates/login.html:19
+msgid "Don't have an account?"
+msgstr ""
+
+#: templates/login.html:20
+msgid "Forgot your password?"
+msgstr ""
+
+#: templates/privacy.html:2 templates/privacy.html:5
+msgid "Privacy Policy"
+msgstr ""
+
+#: templates/privacy.html:6
+msgid "Last updated: March 2025"
+msgstr ""
+
+#: templates/privacy.html:8
+msgid ""
+"RingLog is a free hobby tool run by a single person. This policy explains"
+" what data is stored and how it is used."
+msgstr ""
+
+#: templates/privacy.html:10
+msgid "What data we store"
+msgstr ""
+
+#: templates/privacy.html:12
+msgid "Your username, e-mail address, and hashed password."
+msgstr ""
+
+#: templates/privacy.html:13
+msgid ""
+"Bird records you enter: ring numbers, names, species, breed, sex, birth "
+"dates, notes, and photos."
+msgstr ""
+
+#: templates/privacy.html:14
+msgid "Daily egg logs, light hours, and bedding notes you record for your flocks."
+msgstr ""
+
+#: templates/privacy.html:15
+msgid "Hatching plans and incubation records you create."
+msgstr ""
+
+#: templates/privacy.html:18
+msgid "How we use your data"
+msgstr ""
+
+#: templates/privacy.html:19
+msgid ""
+"Your data is used solely to provide the RingLog service to you. It is "
+"never sold, shared with third parties, or used for advertising."
+msgstr ""
+
+#: templates/privacy.html:22
+msgid ""
+"If you share a flock with another RingLog user, that user will be able to"
+" see — and depending on permissions, edit — the bird records in that "
+"flock. You can revoke access at any time from your settings."
+msgstr ""
+
+#: templates/privacy.html:24
+msgid "Data retention"
+msgstr ""
+
+#: templates/privacy.html:25
+msgid ""
+"You can delete your birds, flocks, and account at any time. Accounts that"
+" have been inactive for more than 6 months may be deleted without prior "
+"notice."
+msgstr ""
+
+#: templates/privacy.html:27
+msgid "Cookies"
+msgstr ""
+
+#: templates/privacy.html:28
+msgid ""
+"RingLog uses a single session cookie to keep you logged in, and an "
+"optional language preference cookie. No tracking or advertising cookies "
+"are used."
+msgstr ""
+
+#: templates/privacy.html:30
+msgid "Your rights"
+msgstr ""
+
+#: templates/privacy.html:31
+msgid ""
+"You have the right to access, correct, or delete all personal data stored"
+" about you. To request this, contact us by e-mail or simply delete your "
+"account and data directly in the app."
+msgstr ""
+
+#: templates/privacy.html:33
+msgid "Contact"
+msgstr ""
+
+#: templates/privacy.html:34
+msgid "Questions or requests regarding your data can be sent to"
+msgstr ""
+
+#: templates/register.html:4 templates/register.html:34
+msgid "Create account"
+msgstr ""
+
+#: templates/register.html:9
+msgid "3–30 characters: letters, numbers, underscores"
+msgstr ""
+
+#: templates/register.html:10
+msgid "Letters, numbers, and underscores. 3–30 characters."
+msgstr ""
+
+#: templates/register.html:13
+msgid "Email"
+msgstr ""
+
+#: templates/register.html:15
+msgid "Without an email address we will not be able to recover a lost password."
+msgstr ""
+
+#: templates/register.html:20
+msgid "Minimum 8 characters."
+msgstr ""
+
+#: templates/register.html:23 templates/reset_password.html:11
+msgid "Confirm password"
+msgstr ""
+
+#: templates/register.html:30
+msgid "I have read and accept the"
+msgstr ""
+
+#: templates/register.html:30
+msgid "Terms of Use"
+msgstr ""
+
+#: templates/register.html:36
+msgid "Already have an account?"
+msgstr ""
+
+#: templates/reset_password.html:4
+msgid "Choose a new password"
+msgstr ""
+
+#: templates/reset_password.html:7
+msgid "New password"
+msgstr ""
+
+#: templates/reset_password.html:14
+msgid "Set new password"
+msgstr ""
+
+#: templates/settings.html:5
+msgid "Account"
+msgstr ""
+
+#: templates/settings.html:12
+msgid ""
+"Used for password recovery only. Without it we cannot recover a lost "
+"password."
+msgstr ""
+
+#: templates/settings.html:27
+msgid "Share with user"
+msgstr ""
+
+#: templates/settings.html:28
+msgid "their username"
+msgstr ""
+
+#: templates/settings.html:47
+msgid "Allow ring number re-use for deceased / sold birds"
+msgstr ""
+
+#: templates/settings.html:67
+#, python-format
+msgid "Remove access for %(u)s?"
+msgstr ""
+
+#: templates/settings.html:75
+msgid "Not shared with anyone."
+msgstr ""
+
+#: templates/settings.html:81
+msgid "You have no flocks yet."
+msgstr ""
+
+#: templates/settings.html:88
+msgid "Flocks shared with me"
+msgstr ""
+
+#: templates/view.html:13
+#, python-format
+msgid "Ring #%(ring)s"
+msgstr ""
+
+#: templates/view.html:58
+msgid "Back to flock"
+msgstr ""
+
+#: templates/view.html:73
+msgid "Delete note"
+msgstr ""
+
+#: templates/view.html:74
+msgid "Delete this note?"
+msgstr ""
+
+#: templates/view.html:89
+msgid "Note"
+msgstr ""
+
+#: templates/view.html:90
+msgid "Add a note…"
+msgstr ""
+
+#: templates/view.html:92
+msgid "Add"
+msgstr ""
+
+#: templates/view.html:97
+msgid "No notes yet."
+msgstr ""
+

@@ -5,12 +5,12 @@
         <div>
             <h2>
                 {{ bird.name or bird.ring_number }}
-                <span class="badge {{ bird.species }}">{{ bird.species }}</span>
-                {% if bird.is_dead %}<span class="badge dead">deceased</span>{% endif %}
-                {% if bird.is_sold %}<span class="badge sold">sold</span>{% endif %}
+                <span class="badge {{ bird.species }}">{{ _(bird.species | title) }}</span>
+                {% if bird.is_dead %}<span class="badge dead">{{ _('deceased') }}</span>{% endif %}
+                {% if bird.is_sold %}<span class="badge sold">{{ _('sold') }}</span>{% endif %}
             </h2>
             {% if bird.name %}
-            <p style="color:#888;">Ring #{{ bird.ring_number }}</p>
+            <p style="color:#888;">{{ _('Ring #%(ring)s', ring=bird.ring_number) }}</p>
             {% endif %}
             <p style="color:#888; font-size:0.85rem;">
                 <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}">{{ flock.name }}</a>
@@ -23,44 +23,44 @@
     </div>
 
     <dl class="detail-grid" style="margin-top:1.5rem;">
-        <dt>Sex</dt>
-        <dd>{{ bird.sex | capitalize }}</dd>
+        <dt>{{ _('Sex') }}</dt>
+        <dd>{{ _(bird.sex | title) if bird.sex else '—' }}</dd>
 
-        <dt>Breed</dt>
+        <dt>{{ _('Breed') }}</dt>
         <dd>{{ bird.breed or '—' }}{% if bird.breed == 'hybrid' and bird.breed_mix %} ({{ bird.breed_mix }}){% endif %}</dd>
 
-        <dt>Date of Birth</dt>
+        <dt>{{ _('Date of Birth') }}</dt>
         <dd>{{ ('~' if bird.birth_approximate else '') }}{{ bird.birth_date or '—' }}</dd>
 
         {% if bird.is_dead %}
-        <dt>Date of Death</dt>
+        <dt>{{ _('Date of Death') }}</dt>
         <dd>{{ bird.death_date or '—' }}</dd>
         {% endif %}
 
         {% if bird.is_sold %}
-        <dt>Date Sold</dt>
+        <dt>{{ _('Date Sold') }}</dt>
         <dd>{{ bird.sold_date or '—' }}</dd>
         {% endif %}
 
         {% if bird.notes %}
-        <dt>Notes</dt>
+        <dt>{{ _('Notes') }}</dt>
         <dd style="white-space:pre-wrap;">{{ bird.notes }}</dd>
         {% endif %}
     </dl>
 
     <div class="actions">
         {% if can_edit %}
-        <a href="{{ url_for('edit_bird', bird_id=bird.id) }}" class="btn btn-primary btn-sm">Edit</a>
+        <a href="{{ url_for('edit_bird', bird_id=bird.id) }}" class="btn btn-primary btn-sm">{{ _('Edit') }}</a>
         {% if flock.user_id == current_user.id %}
-        <a href="{{ url_for('delete_bird', bird_id=bird.id) }}" class="btn btn-danger btn-sm">Delete</a>
+        <a href="{{ url_for('delete_bird', bird_id=bird.id) }}" class="btn btn-danger btn-sm">{{ _('Delete') }}</a>
         {% endif %}
         {% endif %}
-        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" style="margin-left:auto;">Back to flock</a>
+        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" style="margin-left:auto;">{{ _('Back to flock') }}</a>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-bottom:1rem;">Notes</h3>
+    <h3 style="margin-bottom:1rem;">{{ _('Notes') }}</h3>
 
     {% if notes %}
     <div style="margin-bottom:1.5rem;">
@@ -70,8 +70,8 @@
             <span style="flex:1; white-space:pre-wrap;">{{ note.content }}</span>
             {% if can_edit %}
             <form method="post" action="{{ url_for('delete_note', bird_id=bird.id, note_id=note.id) }}" class="inline">
-                <button type="submit" class="btn btn-sm btn-danger" title="Delete note"
-                        onclick="return confirm('Delete this note?')">&times;</button>
+                <button type="submit" class="btn btn-sm btn-danger" title="{{ _('Delete note') }}"
+                        onclick="return confirm('{{ _('Delete this note?') }}')">&times;</button>
             </form>
             {% endif %}
         </div>
@@ -82,19 +82,19 @@
     {% if can_edit %}
     <form method="post" action="{{ url_for('add_note', bird_id=bird.id) }}" style="display:flex; gap:0.75rem; align-items:end; flex-wrap:wrap;">
         <div class="form-group" style="margin:0;">
-            <label style="font-size:0.85rem;">Date</label>
+            <label style="font-size:0.85rem;">{{ _('Date') }}</label>
             <input type="date" name="note_date" required value="{{ today }}" style="width:auto;">
         </div>
         <div class="form-group" style="margin:0; flex:1; min-width:200px;">
-            <label style="font-size:0.85rem;">Note</label>
-            <input type="text" name="content" required placeholder="Add a note…">
+            <label style="font-size:0.85rem;">{{ _('Note') }}</label>
+            <input type="text" name="content" required placeholder="{{ _('Add a note…') }}">
         </div>
-        <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:1px;">Add</button>
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom:1px;">{{ _('Add') }}</button>
     </form>
     {% endif %}
 
     {% if not notes and not can_edit %}
-    <p style="color:#888; font-size:0.9rem;">No notes yet.</p>
+    <p style="color:#888; font-size:0.9rem;">{{ _('No notes yet.') }}</p>
     {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Data Deletion') }} — RingLog{% endblock %}
+{% block content %}
+<div class="card" style="max-width:700px; margin:0 auto;">
+    <h2 style="margin-bottom:0.25rem;">{{ _('Data Deletion') }}</h2>
+    <p style="color:#999; font-size:0.85rem; margin-bottom:1.5rem;">{{ _('Last updated: March 2025') }}</p>
+
+    <p>{{ _('You can delete your data at any time, either partially or completely. This page explains how.') }}</p>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('Delete individual records') }}</h3>
+    <p>{{ _('You can delete individual birds, flocks, log entries, and hatches directly in the app:') }}</p>
+    <ul style="padding-left:1.2rem; color:#555; line-height:1.8; margin-top:0.5rem;">
+        <li>{{ _('To delete a bird: open the bird\'s page and use the Delete button at the bottom.') }}</li>
+        <li>{{ _('To delete a flock and all its birds: go to Settings and delete the flock from there.') }}</li>
+        <li>{{ _('To delete a log entry: open the Daily Log and click the delete icon next to the entry.') }}</li>
+        <li>{{ _('To delete a hatching plan: open the hatch and use the Delete button.') }}</li>
+    </ul>
+
+    <h3 style="margin-top:1.5rem; margin-bottom:0.5rem;">{{ _('Delete your entire account') }}</h3>
+    <p>{{ _('Deleting your account permanently removes all data associated with it, including:') }}</p>
+    <ul style="padding-left:1.2rem; color:#555; line-height:1.8; margin-top:0.5rem;">
+        <li>{{ _('Your username, email address, and password.') }}</li>
+        <li>{{ _('All flocks, birds, notes, and photos you have created.') }}</li>
+        <li>{{ _('All daily log entries and hatching plans.') }}</li>
+        <li>{{ _('Any flock shares you have set up.') }}</li>
+    </ul>
+    <p style="margin-top:1rem;">{{ _('This action is immediate and cannot be undone. There is no recovery option.') }}</p>
+
+    {% if current_user %}
+    <form method="post" style="margin-top:1.5rem;"
+          onsubmit="return confirm('{{ _('This will permanently delete your account and all your data. There is no undo. Are you sure?') }}');">
+        <button type="submit" class="btn btn-danger">{{ _('Delete my account and all data') }}</button>
+    </form>
+    {% else %}
+    <p style="margin-top:1.5rem;">
+        <a href="{{ url_for('login') }}" class="btn btn-primary">{{ _('Log in to delete your account') }}</a>
+    </p>
+    {% endif %}
+
+    <h3 style="margin-top:2rem; margin-bottom:0.5rem;">{{ _('Contact') }}</h3>
+    <p style="margin-bottom:0;">{{ _('If you cannot log in and need your data deleted, contact us at') }}
+        <a href="mailto:contact@ringlog.no">contact@ringlog.no</a>.</p>
+</div>
+{% endblock %}

@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit hatch' if hatch else 'New hatch' }} — RingLog{% endblock %}
+{% block title %}{{ _('Edit hatch') if hatch else _('New hatch') }} — RingLog{% endblock %}
 {% block content %}
 
 <div class="card" style="max-width:640px; margin:0 auto;">
-    <h2 style="margin-bottom:1.5rem;">{{ 'Edit hatch' if hatch else 'New hatching plan' }}</h2>
+    <h2 style="margin-bottom:1.5rem;">{{ _('Edit hatch') if hatch else _('New hatching plan') }}</h2>
     <form method="post">
 
         <div class="form-row">
             <div class="form-group">
-                <label for="name">Name <span style="font-weight:normal;color:#888;">(optional)</span></label>
-                <input type="text" id="name" name="name" placeholder="e.g. Spring batch 2026"
+                <label for="name">{{ _('Name') }} <span style="font-weight:normal;color:#888;">({{ _('optional') }})</span></label>
+                <input type="text" id="name" name="name" placeholder="{{ _('e.g. Spring batch 2026') }}"
                        value="{{ hatch.name or '' if hatch else '' }}">
             </div>
             <div class="form-group">
-                <label for="species">Species</label>
+                <label for="species">{{ _('Species') }}</label>
                 <select id="species" name="species" onchange="applyPreset(this.value)">
                     {% for s in ['chicken','duck','muscovy','custom'] %}
                     <option value="{{ s }}" {{ 'selected' if hatch and hatch.species == s }}>
@@ -26,25 +26,25 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label for="start_datetime">Start date &amp; time</label>
+                <label for="start_datetime">{{ _('Start date & time') }}</label>
                 <input type="datetime-local" id="start_datetime" name="start_datetime" required
                        value="{{ hatch.start_datetime.strftime('%Y-%m-%dT%H:%M') if hatch and hatch.start_datetime else '' }}">
             </div>
             <div class="form-group">
-                <label for="egg_count">Eggs set</label>
+                <label for="egg_count">{{ _('Eggs set') }}</label>
                 <input type="number" id="egg_count" name="egg_count" min="1"
-                       value="{{ hatch.egg_count or '' if hatch else '' }}" placeholder="e.g. 12">
+                       value="{{ hatch.egg_count or '' if hatch else '' }}" placeholder="{{ _('e.g. 12') }}">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="incubation_days">Total incubation days</label>
+                <label for="incubation_days">{{ _('Total incubation days') }}</label>
                 <input type="number" id="incubation_days" name="incubation_days" min="1" required
                        value="{{ hatch.incubation_days if hatch else '' }}">
             </div>
             <div class="form-group">
-                <label for="lockdown_day">Lockdown on day</label>
+                <label for="lockdown_day">{{ _('Lockdown on day') }}</label>
                 <input type="number" id="lockdown_day" name="lockdown_day" min="1" required
                        value="{{ hatch.lockdown_day if hatch else '' }}">
             </div>
@@ -52,47 +52,47 @@
 
         <div class="form-row">
             <div class="form-group">
-                <label for="humidity_incubation">Humidity — incubation (%)</label>
+                <label for="humidity_incubation">{{ _('Humidity — incubation') }} (%)</label>
                 <input type="number" id="humidity_incubation" name="humidity_incubation"
                        min="1" max="99" step="0.5"
-                       value="{{ hatch.humidity_incubation or '' if hatch else '' }}" placeholder="e.g. 45">
+                       value="{{ hatch.humidity_incubation or '' if hatch else '' }}" placeholder="{{ _('e.g. 45') }}">
             </div>
             <div class="form-group">
-                <label for="humidity_lockdown">Humidity — lockdown (%)</label>
+                <label for="humidity_lockdown">{{ _('Humidity — lockdown') }} (%)</label>
                 <input type="number" id="humidity_lockdown" name="humidity_lockdown"
                        min="1" max="99" step="0.5"
-                       value="{{ hatch.humidity_lockdown or '' if hatch else '' }}" placeholder="e.g. 68">
+                       value="{{ hatch.humidity_lockdown or '' if hatch else '' }}" placeholder="{{ _('e.g. 68') }}">
             </div>
         </div>
 
-        <h3 style="margin:1.25rem 0 0.75rem; font-size:1rem; color:#555;">Outcome <span style="font-weight:normal;">(fill in as the hatch progresses)</span></h3>
+        <h3 style="margin:1.25rem 0 0.75rem; font-size:1rem; color:#555;">{{ _('Outcome') }} <span style="font-weight:normal;">({{ _('fill in as the hatch progresses') }})</span></h3>
         <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;">
             <div class="form-group">
-                <label for="eggs_brooder">Eggs to lockdown</label>
+                <label for="eggs_brooder">{{ _('Eggs to lockdown') }}</label>
                 <input type="number" id="eggs_brooder" name="eggs_brooder" min="0"
                        value="{{ hatch.eggs_brooder or '' if hatch else '' }}">
             </div>
             <div class="form-group">
-                <label for="eggs_discarded">Eggs discarded</label>
+                <label for="eggs_discarded">{{ _('Eggs discarded') }}</label>
                 <input type="number" id="eggs_discarded" name="eggs_discarded" min="0"
                        value="{{ hatch.eggs_discarded or '' if hatch else '' }}">
             </div>
             <div class="form-group">
-                <label for="eggs_hatched">Hatched</label>
+                <label for="eggs_hatched">{{ _('Hatched') }}</label>
                 <input type="number" id="eggs_hatched" name="eggs_hatched" min="0"
                        value="{{ hatch.eggs_hatched or '' if hatch else '' }}">
             </div>
         </div>
 
         <div class="form-group">
-            <label for="notes">Notes</label>
+            <label for="notes">{{ _('Notes') }}</label>
             <textarea id="notes" name="notes" rows="3">{{ hatch.notes or '' if hatch else '' }}</textarea>
         </div>
 
         <div class="actions">
-            <button type="submit" class="btn btn-primary">{{ 'Save changes' if hatch else 'Start hatch' }}</button>
+            <button type="submit" class="btn btn-primary">{{ _('Save changes') if hatch else _('Start hatch') }}</button>
             <a href="{{ url_for('view_hatch', hatch_id=hatch.id) if hatch else url_for('hatches') }}"
-               style="color:#888;">Cancel</a>
+               style="color:#888;">{{ _('Cancel') }}</a>
         </div>
     </form>
 </div>

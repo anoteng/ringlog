@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.env
+
+# Database
+*.db
+*.sqlite
+
+# Uploads / local files
+static/uploads/
+
+# Android secrets (also covered by android/.gitignore)
+android/keystore.properties
+android/local.properties
+android/*.jks
+android/*.keystore
+android/release.jks
+
+# Images added locally
+*.png
+*.jpg

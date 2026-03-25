@@ -1,39 +1,39 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card auth-card">
-    <h2>Create account</h2>
+    <h2>{{ _('Create account') }}</h2>
     <form method="post" id="reg-form">
         <div class="form-group">
-            <label for="username">Username</label>
+            <label for="username">{{ _('Username') }}</label>
             <input type="text" id="username" name="username" required autofocus autocomplete="username"
-                   pattern="[A-Za-z0-9_]{3,30}" title="3–30 characters: letters, numbers, underscores">
-            <small style="color:#888;">Letters, numbers, and underscores. 3–30 characters.</small>
+                   pattern="[A-Za-z0-9_]{3,30}" title="{{ _('3–30 characters: letters, numbers, underscores') }}">
+            <small style="color:#888;">{{ _('Letters, numbers, and underscores. 3–30 characters.') }}</small>
         </div>
         <div class="form-group">
-            <label for="email">Email <span style="font-weight:normal; color:#888;">(optional)</span></label>
+            <label for="email">{{ _('Email') }} <span style="font-weight:normal; color:#888;">({{ _('optional') }})</span></label>
             <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com">
-            <small style="color:#888;">Without an email address we will not be able to recover a lost password.</small>
+            <small style="color:#888;">{{ _('Without an email address we will not be able to recover a lost password.') }}</small>
         </div>
         <div class="form-group">
-            <label for="password">Password</label>
+            <label for="password">{{ _('Password') }}</label>
             <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
-            <small style="color:#888;">Minimum 8 characters.</small>
+            <small style="color:#888;">{{ _('Minimum 8 characters.') }}</small>
         </div>
         <div class="form-group">
-            <label for="confirm">Confirm password</label>
+            <label for="confirm">{{ _('Confirm password') }}</label>
             <input type="password" id="confirm" name="confirm" required autocomplete="new-password">
         </div>
         <div class="form-group">
             <div class="checkbox-group">
                 <input type="checkbox" id="accept_terms" name="accept_terms" required>
                 <label for="accept_terms" style="font-weight:normal;">
-                    I have read and accept the <a href="{{ url_for('terms') }}" target="_blank">Terms of Use</a>
+                    {{ _('I have read and accept the') }} <a href="{{ url_for('terms') }}" target="_blank">{{ _('Terms of Use') }}</a>
                 </label>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;">Create account</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;">{{ _('Create account') }}</button>
     </form>
-    <p class="hint">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+    <p class="hint">{{ _('Already have an account?') }} <a href="{{ url_for('login') }}">{{ _('Log in') }}</a></p>
 </div>
 <script>
     document.getElementById('reg-form').addEventListener('submit', function(e) {
@@ -41,7 +41,7 @@
         const cf = document.getElementById('confirm').value;
         if (pw !== cf) {
             e.preventDefault();
-            alert('Passwords do not match.');
+            alert('{{ _("Passwords do not match.") }}');
         }
     });
 </script>

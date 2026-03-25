@@ -14,8 +14,9 @@ from datetime import date as _date, datetime, timedelta
 import pymysql
 import pymysql.cursors
 from flask import (
-    Flask, render_template, request, redirect, url_for, g, send_file, flash, session
+    Flask, render_template, request, redirect, url_for, g, send_file, flash, session, jsonify
 )
+from flask_babel import Babel, gettext as _, ngettext
 from werkzeug.security import generate_password_hash, check_password_hash
 from io import BytesIO
 from dotenv import load_dotenv
@@ -24,6 +25,20 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+
+SUPPORTED_LANGS = ["en", "nb", "nl"]
+
+
+def _get_locale():
+    if g.user and g.user.get("lang") and g.user["lang"] in SUPPORTED_LANGS:
+        return g.user["lang"]
+    lang = request.cookies.get("lang")
+    if lang in SUPPORTED_LANGS:
+        return lang
+    return request.accept_languages.best_match(SUPPORTED_LANGS, default="en")
+
+
+babel = Babel(app, locale_selector=_get_locale)
 
 MAIL_FROM    = os.environ.get("MAIL_FROM", "ringlog@noteng.no")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
@@ -113,14 +128,15 @@ def load_user():
 
 @app.context_processor
 def inject_user():
-    return {"current_user": g.user}
+    from flask_babel import get_locale
+    return {"current_user": g.user, "get_locale": get_locale}
 
 
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not g.user:
-            flash("Please log in to continue.", "error")
+            flash(_("Please log in to continue."), "error")
             return redirect(url_for("login", next=request.path))
         return f(*args, **kwargs)
     return decorated
@@ -234,15 +250,15 @@ def register():
         confirm        = request.form.get("confirm", "")
         accept_terms   = request.form.get("accept_terms")
         if not accept_terms:
-            flash("You must accept the Terms of Use to register.", "error")
+            flash(_("You must accept the Terms of Use to register."), "error")
         elif not username or len(username) < 3:
-            flash("Username must be at least 3 characters.", "error")
+            flash(_("Username must be at least 3 characters."), "error")
         elif not username.replace("_", "").isalnum():
-            flash("Username may only contain letters, numbers, and underscores.", "error")
+            flash(_("Username may only contain letters, numbers, and underscores."), "error")
         elif len(password) < 8:
-            flash("Password must be at least 8 characters.", "error")
+            flash(_("Password must be at least 8 characters."), "error")
         elif password != confirm:
-            flash("Passwords do not match.", "error")
+            flash(_("Passwords do not match."), "error")
         else:
             try:
                 db = get_db()
@@ -254,13 +270,13 @@ def register():
                 user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
                 session.clear()
                 session["user_id"] = user["id"]
-                flash(f"Welcome, {user['username']}!", "success")
+                flash(_("Welcome, %(name)s!", name=user["username"]), "success")
                 return redirect(url_for("flocks"))
             except pymysql.IntegrityError as e:
                 if "email" in str(e).lower():
-                    flash("That email address is already registered.", "error")
+                    flash(_("That email address is already registered."), "error")
                 else:
-                    flash("Username already taken.", "error")
+                    flash(_("Username already taken."), "error")
     return render_template("register.html")
 
 
@@ -278,9 +294,9 @@ def login():
             next_url = request.args.get("next", "")
             if not next_url.startswith("/"):
                 next_url = url_for("flocks")
-            flash(f"Welcome back, {user['username']}!", "success")
+            flash(_("Welcome back, %(name)s!", name=user["username"]), "success")
             return redirect(next_url)
-        flash("Invalid username or password.", "error")
+        flash(_("Invalid username or password."), "error")
     return render_template("login.html")
 
 
@@ -288,6 +304,19 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+
+@app.route("/set-lang/<lang>")
+def set_lang(lang):
+    if lang not in SUPPORTED_LANGS:
+        lang = "en"
+    if g.user:
+        db = get_db()
+        db.execute("UPDATE users SET lang = ? WHERE id = ?", (lang, g.user["id"]))
+        db.commit()
+    resp = redirect(request.referrer or url_for("index"))
+    resp.set_cookie("lang", lang, max_age=365 * 24 * 3600)
+    return resp
 
 
 @app.route("/forgot-password", methods=["GET", "POST"])
@@ -323,10 +352,10 @@ def forgot_password():
                         ),
                     )
                 except Exception:
-                    flash("Failed to send email. Please try again later.", "error")
+                    flash(_("Failed to send email. Please try again later."), "error")
                     return render_template("forgot_password.html")
         # Always show the same message to avoid user enumeration
-        flash("If that email address is registered, a reset link has been sent.", "success")
+        flash(_("If that email address is registered, a reset link has been sent."), "success")
         return redirect(url_for("login"))
     return render_template("forgot_password.html")
 
@@ -341,16 +370,16 @@ def reset_password(token):
         (token,)
     ).fetchone()
     if not row:
-        flash("This reset link is invalid or has expired.", "error")
+        flash(_("This reset link is invalid or has expired."), "error")
         return redirect(url_for("forgot_password"))
 
     if request.method == "POST":
         password = request.form.get("password", "")
         confirm  = request.form.get("confirm", "")
         if len(password) < 8:
-            flash("Password must be at least 8 characters.", "error")
+            flash(_("Password must be at least 8 characters."), "error")
         elif password != confirm:
-            flash("Passwords do not match.", "error")
+            flash(_("Passwords do not match."), "error")
         else:
             db.execute(
                 "UPDATE users SET password_hash = ? WHERE id = ?",
@@ -358,7 +387,7 @@ def reset_password(token):
             )
             db.execute("DELETE FROM password_resets WHERE token = ?", (token,))
             db.commit()
-            flash("Password updated. You can now log in.", "success")
+            flash(_("Password updated. You can now log in."), "success")
             return redirect(url_for("login"))
 
     return render_template("reset_password.html", token=token)
@@ -388,7 +417,7 @@ def flocks():
         name = request.form.get("name", "").strip()
         description = request.form.get("description", "").strip() or None
         if not name:
-            flash("Flock name is required.", "error")
+            flash(_("Flock name is required."), "error")
         else:
             try:
                 db.execute(
@@ -396,10 +425,10 @@ def flocks():
                     (g.user["id"], name, description)
                 )
                 db.commit()
-                flash(f"Flock '{name}' created.", "success")
+                flash(_("Flock '%(name)s' created.", name=name), "success")
                 return redirect(url_for("view_flock", username=g.user["username"], flock_name=name))
             except pymysql.IntegrityError:
-                flash("You already have a flock with that name.", "error")
+                flash(_("You already have a flock with that name."), "error")
 
     my_flocks = user_flocks(g.user["id"])
     shared    = shared_flocks_for(g.user["id"])
@@ -418,7 +447,7 @@ def flocks():
 def delete_flock(username, flock_name):
     flock = resolve_flock(username, flock_name)
     if not flock or flock["user_id"] != g.user["id"]:
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     db = get_db()
@@ -429,7 +458,7 @@ def delete_flock(username, flock_name):
     if request.method == "POST":
         db.execute("DELETE FROM flocks WHERE id = ?", (flock["id"],))
         db.commit()
-        flash(f"Flock '{flock['name']}' deleted.", "success")
+        flash(_("Flock '%(name)s' deleted.", name=flock["name"]), "success")
         return redirect(url_for("flocks"))
 
     return render_template("delete_flock_confirm.html", flock=flock, bird_count=bird_count)
@@ -444,12 +473,12 @@ def delete_flock(username, flock_name):
 def view_flock(username, flock_name):
     flock = resolve_flock(username, flock_name)
     if not flock:
-        flash("Flock not found.", "error")
+        flash(_("Flock not found."), "error")
         return redirect(url_for("flocks"))
 
     perm = get_permission(flock["id"])
     if not perm:
-        flash("You don't have access to that flock.", "error")
+        flash(_("You don't have access to that flock."), "error")
         return redirect(url_for("flocks"))
 
     db = get_db()
@@ -496,10 +525,10 @@ def view_flock(username, flock_name):
 def export_flock(username, flock_name):
     flock = resolve_flock(username, flock_name)
     if not flock:
-        flash("Flock not found.", "error")
+        flash(_("Flock not found."), "error")
         return redirect(url_for("flocks"))
     if not get_permission(flock["id"]):
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     db = get_db()
@@ -567,7 +596,7 @@ def export_flock(username, flock_name):
 def add_bird(username, flock_name):
     flock = resolve_flock(username, flock_name)
     if not flock or get_permission(flock["id"]) != "edit":
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     db = get_db()
@@ -583,7 +612,7 @@ def add_bird(username, flock_name):
 
         ring = request.form["ring_number"].strip()
         if ring_number_taken(flock, ring):
-            flash("Ring number already in use in this flock.", "error")
+            flash(_("Ring number already in use in this flock."), "error")
         else:
             db.execute(
                 """INSERT INTO birds
@@ -603,7 +632,7 @@ def add_bird(username, flock_name):
                 ),
             )
             db.commit()
-            flash("Bird registered!", "success")
+            flash(_("Bird registered!"), "success")
             return redirect(url_for("view_flock", username=username, flock_name=flock_name))
 
     return render_template("form.html", bird=None, flock=flock)
@@ -615,7 +644,7 @@ def edit_bird(bird_id):
     db = get_db()
     bird = db.execute("SELECT * FROM birds WHERE id = ?", (bird_id,)).fetchone()
     if not bird or get_permission(bird["flock_id"]) != "edit":
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     flock = db.execute(
@@ -647,7 +676,7 @@ def edit_bird(bird_id):
 
         ring = request.form["ring_number"].strip()
         if ring_number_taken(flock, ring, exclude_bird_id=bird_id):
-            flash("Ring number already in use in this flock.", "error")
+            flash(_("Ring number already in use in this flock."), "error")
         else:
             db.execute(
                 """UPDATE birds SET ring_number=?, name=?, species=?, breed=?, breed_mix=?,
@@ -666,7 +695,7 @@ def edit_bird(bird_id):
                 ),
             )
             db.commit()
-            flash("Bird updated!", "success")
+            flash(_("Bird updated!"), "success")
             return redirect(url_for("view_bird", bird_id=bird_id))
 
     return render_template("form.html", bird=bird, flock=flock)
@@ -680,12 +709,12 @@ def view_bird(bird_id):
         "SELECT *, image IS NOT NULL AS has_image FROM birds WHERE id = ?", (bird_id,)
     ).fetchone()
     if not bird:
-        flash("Bird not found.", "error")
+        flash(_("Bird not found."), "error")
         return redirect(url_for("flocks"))
 
     perm = get_permission(bird["flock_id"])
     if not perm:
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     flock = db.execute(
@@ -717,7 +746,7 @@ def delete_bird(bird_id):
     db = get_db()
     bird = db.execute("SELECT * FROM birds WHERE id = ?", (bird_id,)).fetchone()
     if not bird:
-        flash("Bird not found.", "error")
+        flash(_("Bird not found."), "error")
         return redirect(url_for("flocks"))
 
     flock = db.execute(
@@ -726,7 +755,7 @@ def delete_bird(bird_id):
     ).fetchone()
 
     if not g.user or g.user["id"] != flock["user_id"]:
-        flash("Only the flock owner can delete birds.", "error")
+        flash(_("Only the flock owner can delete birds."), "error")
         return redirect(url_for("view_bird", bird_id=bird_id))
 
     if request.method == "GET":
@@ -734,7 +763,7 @@ def delete_bird(bird_id):
 
     db.execute("DELETE FROM birds WHERE id = ?", (bird_id,))
     db.commit()
-    flash("Bird deleted.", "success")
+    flash(_("Bird deleted."), "success")
     return redirect(url_for("view_flock", username=flock["username"], flock_name=flock["name"]))
 
 
@@ -748,13 +777,13 @@ def add_note(bird_id):
     db = get_db()
     bird = db.execute("SELECT flock_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
     if not bird or get_permission(bird["flock_id"]) != "edit":
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     note_date = request.form.get("note_date", "").strip()
     content   = request.form.get("content", "").strip()
     if not note_date or not content:
-        flash("Date and content are required.", "error")
+        flash(_("Date and content are required."), "error")
     else:
         db.execute(
             "INSERT INTO bird_notes (bird_id, note_date, content) VALUES (?,?,?)",
@@ -770,7 +799,7 @@ def delete_note(bird_id, note_id):
     db = get_db()
     bird = db.execute("SELECT flock_id FROM birds WHERE id = ?", (bird_id,)).fetchone()
     if not bird or get_permission(bird["flock_id"]) != "edit":
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     db.execute("DELETE FROM bird_notes WHERE id = ? AND bird_id = ?", (note_id, bird_id))
@@ -796,9 +825,9 @@ def settings():
             try:
                 db.execute("UPDATE users SET email = ? WHERE id = ?", (email, g.user["id"]))
                 db.commit()
-                flash("Email address updated.", "success")
+                flash(_("Email address updated."), "success")
             except pymysql.IntegrityError:
-                flash("That email address is already registered to another account.", "error")
+                flash(_("That email address is already registered to another account."), "error")
             return redirect(url_for("settings"))
 
         elif action == "grant":
@@ -810,11 +839,11 @@ def settings():
                                (flock_id, g.user["id"])).fetchone()
             target = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
             if not flock:
-                flash("Flock not found.", "error")
+                flash(_("Flock not found."), "error")
             elif not target:
-                flash("User not found.", "error")
+                flash(_("User not found."), "error")
             elif target["id"] == g.user["id"]:
-                flash("You can't share with yourself.", "error")
+                flash(_("You can't share with yourself."), "error")
             else:
                 try:
                     db.execute(
@@ -827,8 +856,8 @@ def settings():
                         (can_edit, flock_id, target["id"])
                     )
                 db.commit()
-                perm_label = "view & edit" if can_edit else "view"
-                flash(f"Flock shared with {target['username']} ({perm_label}).", "success")
+                perm_label = _("view & edit") if can_edit else _("view")
+                flash(_("Flock shared with %(username)s (%(perm)s).", username=target["username"], perm=perm_label), "success")
 
         elif action == "revoke":
             share_id = request.form.get("share_id", type=int)
@@ -839,7 +868,7 @@ def settings():
                 (share_id, g.user["id"])
             )
             db.commit()
-            flash("Share removed.", "success")
+            flash(_("Share removed."), "success")
 
         elif action == "toggle_reuse":
             flock_id  = request.form.get("flock_id", type=int)
@@ -849,7 +878,7 @@ def settings():
                 (allow, flock_id, g.user["id"])
             )
             db.commit()
-            flash("Ring number policy updated.", "success")
+            flash(_("Ring number policy updated."), "success")
 
     # Shares per flock
     flock_shares = {}
@@ -937,7 +966,7 @@ def new_hatch():
 def view_hatch(hatch_id):
     perm = get_hatch_permission(hatch_id)
     if not perm:
-        flash("Hatch not found.", "error")
+        flash(_("Hatch not found."), "error")
         return redirect(url_for("hatches"))
     db = get_db()
     hatch = db.execute("SELECT * FROM hatches WHERE id = ?", (hatch_id,)).fetchone()
@@ -958,15 +987,15 @@ def view_hatch(hatch_id):
 def share_hatch(hatch_id):
     hatch = _get_own_hatch(hatch_id)
     if not hatch:
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("hatches"))
     username = request.form.get("username", "").strip()
     db = get_db()
     target = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
     if not target:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
     elif target["id"] == g.user["id"]:
-        flash("You can't share with yourself.", "error")
+        flash(_("You can't share with yourself."), "error")
     else:
         can_edit = 1 if request.form.get("can_edit") else 0
         try:
@@ -980,8 +1009,8 @@ def share_hatch(hatch_id):
                 (can_edit, hatch_id, target["id"])
             )
         db.commit()
-        perm_label = "view & edit" if can_edit else "view"
-        flash(f"Hatch shared with {target['username']} ({perm_label}).", "success")
+        perm_label = _("view & edit") if can_edit else _("view")
+        flash(_("Hatch shared with %(username)s (%(perm)s).", username=target["username"], perm=perm_label), "success")
     return redirect(url_for("view_hatch", hatch_id=hatch_id))
 
 
@@ -995,7 +1024,7 @@ def revoke_hatch_share(hatch_id, share_id):
             (share_id, hatch_id)
         )
         get_db().commit()
-        flash("Share removed.", "success")
+        flash(_("Share removed."), "success")
     return redirect(url_for("view_hatch", hatch_id=hatch_id))
 
 
@@ -1003,11 +1032,11 @@ def revoke_hatch_share(hatch_id, share_id):
 @login_required
 def edit_hatch(hatch_id):
     if get_hatch_permission(hatch_id) not in ("owner", "edit"):
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("hatches"))
     hatch = get_db().execute("SELECT * FROM hatches WHERE id = ?", (hatch_id,)).fetchone()
     if not hatch:
-        flash("Hatch not found.", "error")
+        flash(_("Hatch not found."), "error")
         return redirect(url_for("hatches"))
     if request.method == "POST":
         return _save_hatch(hatch_id)
@@ -1022,7 +1051,7 @@ def delete_hatch(hatch_id):
     if hatch:
         get_db().execute("DELETE FROM hatches WHERE id = ?", (hatch_id,))
         get_db().commit()
-        flash("Hatch deleted.", "success")
+        flash(_("Hatch deleted."), "success")
     return redirect(url_for("hatches"))
 
 
@@ -1065,41 +1094,55 @@ def shared_hatches_for(user_id):
 
 
 def _save_hatch(hatch_id):
-    f = request.form
+    is_api = request.path.startswith("/api/")
+    f = request.get_json(silent=True) if is_api else request.form
+    if f is None:
+        f = {}
     species = f.get("species", "chicken")
     preset  = SPECIES_PRESETS.get(species, SPECIES_PRESETS["chicken"])
     try:
         incubation_days = int(f.get("incubation_days") or preset["incubation_days"])
         lockdown_day    = int(f.get("lockdown_day") or preset["lockdown_day"])
     except ValueError:
-        flash("Incubation days and lockdown day must be numbers.", "error")
+        if is_api:
+            return jsonify({"error": "incubation_days and lockdown_day must be numbers"}), 400
+        flash(_("Incubation days and lockdown day must be numbers."), "error")
         return redirect(request.url)
 
     def _int(key):
-        v = f.get(key, "").strip()
-        return int(v) if v else None
+        v = f.get(key)
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return int(v)
 
     def _float(key):
-        v = f.get(key, "").strip()
-        return float(v) if v else None
+        v = f.get(key)
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return float(v)
 
     db = get_db()
     if hatch_id is None:
+        if is_api and not f.get("start_datetime"):
+            return jsonify({"error": "start_datetime required"}), 400
         db.execute(
             """INSERT INTO hatches
                (user_id, name, species, start_datetime, incubation_days, lockdown_day,
                 humidity_incubation, humidity_lockdown, egg_count,
                 eggs_brooder, eggs_discarded, eggs_hatched, notes)
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            (g.user["id"], f.get("name","").strip() or None, species,
-             f["start_datetime"], incubation_days, lockdown_day,
+            (g.user["id"], (f.get("name") or "").strip() or None, species,
+             f.get("start_datetime"), incubation_days, lockdown_day,
              _float("humidity_incubation"), _float("humidity_lockdown"),
              _int("egg_count"), _int("eggs_brooder"), _int("eggs_discarded"),
-             _int("eggs_hatched"), f.get("notes","").strip() or None)
+             _int("eggs_hatched"), (f.get("notes") or "").strip() or None)
         )
         db.commit()
-        flash("Hatch started!", "success")
         new_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+        if is_api:
+            h = db.execute("SELECT * FROM hatches WHERE id=?", (new_id,)).fetchone()
+            return jsonify({"id": new_id, "name": h["name"], "species": h["species"]}), 201
+        flash(_("Hatch started!"), "success")
         return redirect(url_for("view_hatch", hatch_id=new_id))
     else:
         db.execute(
@@ -1107,16 +1150,18 @@ def _save_hatch(hatch_id):
                name=?, species=?, start_datetime=?, incubation_days=?, lockdown_day=?,
                humidity_incubation=?, humidity_lockdown=?, egg_count=?,
                eggs_brooder=?, eggs_discarded=?, eggs_hatched=?, notes=?
-               WHERE id=? AND user_id=?""",
-            (f.get("name","").strip() or None, species, f["start_datetime"],
+               WHERE id=?""",
+            ((f.get("name") or "").strip() or None, species, f.get("start_datetime"),
              incubation_days, lockdown_day,
              _float("humidity_incubation"), _float("humidity_lockdown"),
              _int("egg_count"), _int("eggs_brooder"), _int("eggs_discarded"),
-             _int("eggs_hatched"), f.get("notes","").strip() or None,
-             hatch_id, g.user["id"])
+             _int("eggs_hatched"), (f.get("notes") or "").strip() or None,
+             hatch_id)
         )
         db.commit()
-        flash("Hatch updated.", "success")
+        if is_api:
+            return jsonify({"ok": True, "id": hatch_id})
+        flash(_("Hatch updated."), "success")
         return redirect(url_for("view_hatch", hatch_id=hatch_id))
 
 
@@ -1167,7 +1212,7 @@ def daily_log():
                     (fid, g.user["id"], log_date, eggs, light, bedding, notes)
                 )
         db.commit()
-        flash("Log saved.", "success")
+        flash(_("Log saved."), "success")
         return redirect(url_for("daily_log", date=log_date))
 
     # Load existing entries for the selected date
@@ -1193,11 +1238,11 @@ def flock_log(username, flock_name):
         # allow view permission to see the log, just not post
         pass
     if not flock:
-        flash("Flock not found.", "error")
+        flash(_("Flock not found."), "error")
         return redirect(url_for("flocks"))
     perm = get_permission(flock["id"])
     if not perm:
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     db = get_db()
@@ -1221,13 +1266,13 @@ def flock_log(username, flock_name):
                 (flock["id"], g.user["id"], log_date, eggs, light, bedding, notes)
             )
             db.commit()
-            flash("Entry saved.", "success")
+            flash(_("Entry saved."), "success")
 
         elif action == "delete_log":
             entry_id = request.form.get("entry_id", type=int)
             db.execute("DELETE FROM flock_log WHERE id = ? AND flock_id = ?", (entry_id, flock["id"]))
             db.commit()
-            flash("Entry deleted.", "success")
+            flash(_("Entry deleted."), "success")
 
         elif action == "stash":
             found_date = request.form.get("found_date", "").strip()
@@ -1239,13 +1284,13 @@ def flock_log(username, flock_name):
                     (flock["id"], g.user["id"], found_date, int(egg_count), notes)
                 )
                 db.commit()
-                flash("Stash logged.", "success")
+                flash(_("Stash logged."), "success")
 
         elif action == "delete_stash":
             stash_id = request.form.get("stash_id", type=int)
             db.execute("DELETE FROM flock_stash WHERE id = ? AND flock_id = ?", (stash_id, flock["id"]))
             db.commit()
-            flash("Stash entry deleted.", "success")
+            flash(_("Stash entry deleted."), "success")
 
         return redirect(url_for("flock_log", username=username, flock_name=flock_name))
 
@@ -1272,11 +1317,11 @@ def flock_log(username, flock_name):
 def flock_report(username, flock_name):
     flock = resolve_flock(username, flock_name)
     if not flock:
-        flash("Flock not found.", "error")
+        flash(_("Flock not found."), "error")
         return redirect(url_for("flocks"))
     perm = get_permission(flock["id"])
     if not perm:
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
 
     db = get_db()
@@ -1305,8 +1350,73 @@ def flock_report(username, flock_name):
         (flock["id"],)
     ).fetchone()["n"]
 
+    # Laying hens: adult females (sex=female, birth_date unknown or >5 months ago)
+    laying_count = db.execute(
+        """SELECT COUNT(*) AS n FROM birds
+           WHERE flock_id = ? AND is_dead = 0 AND is_sold = 0
+             AND sex = 'female'
+             AND (birth_date IS NULL OR birth_date <= DATE_SUB(CURDATE(), INTERVAL 5 MONTH))""",
+        (flock["id"],)
+    ).fetchone()["n"]
+
     return render_template("flock_report.html", flock=flock, logs=logs, stashes=stashes,
-                           days=days, active_count=active_count)
+                           days=days, active_count=active_count, laying_count=laying_count)
+
+
+@app.route("/delete-account", methods=["GET", "POST"])
+def delete_account():
+    if request.method == "POST":
+        if not g.user:
+            return redirect(url_for("login", next="/delete-account"))
+        db = get_db()
+        user_id = g.user["id"]
+        # Cascade: birds → via flock_id, flock_shares, flock_log, hatches, user_tokens, password_resets, users
+        db.execute("DELETE FROM user_tokens WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM password_resets WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM hatch_shares WHERE hatch_id IN (SELECT id FROM hatches WHERE user_id = ?)", (user_id,))
+        db.execute("DELETE FROM hatches WHERE user_id = ?", (user_id,))
+        db.execute("""DELETE FROM flock_log WHERE flock_id IN
+                      (SELECT id FROM flocks WHERE user_id = ?)""", (user_id,))
+        db.execute("""DELETE FROM flock_stash WHERE flock_id IN
+                      (SELECT id FROM flocks WHERE user_id = ?)""", (user_id,))
+        db.execute("""DELETE FROM flock_shares WHERE flock_id IN
+                      (SELECT id FROM flocks WHERE user_id = ?)""", (user_id,))
+        db.execute("""DELETE FROM bird_notes WHERE bird_id IN
+                      (SELECT b.id FROM birds b JOIN flocks f ON f.id = b.flock_id WHERE f.user_id = ?)""",
+                   (user_id,))
+        db.execute("""DELETE FROM birds WHERE flock_id IN
+                      (SELECT id FROM flocks WHERE user_id = ?)""", (user_id,))
+        db.execute("DELETE FROM flocks WHERE user_id = ?", (user_id,))
+        db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        db.commit()
+        session.clear()
+        flash(_("Your account and all data have been permanently deleted."), "success")
+        return redirect(url_for("landing"))
+    return render_template("data_deletion.html")
+
+
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
+@app.route("/app")
+def app_download():
+    return render_template("app_download.html")
+
+
+@app.route("/app/ringlog.apk")
+def download_apk():
+    apk_path = os.path.join(os.path.dirname(__file__), "ringlog.apk")
+    return send_file(apk_path, as_attachment=True, download_name="ringlog.apk",
+                     mimetype="application/vnd.android.package-archive")
+
+
+@app.route("/app/ringlog.aab")
+def download_aab():
+    aab_path = os.path.join(os.path.dirname(__file__), "ringlog.aab")
+    return send_file(aab_path, as_attachment=True, download_name="ringlog.aab",
+                     mimetype="application/octet-stream")
 
 
 @app.route("/robots.txt")
@@ -1329,6 +1439,531 @@ def sitemap():
         "</urlset>"
     )
     return app.response_class(xml, mimetype="application/xml")
+
+
+# ---------------------------------------------------------------------------
+# JSON API v1
+# ---------------------------------------------------------------------------
+
+def _api_user():
+    """Return user from Bearer token, or None."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return None
+    token = auth[7:]
+    db = get_db()
+    row = db.execute(
+        """SELECT u.* FROM user_tokens t
+           JOIN users u ON u.id = t.user_id
+           WHERE t.token = ?""",
+        (token,)
+    ).fetchone()
+    if row:
+        db.execute("UPDATE user_tokens SET last_used=NOW() WHERE token=?", (token,))
+        db.commit()
+    return row
+
+
+def api_login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        user = _api_user()
+        if not user:
+            return jsonify({"error": "Unauthorized"}), 401
+        g.user = user
+        return f(*args, **kwargs)
+    return decorated
+
+
+def _bird_dict(b):
+    return {
+        "id":               b["id"],
+        "flock_id":         b["flock_id"],
+        "ring_number":      b["ring_number"],
+        "name":             b["name"],
+        "species":          b["species"],
+        "breed":            b["breed"],
+        "breed_mix":        b["breed_mix"],
+        "sex":              b["sex"],
+        "birth_date":       str(b["birth_date"]) if b["birth_date"] else None,
+        "birth_approximate": bool(b["birth_approximate"]),
+        "notes":            b["notes"],
+        "is_dead":          bool(b["is_dead"]),
+        "death_date":       str(b["death_date"]) if b["death_date"] else None,
+        "is_sold":          bool(b["is_sold"]),
+        "sold_date":        str(b["sold_date"]) if b["sold_date"] else None,
+        "has_image":        bool(b["image"]),
+    }
+
+
+def _flock_dict(f, bird_count=None, can_edit=True, owner_username=None):
+    return {
+        "id":             f["id"],
+        "name":           f["name"],
+        "description":    f.get("description"),
+        "owner_username": owner_username or f.get("username"),
+        "can_edit":       can_edit,
+        "bird_count":     bird_count,
+    }
+
+
+# --- Auth ---
+
+@app.route("/api/v1/auth/login", methods=["POST"])
+def api_login():
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    password = data.get("password") or ""
+    device   = (data.get("device_name") or "")[:128]
+    if not username or not password:
+        return jsonify({"error": "username and password required"}), 400
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    if not user or not check_password_hash(user["password_hash"], password):
+        return jsonify({"error": "Invalid username or password"}), 401
+    token = secrets.token_hex(32)
+    db.execute(
+        "INSERT INTO user_tokens (user_id, token, device_name) VALUES (?,?,?)",
+        (user["id"], token, device or None)
+    )
+    db.commit()
+    return jsonify({"token": token, "username": user["username"], "user_id": user["id"]})
+
+
+@app.route("/api/v1/auth/logout", methods=["POST"])
+@api_login_required
+def api_logout():
+    token = request.headers["Authorization"][7:]
+    get_db().execute("DELETE FROM user_tokens WHERE token=?", (token,))
+    get_db().commit()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/v1/auth/me")
+@api_login_required
+def api_me():
+    u = g.user
+    return jsonify({"id": u["id"], "username": u["username"], "lang": u.get("lang", "en")})
+
+
+# --- Flocks ---
+
+@app.route("/api/v1/flocks")
+@api_login_required
+def api_flocks():
+    db = get_db()
+    owned = db.execute(
+        """SELECT f.*, u.username,
+             (SELECT COUNT(*) FROM birds b WHERE b.flock_id=f.id AND b.is_dead=0 AND b.is_sold=0) AS bird_count
+           FROM flocks f JOIN users u ON u.id=f.user_id
+           WHERE f.user_id=? ORDER BY f.name""",
+        (g.user["id"],)
+    ).fetchall()
+    shared = db.execute(
+        """SELECT f.*, u.username, fs.can_edit,
+             (SELECT COUNT(*) FROM birds b WHERE b.flock_id=f.id AND b.is_dead=0 AND b.is_sold=0) AS bird_count
+           FROM flock_shares fs
+           JOIN flocks f ON f.id=fs.flock_id
+           JOIN users u ON u.id=f.user_id
+           WHERE fs.grantee_id=? ORDER BY f.name""",
+        (g.user["id"],)
+    ).fetchall()
+    return jsonify({
+        "owned":  [_flock_dict(f, f["bird_count"], True) for f in owned],
+        "shared": [_flock_dict(f, f["bird_count"], bool(f["can_edit"])) for f in shared],
+    })
+
+
+@app.route("/api/v1/flocks/<int:flock_id>")
+@api_login_required
+def api_flock_detail(flock_id):
+    perm = get_permission(flock_id)
+    if not perm:
+        return jsonify({"error": "Not found"}), 404
+    db = get_db()
+    flock = db.execute(
+        "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id=f.user_id WHERE f.id=?",
+        (flock_id,)
+    ).fetchone()
+    birds = db.execute(
+        "SELECT * FROM birds WHERE flock_id=? ORDER BY ring_number", (flock_id,)
+    ).fetchall()
+    return jsonify({
+        **_flock_dict(flock, len(birds), perm == "edit"),
+        "can_edit": perm == "edit",
+        "birds": [_bird_dict(b) for b in birds],
+    })
+
+
+@app.route("/api/v1/flocks", methods=["POST"])
+@api_login_required
+def api_create_flock():
+    data = request.get_json(silent=True) or {}
+    name = (data.get("name") or "").strip()
+    if not name:
+        return jsonify({"error": "name required"}), 400
+    db = get_db()
+    try:
+        db.execute(
+            "INSERT INTO flocks (user_id, name, description) VALUES (?,?,?)",
+            (g.user["id"], name, (data.get("description") or "").strip() or None)
+        )
+        db.commit()
+        flock_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+        flock = db.execute(
+            "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id=f.user_id WHERE f.id=?",
+            (flock_id,)
+        ).fetchone()
+        return jsonify(_flock_dict(flock, 0, True)), 201
+    except pymysql.IntegrityError:
+        return jsonify({"error": "A flock with that name already exists"}), 409
+
+
+# --- Birds ---
+
+@app.route("/api/v1/flocks/<int:flock_id>/birds", methods=["POST"])
+@api_login_required
+def api_add_bird(flock_id):
+    if get_permission(flock_id) != "edit":
+        return jsonify({"error": "Permission denied"}), 403
+    db = get_db()
+    flock = db.execute("SELECT * FROM flocks WHERE id=?", (flock_id,)).fetchone()
+    f = request.form if request.content_type and "multipart" in request.content_type else (request.get_json(silent=True) or {})
+    ring = (f.get("ring_number") or "").strip()
+    if not ring:
+        return jsonify({"error": "ring_number required"}), 400
+    if ring_number_taken(flock, ring):
+        return jsonify({"error": "Ring number already in use"}), 409
+    image_data = image_mime = None
+    if request.files.get("image"):
+        img = request.files["image"]
+        image_data = img.read()
+        image_mime = img.mimetype
+    birth_approx = 1 if f.get("birth_approximate") in (True, "true", "1", 1) else 0
+    try:
+        db.execute(
+            """INSERT INTO birds (flock_id, ring_number, name, species, breed, breed_mix, sex,
+               birth_date, birth_approximate, notes, image, image_mime)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (flock_id, ring, (f.get("name") or "").strip() or None,
+             f.get("species") or "chicken", (f.get("breed") or "").strip() or None,
+             (f.get("breed_mix") or "").strip() or None, f.get("sex") or "unknown",
+             f.get("birth_date") or None, birth_approx,
+             (f.get("notes") or "").strip() or None, image_data, image_mime)
+        )
+        db.commit()
+        bird_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+        bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
+        return jsonify(_bird_dict(bird)), 201
+    except pymysql.IntegrityError:
+        return jsonify({"error": "Ring number already in use"}), 409
+
+
+@app.route("/api/v1/birds/<int:bird_id>")
+@api_login_required
+def api_bird_detail(bird_id):
+    db = get_db()
+    bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
+    if not bird or not get_permission(bird["flock_id"]):
+        return jsonify({"error": "Not found"}), 404
+    notes = db.execute(
+        "SELECT id, note_date, content, created_at FROM bird_notes WHERE bird_id=? ORDER BY note_date DESC, id DESC",
+        (bird_id,)
+    ).fetchall()
+    return jsonify({
+        **_bird_dict(bird),
+        "notes_list": [{"id": n["id"], "note_date": str(n["note_date"]), "content": n["content"]} for n in notes],
+    })
+
+
+@app.route("/api/v1/birds/<int:bird_id>", methods=["PUT"])
+@api_login_required
+def api_update_bird(bird_id):
+    db = get_db()
+    bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
+    if not bird or get_permission(bird["flock_id"]) != "edit":
+        return jsonify({"error": "Not found or permission denied"}), 404
+    flock = db.execute("SELECT * FROM flocks WHERE id=?", (bird["flock_id"],)).fetchone()
+    f = request.form if request.content_type and "multipart" in request.content_type else (request.get_json(silent=True) or {})
+    ring = (f.get("ring_number") or "").strip() or bird["ring_number"]
+    if ring != bird["ring_number"] and ring_number_taken(flock, ring, exclude_bird_id=bird_id):
+        return jsonify({"error": "Ring number already in use"}), 409
+    image_data = bird["image"]
+    image_mime = bird["image_mime"]
+    if request.files.get("image"):
+        img = request.files["image"]
+        image_data = img.read()
+        image_mime = img.mimetype
+    birth_approx = 1 if f.get("birth_approximate") in (True, "true", "1", 1) else 0
+    db.execute(
+        """UPDATE birds SET ring_number=?, name=?, species=?, breed=?, breed_mix=?, sex=?,
+           birth_date=?, birth_approximate=?, notes=?, is_dead=?, death_date=?, is_sold=?, sold_date=?,
+           image=?, image_mime=? WHERE id=?""",
+        (ring, (f.get("name") or "").strip() or None,
+         f.get("species") or bird["species"], (f.get("breed") or "").strip() or None,
+         (f.get("breed_mix") or "").strip() or None, f.get("sex") or bird["sex"],
+         f.get("birth_date") or None, birth_approx,
+         (f.get("notes") or "").strip() or None,
+         1 if f.get("is_dead") in (True, "true", "1", 1) else 0,
+         f.get("death_date") or None,
+         1 if f.get("is_sold") in (True, "true", "1", 1) else 0,
+         f.get("sold_date") or None,
+         image_data, image_mime, bird_id)
+    )
+    db.commit()
+    return jsonify(_bird_dict(db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()))
+
+
+@app.route("/api/v1/birds/<int:bird_id>/image", methods=["PUT"])
+@api_login_required
+def api_upload_bird_image(bird_id):
+    db = get_db()
+    bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
+    if not bird or get_permission(bird["flock_id"]) != "edit":
+        return jsonify({"error": "Not found or permission denied"}), 404
+    img = request.files.get("image")
+    if not img:
+        return jsonify({"error": "No image provided"}), 400
+    db.execute("UPDATE birds SET image=?, image_mime=? WHERE id=?",
+               (img.read(), img.mimetype, bird_id))
+    db.commit()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/v1/birds/<int:bird_id>", methods=["DELETE"])
+@api_login_required
+def api_delete_bird(bird_id):
+    db = get_db()
+    bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
+    if not bird:
+        return jsonify({"error": "Not found"}), 404
+    flock = db.execute("SELECT * FROM flocks WHERE id=?", (bird["flock_id"],)).fetchone()
+    if flock["user_id"] != g.user["id"]:
+        return jsonify({"error": "Only the flock owner can delete birds"}), 403
+    db.execute("DELETE FROM birds WHERE id=?", (bird_id,))
+    db.commit()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/v1/birds/<int:bird_id>/image")
+@api_login_required
+def api_bird_image(bird_id):
+    db = get_db()
+    bird = db.execute("SELECT image, image_mime, flock_id FROM birds WHERE id=?", (bird_id,)).fetchone()
+    if not bird or not bird["image"] or not get_permission(bird["flock_id"]):
+        return jsonify({"error": "Not found"}), 404
+    return send_file(BytesIO(bird["image"]), mimetype=bird["image_mime"])
+
+
+# --- Bird notes ---
+
+@app.route("/api/v1/birds/<int:bird_id>/notes", methods=["POST"])
+@api_login_required
+def api_add_note(bird_id):
+    db = get_db()
+    bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
+    if not bird or get_permission(bird["flock_id"]) != "edit":
+        return jsonify({"error": "Not found or permission denied"}), 404
+    data = request.get_json(silent=True) or {}
+    note_date = data.get("note_date") or _date.today().isoformat()
+    content = (data.get("content") or "").strip()
+    if not content:
+        return jsonify({"error": "content required"}), 400
+    db.execute("INSERT INTO bird_notes (bird_id, note_date, content) VALUES (?,?,?)",
+               (bird_id, note_date, content))
+    db.commit()
+    note_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+    return jsonify({"id": note_id, "bird_id": bird_id, "note_date": note_date, "content": content}), 201
+
+
+@app.route("/api/v1/birds/<int:bird_id>/notes/<int:note_id>", methods=["DELETE"])
+@api_login_required
+def api_delete_note(bird_id, note_id):
+    db = get_db()
+    bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
+    if not bird or get_permission(bird["flock_id"]) != "edit":
+        return jsonify({"error": "Not found or permission denied"}), 404
+    db.execute("DELETE FROM bird_notes WHERE id=? AND bird_id=?", (note_id, bird_id))
+    db.commit()
+    return jsonify({"ok": True})
+
+
+# --- Flock log ---
+
+@app.route("/api/v1/flocks/<int:flock_id>/log")
+@api_login_required
+def api_flock_log(flock_id):
+    if not get_permission(flock_id):
+        return jsonify({"error": "Not found"}), 404
+    db = get_db()
+    from_date = request.args.get("from") or ((_date.today() - timedelta(days=29)).isoformat())
+    to_date   = request.args.get("to")   or _date.today().isoformat()
+    rows = db.execute(
+        """SELECT log_date, eggs_collected, light_hours, bedding_changed, notes
+           FROM flock_log WHERE flock_id=? AND log_date BETWEEN ? AND ?
+           ORDER BY log_date DESC""",
+        (flock_id, from_date, to_date)
+    ).fetchall()
+    return jsonify([{
+        "log_date":        str(r["log_date"]),
+        "eggs_collected":  r["eggs_collected"],
+        "light_hours":     float(r["light_hours"]) if r["light_hours"] is not None else None,
+        "bedding_changed": bool(r["bedding_changed"]),
+        "notes":           r["notes"],
+    } for r in rows])
+
+
+@app.route("/api/v1/flocks/<int:flock_id>/log/<log_date>", methods=["PUT"])
+@api_login_required
+def api_upsert_log(flock_id, log_date):
+    if get_permission(flock_id) != "edit":
+        return jsonify({"error": "Permission denied"}), 403
+    data = request.get_json(silent=True) or {}
+    eggs    = data.get("eggs_collected")
+    light   = data.get("light_hours")
+    bedding = 1 if data.get("bedding_changed") else 0
+    notes   = (data.get("notes") or "").strip() or None
+    db = get_db()
+    db.execute(
+        """INSERT INTO flock_log (flock_id, user_id, log_date, eggs_collected, light_hours, bedding_changed, notes)
+           VALUES (?,?,?,?,?,?,?)
+           ON DUPLICATE KEY UPDATE eggs_collected=VALUES(eggs_collected),
+             light_hours=VALUES(light_hours), bedding_changed=VALUES(bedding_changed),
+             notes=VALUES(notes), user_id=VALUES(user_id)""",
+        (flock_id, g.user["id"], log_date, eggs, light, bedding, notes)
+    )
+    db.commit()
+    return jsonify({"ok": True, "log_date": log_date})
+
+
+@app.route("/api/v1/flocks/<int:flock_id>/report")
+@api_login_required
+def api_flock_report(flock_id):
+    if not get_permission(flock_id):
+        return jsonify({"error": "Not found"}), 404
+    days = min(int(request.args.get("days", 30)), 365)
+    db = get_db()
+    logs = db.execute(
+        """SELECT log_date, eggs_collected, light_hours, bedding_changed
+           FROM flock_log WHERE flock_id=? AND log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+           ORDER BY log_date""",
+        (flock_id, days)
+    ).fetchall()
+    laying_count = db.execute(
+        """SELECT COUNT(*) AS n FROM birds
+           WHERE flock_id=? AND is_dead=0 AND is_sold=0 AND sex='female'
+             AND (birth_date IS NULL OR birth_date <= DATE_SUB(CURDATE(), INTERVAL 5 MONTH))""",
+        (flock_id,)
+    ).fetchone()["n"]
+    entries = [{"log_date": str(r["log_date"]), "eggs_collected": r["eggs_collected"],
+                "light_hours": float(r["light_hours"]) if r["light_hours"] is not None else None,
+                "bedding_changed": bool(r["bedding_changed"])} for r in logs]
+    egg_days   = [e for e in entries if e["eggs_collected"] is not None]
+    total_eggs = sum(e["eggs_collected"] for e in egg_days)
+    avg_eggs   = round(total_eggs / len(egg_days), 1) if egg_days else 0
+    max_eggs   = max((e["eggs_collected"] for e in egg_days), default=0)
+    return jsonify({
+        "days": days, "laying_count": laying_count,
+        "stats": {"total_eggs": total_eggs, "avg_eggs_per_day": avg_eggs,
+                  "best_day": max_eggs, "days_logged": len(egg_days)},
+        "logs": entries,
+    })
+
+
+# --- Hatches ---
+
+@app.route("/api/v1/hatches")
+@api_login_required
+def api_hatches():
+    db = get_db()
+    owned = db.execute(
+        "SELECT * FROM hatches WHERE user_id=? ORDER BY start_datetime DESC",
+        (g.user["id"],)
+    ).fetchall()
+    shared = shared_hatches_for(g.user["id"])
+
+    def _hatch_dict(h):
+        tl = hatch_timeline(h)
+        return {
+            "id":                  h["id"],
+            "name":                h["name"],
+            "species":             h["species"],
+            "start_datetime":      str(h["start_datetime"]),
+            "incubation_days":     h["incubation_days"],
+            "lockdown_day":        h["lockdown_day"],
+            "humidity_incubation": h["humidity_incubation"],
+            "humidity_lockdown":   h["humidity_lockdown"],
+            "egg_count":           h["egg_count"],
+            "eggs_brooder":        h["eggs_brooder"],
+            "eggs_discarded":      h["eggs_discarded"],
+            "eggs_hatched":        h["eggs_hatched"],
+            "notes":               h["notes"],
+            "owner_id":            h["user_id"],
+            "timeline": {
+                "status":        tl["status"],
+                "days_remaining": tl.get("days_remaining"),
+                "progress_pct":  tl.get("progress_pct"),
+                "lockdown_dt":   str(tl["lockdown_dt"]) if tl.get("lockdown_dt") else None,
+                "hatch_dt":      str(tl["hatch_dt"]) if tl.get("hatch_dt") else None,
+            },
+        }
+
+    return jsonify({
+        "owned":  [_hatch_dict(h) for h in owned],
+        "shared": [_hatch_dict(h) for h in shared],
+    })
+
+
+@app.route("/api/v1/hatches/<int:hatch_id>")
+@api_login_required
+def api_hatch_detail(hatch_id):
+    perm = get_hatch_permission(hatch_id)
+    if not perm:
+        return jsonify({"error": "Not found"}), 404
+    h = get_db().execute("SELECT * FROM hatches WHERE id=?", (hatch_id,)).fetchone()
+    tl = hatch_timeline(h)
+    return jsonify({
+        "id": h["id"], "name": h["name"], "species": h["species"],
+        "start_datetime": str(h["start_datetime"]),
+        "incubation_days": h["incubation_days"], "lockdown_day": h["lockdown_day"],
+        "humidity_incubation": h["humidity_incubation"], "humidity_lockdown": h["humidity_lockdown"],
+        "egg_count": h["egg_count"], "eggs_brooder": h["eggs_brooder"],
+        "eggs_discarded": h["eggs_discarded"], "eggs_hatched": h["eggs_hatched"],
+        "notes": h["notes"], "owner_id": h["user_id"], "can_edit": perm in ("owner", "edit"),
+        "timeline": {
+            "status": tl["status"], "days_remaining": tl.get("days_remaining"),
+            "progress_pct": tl.get("progress_pct"),
+            "lockdown_dt": str(tl["lockdown_dt"]) if tl.get("lockdown_dt") else None,
+            "hatch_dt": str(tl["hatch_dt"]) if tl.get("hatch_dt") else None,
+        },
+    })
+
+
+@app.route("/api/v1/hatches", methods=["POST"])
+@api_login_required
+def api_create_hatch():
+    g.user = g.user  # already set by decorator
+    return _save_hatch(None)
+
+
+@app.route("/api/v1/hatches/<int:hatch_id>", methods=["PUT"])
+@api_login_required
+def api_update_hatch(hatch_id):
+    if get_hatch_permission(hatch_id) not in ("owner", "edit"):
+        return jsonify({"error": "Permission denied"}), 403
+    return _save_hatch(hatch_id)
+
+
+@app.route("/api/v1/hatches/<int:hatch_id>", methods=["DELETE"])
+@api_login_required
+def api_delete_hatch(hatch_id):
+    h = _get_own_hatch(hatch_id)
+    if not h:
+        return jsonify({"error": "Not found or not owner"}), 404
+    db = get_db()
+    db.execute("DELETE FROM hatches WHERE id=?", (hatch_id,))
+    db.commit()
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":

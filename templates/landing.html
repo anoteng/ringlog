@@ -1,58 +1,57 @@
 {% extends "base.html" %}
-{% block title %}RingLog — Free flock manager for hobby poultry keepers{% endblock %}
-{% block meta_description %}RingLog is a free tool for hobby and small-scale poultry keepers. Track ring numbers, log daily eggs and light hours, plan hatches, and monitor trends — for ducks, hens, geese, turkeys, quail, and more.{% endblock %}
-{% block og_title %}RingLog — Free flock manager for hobby poultry keepers{% endblock %}
-{% block og_description %}Bird registry, daily egg logging, hatching plans, egg production trends, flock sharing, and more. Free, no ads, mobile friendly.{% endblock %}
+{% block title %}RingLog — {{ _('Free flock manager for hobby poultry keepers') }}{% endblock %}
+{% block meta_description %}{{ _('RingLog is a free tool for hobby and small-scale poultry keepers. Track ring numbers, log daily eggs and light hours, plan hatches, and monitor trends — for ducks, hens, geese, turkeys, quail, and more.') }}{% endblock %}
+{% block og_title %}RingLog — {{ _('Free flock manager for hobby poultry keepers') }}{% endblock %}
+{% block og_description %}{{ _('Bird registry, daily egg logging, hatching plans, egg production trends, flock sharing, and more. Free, no ads, mobile friendly.') }}{% endblock %}
 {% block content %}
 
 <div style="text-align:center; padding:2.5rem 1rem 1.5rem;">
     <h1 style="font-size:2.2rem; color:#5b7a3a; margin-bottom:0.5rem;">&#x1f986; RingLog</h1>
     <p style="font-size:1.15rem; color:#555; max-width:560px; margin:0 auto;">
-        A free flock manager for hobby and small-scale poultry keepers — from bird registry to egg production trends.
+        {{ _('A free flock manager for hobby and small-scale poultry keepers — from bird registry to egg production trends.') }}
     </p>
 </div>
 
 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr)); gap:1rem; margin-bottom:2rem;">
     <div class="card" style="text-align:center;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f4cb;</div>
-        <h3 style="margin-bottom:0.4rem;">Bird registry</h3>
-        <p style="color:#666; font-size:0.9rem;">Record ring numbers, species, breed, sex, birth date, and a photo for each bird. Supports ducks, hens, geese, turkeys, quail, and more.</p>
+        <h3 style="margin-bottom:0.4rem;">{{ _('Bird registry') }}</h3>
+        <p style="color:#666; font-size:0.9rem;">{{ _('Record ring numbers, species, breed, sex, birth date, and a photo for each bird. Supports ducks, hens, geese, turkeys, quail, and more.') }}</p>
     </div>
     <div class="card" style="text-align:center;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f95a;</div>
-        <h3 style="margin-bottom:0.4rem;">Daily egg log</h3>
-        <p style="color:#666; font-size:0.9rem;">Log eggs collected, hours of light, and bedding changes across all your flocks in one quick daily entry. Log hidden stash finds separately.</p>
+        <h3 style="margin-bottom:0.4rem;">{{ _('Daily egg log') }}</h3>
+        <p style="color:#666; font-size:0.9rem;">{{ _('Log eggs collected, hours of light, and bedding changes across all your flocks in one quick daily entry. Log hidden stash finds separately.') }}</p>
     </div>
     <div class="card" style="text-align:center;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f4c8;</div>
-        <h3 style="margin-bottom:0.4rem;">Production trends</h3>
-        <p style="color:#666; font-size:0.9rem;">Charts showing egg production over time, 7-day rolling averages, and correlation with hours of light. Monitor your flock's performance at a glance.</p>
+        <h3 style="margin-bottom:0.4rem;">{{ _('Production trends') }}</h3>
+        <p style="color:#666; font-size:0.9rem;">{{ _("Charts showing egg production over time, 7-day rolling averages, and correlation with hours of light. Monitor your flock's performance at a glance.") }}</p>
     </div>
     <div class="card" style="text-align:center;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f423;</div>
-        <h3 style="margin-bottom:0.4rem;">Hatching plans</h3>
-        <p style="color:#666; font-size:0.9rem;">Plan and track incubation with species presets for chickens, ducks, and muscovy. Timeline view with lockdown and pip dates, humidity guidance, and hatch outcome tracking.</p>
+        <h3 style="margin-bottom:0.4rem;">{{ _('Hatching plans') }}</h3>
+        <p style="color:#666; font-size:0.9rem;">{{ _('Plan and track incubation with species presets for chickens, ducks, and muscovy. Timeline view with lockdown and pip dates, humidity guidance, and hatch outcome tracking.') }}</p>
     </div>
     <div class="card" style="text-align:center;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f4dd;</div>
-        <h3 style="margin-bottom:0.4rem;">Bird notes</h3>
-        <p style="color:#666; font-size:0.9rem;">Keep a dated log of observations, health events, and milestones per bird.</p>
+        <h3 style="margin-bottom:0.4rem;">{{ _('Bird notes') }}</h3>
+        <p style="color:#666; font-size:0.9rem;">{{ _('Keep a dated log of observations, health events, and milestones per bird.') }}</p>
     </div>
     <div class="card" style="text-align:center;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">&#x1f465;</div>
-        <h3 style="margin-bottom:0.4rem;">Flock sharing</h3>
-        <p style="color:#666; font-size:0.9rem;">Share your flock with a partner or helper — read-only or with edit access. Works for both bird records and hatching plans.</p>
+        <h3 style="margin-bottom:0.4rem;">{{ _('Flock sharing') }}</h3>
+        <p style="color:#666; font-size:0.9rem;">{{ _('Share your flock with a partner or helper — read-only or with edit access. Works for both bird records and hatching plans.') }}</p>
     </div>
 </div>
 
 <div class="card" style="max-width:480px; margin:0 auto; text-align:center;">
     <p style="color:#555; margin-bottom:1.25rem;">
-        Made for <strong>hobby keepers and small-scale flock owners</strong>.
-        Free to use, no ads, no fluff.
+        {{ _('Made for <strong>hobby keepers and small-scale flock owners</strong>. Free to use, no ads, no fluff.') }}
     </p>
     <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-        <a href="{{ url_for('register') }}" class="btn btn-primary">Create a free account</a>
-        <a href="{{ url_for('login') }}" class="btn" style="background:#eee; color:#333;">Log in</a>
+        <a href="{{ url_for('register') }}" class="btn btn-primary">{{ _('Create a free account') }}</a>
+        <a href="{{ url_for('login') }}" class="btn" style="background:#eee; color:#333;">{{ _('Log in') }}</a>
     </div>
 </div>
 

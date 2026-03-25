@@ -1,67 +1,67 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-    <h2>{{ 'Edit Bird' if bird else 'Register New Bird' }}</h2>
+    <h2>{{ _('Edit Bird') if bird else _('Register New Bird') }}</h2>
     <p style="color:#888; font-size:0.9rem; margin-top:0.25rem;">
-        Flock: <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}">{{ flock.name }}</a>
+        {{ _('Flock:') }} <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}">{{ flock.name }}</a>
         {% if flock.user_id != current_user.id %} ({{ flock.username }}){% endif %}
     </p>
     <form method="post" enctype="multipart/form-data" style="margin-top:1rem;">
         <div class="form-row">
             <div class="form-group">
-                <label for="ring_number">Ring Number *</label>
+                <label for="ring_number">{{ _('Ring Number') }} *</label>
                 <input type="text" id="ring_number" name="ring_number" required value="{{ bird.ring_number if bird else '' }}">
             </div>
             <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" placeholder="Optional" value="{{ bird.name if bird and bird.name else '' }}">
+                <label for="name">{{ _('Name') }}</label>
+                <input type="text" id="name" name="name" placeholder="{{ _('Optional') }}" value="{{ bird.name if bird and bird.name else '' }}">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="species">Species *</label>
+                <label for="species">{{ _('Species') }} *</label>
                 <select id="species" name="species" required>
-                    <option value="chicken" {{ 'selected' if bird and bird.species == 'chicken' }}>Chicken</option>
-                    <option value="duck" {{ 'selected' if bird and bird.species == 'duck' }}>Duck</option>
-                    <option value="goose" {{ 'selected' if bird and bird.species == 'goose' }}>Goose</option>
-                    <option value="turkey" {{ 'selected' if bird and bird.species == 'turkey' }}>Turkey</option>
-                    <option value="quail" {{ 'selected' if bird and bird.species == 'quail' }}>Quail</option>
-                    <option value="pigeon" {{ 'selected' if bird and bird.species == 'pigeon' }}>Pigeon</option>
-                    <option value="guinea fowl" {{ 'selected' if bird and bird.species == 'guinea fowl' }}>Guinea Fowl</option>
-                    <option value="peafowl" {{ 'selected' if bird and bird.species == 'peafowl' }}>Peafowl</option>
+                    <option value="chicken" {{ 'selected' if bird and bird.species == 'chicken' }}>{{ _('Chicken') }}</option>
+                    <option value="duck" {{ 'selected' if bird and bird.species == 'duck' }}>{{ _('Duck') }}</option>
+                    <option value="goose" {{ 'selected' if bird and bird.species == 'goose' }}>{{ _('Goose') }}</option>
+                    <option value="turkey" {{ 'selected' if bird and bird.species == 'turkey' }}>{{ _('Turkey') }}</option>
+                    <option value="quail" {{ 'selected' if bird and bird.species == 'quail' }}>{{ _('Quail') }}</option>
+                    <option value="pigeon" {{ 'selected' if bird and bird.species == 'pigeon' }}>{{ _('Pigeon') }}</option>
+                    <option value="guinea fowl" {{ 'selected' if bird and bird.species == 'guinea fowl' }}>{{ _('Guinea Fowl') }}</option>
+                    <option value="peafowl" {{ 'selected' if bird and bird.species == 'peafowl' }}>{{ _('Peafowl') }}</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="sex">Sex</label>
+                <label for="sex">{{ _('Sex') }}</label>
                 <select id="sex" name="sex">
-                    <option value="unknown" {{ 'selected' if not bird or bird.sex == 'unknown' }}>Unknown</option>
-                    <option value="female" {{ 'selected' if bird and bird.sex == 'female' }}>Female</option>
-                    <option value="male" {{ 'selected' if bird and bird.sex == 'male' }}>Male</option>
+                    <option value="unknown" {{ 'selected' if not bird or bird.sex == 'unknown' }}>{{ _('Unknown') }}</option>
+                    <option value="female" {{ 'selected' if bird and bird.sex == 'female' }}>{{ _('Female') }}</option>
+                    <option value="male" {{ 'selected' if bird and bird.sex == 'male' }}>{{ _('Male') }}</option>
                 </select>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="breed">Breed</label>
-                <input type="text" id="breed" name="breed" placeholder="e.g. Pekin, Muscovy, hybrid" value="{{ bird.breed if bird and bird.breed else '' }}">
+                <label for="breed">{{ _('Breed') }}</label>
+                <input type="text" id="breed" name="breed" placeholder="{{ _('e.g. Pekin, Muscovy, hybrid') }}" value="{{ bird.breed if bird and bird.breed else '' }}">
             </div>
             <div class="form-group" id="mix-group" style="display:none;">
-                <label for="breed_mix">Hybrid Mix</label>
-                <input type="text" id="breed_mix" name="breed_mix" placeholder="e.g. Pekin x Muscovy" value="{{ bird.breed_mix if bird and bird.breed_mix else '' }}">
+                <label for="breed_mix">{{ _('Hybrid Mix') }}</label>
+                <input type="text" id="breed_mix" name="breed_mix" placeholder="{{ _('e.g. Pekin x Muscovy') }}" value="{{ bird.breed_mix if bird and bird.breed_mix else '' }}">
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="birth_date">Date of Birth</label>
+                <label for="birth_date">{{ _('Date of Birth') }}</label>
                 <input type="date" id="birth_date" name="birth_date" value="{{ bird.birth_date if bird and bird.birth_date else '' }}">
             </div>
             <div class="form-group" style="display:flex; align-items:end; padding-bottom:0.5rem;">
                 <div class="checkbox-group">
                     <input type="checkbox" id="birth_approximate" name="birth_approximate" {{ 'checked' if bird and bird.birth_approximate }}>
-                    <label for="birth_approximate" style="font-weight:normal;">Approximate date</label>
+                    <label for="birth_approximate" style="font-weight:normal;">{{ _('Approximate date') }}</label>
                 </div>
             </div>
         </div>
@@ -69,25 +69,25 @@
         {% if bird %}
         <div class="form-row">
             <div class="form-group">
-                <label style="margin-bottom:0.5rem;">Status</label>
+                <label style="margin-bottom:0.5rem;">{{ _('Status') }}</label>
                 <div class="checkbox-group" style="margin-bottom:0.4rem;">
                     <input type="checkbox" id="is_dead" name="is_dead" {{ 'checked' if bird.is_dead }}
                            onchange="syncStatus('dead')">
-                    <label for="is_dead" style="font-weight:normal;">Deceased</label>
+                    <label for="is_dead" style="font-weight:normal;">{{ _('Deceased') }}</label>
                 </div>
                 <div class="checkbox-group">
                     <input type="checkbox" id="is_sold" name="is_sold" {{ 'checked' if bird.is_sold }}
                            onchange="syncStatus('sold')">
-                    <label for="is_sold" style="font-weight:normal;">Sold / rehomed</label>
+                    <label for="is_sold" style="font-weight:normal;">{{ _('Sold / rehomed') }}</label>
                 </div>
             </div>
             <div class="form-group">
                 <div id="death-date-group" style="{{ '' if bird.is_dead else 'display:none;' }}">
-                    <label for="death_date">Date of Death</label>
+                    <label for="death_date">{{ _('Date of Death') }}</label>
                     <input type="date" id="death_date" name="death_date" value="{{ bird.death_date if bird.death_date else '' }}">
                 </div>
                 <div id="sold-date-group" style="{{ '' if bird.is_sold else 'display:none;' }}">
-                    <label for="sold_date">Date Sold</label>
+                    <label for="sold_date">{{ _('Date Sold') }}</label>
                     <input type="date" id="sold_date" name="sold_date" value="{{ bird.sold_date if bird.sold_date else '' }}">
                 </div>
             </div>
@@ -95,26 +95,26 @@
         {% endif %}
 
         <div class="form-group">
-            <label for="notes">Notes</label>
-            <textarea id="notes" name="notes" placeholder="Any additional notes...">{{ bird.notes if bird and bird.notes else '' }}</textarea>
+            <label for="notes">{{ _('Notes') }}</label>
+            <textarea id="notes" name="notes" placeholder="{{ _('Any additional notes...') }}">{{ bird.notes if bird and bird.notes else '' }}</textarea>
         </div>
 
         <div class="form-group">
-            <label for="image">Photo</label>
+            <label for="image">{{ _('Photo') }}</label>
             {% if bird and bird.image %}
             <p style="margin-bottom:0.5rem;">
-                <img src="{{ url_for('bird_image', bird_id=bird.id) }}" class="bird-image" alt="Current photo">
+                <img src="{{ url_for('bird_image', bird_id=bird.id) }}" class="bird-image" alt="{{ _('Current photo') }}">
             </p>
             <div class="checkbox-group" style="margin-bottom:0.5rem;">
                 <input type="checkbox" id="remove_image" name="remove_image">
-                <label for="remove_image" style="font-weight:normal;">Remove current photo</label>
+                <label for="remove_image" style="font-weight:normal;">{{ _('Remove current photo') }}</label>
             </div>
             {% endif %}
             <input type="file" id="image" name="image" accept="image/*">
         </div>
 
-        <button type="submit" class="btn btn-primary">{{ 'Save Changes' if bird else 'Register Bird' }}</button>
-        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" style="margin-left:1rem;">Cancel</a>
+        <button type="submit" class="btn btn-primary">{{ _('Save Changes') if bird else _('Register Bird') }}</button>
+        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" style="margin-left:1rem;">{{ _('Cancel') }}</a>
     </form>
 </div>
 
