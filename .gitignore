@@ -20,3 +20,6 @@ android/release.jks
 # Images added locally
 *.png
 *.jpg
+
+# But do track Android app icons
+!android/app/src/main/res/mipmap-*/ic_launcher*.png
