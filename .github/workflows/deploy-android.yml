@@ -38,7 +38,8 @@ jobs:
         working-directory: android
         env:
           JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
-        run: ./gradlew bundleRelease
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx3g -XX:+UseG1GC -XX:MaxMetaspaceSize=512m"
+        run: ./gradlew bundleRelease --no-daemon
 
       - name: Upload to Play Store (internal testing)
         uses: r0adkll/upload-google-play@v1
