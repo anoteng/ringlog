@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -68,7 +68,7 @@ private fun FlockRow(flock: Flock, onClick: (Int) -> Unit) {
         supportingContent = {
             Text("${pluralStringResource(R.plurals.bird_count, count, count)}$owner")
         },
-        trailingContent  = { Icon(Icons.Default.KeyboardArrowRight, null) },
+        trailingContent  = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
         modifier = Modifier.clickable { onClick(flock.id) },
     )
     HorizontalDivider(Modifier.padding(start = 16.dp))

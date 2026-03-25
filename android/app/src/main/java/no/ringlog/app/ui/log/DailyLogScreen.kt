@@ -5,8 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,14 +51,14 @@ private fun LogContent(s: LogViewModel.State.Ready, vm: LogViewModel) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             IconButton(onClick = { vm.loadDate(vm.selectedDate.minusDays(1)) }) {
-                Icon(Icons.Default.KeyboardArrowLeft, stringResource(R.string.previous_day))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.previous_day))
             }
             Text(vm.selectedDate.format(fmt), style = MaterialTheme.typography.titleSmall)
             IconButton(
                 onClick = { vm.loadDate(vm.selectedDate.plusDays(1)) },
                 enabled = vm.selectedDate < LocalDate.now(),
             ) {
-                Icon(Icons.Default.KeyboardArrowRight, stringResource(R.string.next_day))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.next_day))
             }
         }
         HorizontalDivider()

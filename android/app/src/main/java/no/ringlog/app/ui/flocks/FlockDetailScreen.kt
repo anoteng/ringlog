@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -98,7 +98,7 @@ private fun BirdRow(bird: Bird, onClick: (Int) -> Unit) {
     ListItem(
         headlineContent   = { Text(label) },
         supportingContent = { Text(sub) },
-        trailingContent   = { Icon(Icons.Default.KeyboardArrowRight, null) },
+        trailingContent   = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
         modifier = Modifier.clickable { onClick(bird.id) },
     )
     HorizontalDivider(Modifier.padding(start = 16.dp))
