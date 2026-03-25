@@ -36,6 +36,8 @@ jobs:
 
       - name: Build release AAB
         working-directory: android
+        env:
+          JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
         run: ./gradlew bundleRelease
 
       - name: Upload to Play Store (internal testing)
