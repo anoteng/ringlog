@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -28,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import no.ringlog.app.BuildConfig
+import no.ringlog.app.R
 import no.ringlog.app.data.local.TokenStore
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
@@ -61,11 +63,9 @@ fun BirdDetailScreen(
     var showImageSheet by remember { mutableStateOf(false) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Show error snackbar on upload failure, reset on success
     LaunchedEffect(uploadState) {
         if (uploadState is FlockViewModel.ImageUploadState.Success ||
             uploadState is FlockViewModel.ImageUploadState.Error) {
-            // Brief delay then reset so the indicator goes away
             kotlinx.coroutines.delay(2000)
             vm.resetImageUpload()
         }
@@ -113,15 +113,15 @@ fun BirdDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text((state as? FlockViewModel.BirdState.Success)?.bird
-                    ?.let { it.name ?: it.ring_number } ?: "Bird") },
+                    ?.let { it.name ?: it.ring_number } ?: stringResource(R.string.bird)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showImageSheet = true }) {
-                        Icon(Icons.Default.CameraAlt, "Change photo")
+                        Icon(Icons.Default.CameraAlt, stringResource(R.string.change_photo))
                     }
                 },
             )
@@ -135,16 +135,15 @@ fun BirdDetailScreen(
                     val bird = s.bird
                     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
                         item {
-                            // Image area
                             Box(
                                 Modifier.fillMaxWidth().padding(bottom = 16.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 if (uploadState is FlockViewModel.ImageUploadState.Loading) {
-                                    Box(
-                                        Modifier.fillMaxWidth().height(180.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) { CircularProgressIndicator() }
+                                    Box(Modifier.fillMaxWidth().height(180.dp),
+                                        contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator()
+                                    }
                                 } else if (bird.has_image) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(context)
@@ -165,35 +164,42 @@ fun BirdDetailScreen(
                                         (uploadState as FlockViewModel.ImageUploadState.Error).msg,
                                         color = MaterialTheme.colorScheme.error,
                                         style = MaterialTheme.typography.bodySmall,
-                                        modifier = Modifier.align(Alignment.BottomCenter)
-                                            .padding(4.dp),
+                                        modifier = Modifier.align(Alignment.BottomCenter).padding(4.dp),
                                     )
                                 }
                             }
 
-                            DetailRow("Ring", bird.ring_number)
-                            if (bird.name != null) DetailRow("Name", bird.name)
-                            DetailRow("Species", bird.species.replaceFirstChar { it.uppercase() })
+                            DetailRow(stringResource(R.string.ring), bird.ring_number)
+                            if (bird.name != null) DetailRow(stringResource(R.string.name), bird.name)
+                            DetailRow(stringResource(R.string.species),
+                                bird.species.replaceFirstChar { it.uppercase() })
                             if (!bird.breed.isNullOrBlank()) {
                                 val breedText = if (!bird.breed_mix.isNullOrBlank())
                                     "${bird.breed} (${bird.breed_mix})" else bird.breed
-                                DetailRow("Breed", breedText)
+                                DetailRow(stringResource(R.string.breed), breedText)
                             }
-                            DetailRow("Sex", bird.sex.replaceFirstChar { it.uppercase() })
+                            DetailRow(stringResource(R.string.sex),
+                                bird.sex.replaceFirstChar { it.uppercase() })
                             if (bird.birth_date != null)
-                                DetailRow("Born", "${if (bird.birth_approximate) "~" else ""}${bird.birth_date}")
-                            if (bird.is_dead) DetailRow("Deceased", bird.death_date ?: "yes")
-                            if (bird.is_sold) DetailRow("Sold", bird.sold_date ?: "yes")
-                            if (!bird.notes.isNullOrBlank()) DetailRow("Notes", bird.notes)
+                                DetailRow(stringResource(R.string.born),
+                                    "${if (bird.birth_approximate) "~" else ""}${bird.birth_date}")
+                            if (bird.is_dead)
+                                DetailRow(stringResource(R.string.deceased),
+                                    bird.death_date ?: stringResource(R.string.yes))
+                            if (bird.is_sold)
+                                DetailRow(stringResource(R.string.sold),
+                                    bird.sold_date ?: stringResource(R.string.yes))
+                            if (!bird.notes.isNullOrBlank())
+                                DetailRow(stringResource(R.string.notes), bird.notes)
                             Spacer(Modifier.height(24.dp))
-                            Text("Notes", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.notes), style = MaterialTheme.typography.titleMedium)
                             Spacer(Modifier.height(8.dp))
                         }
 
                         val notes = bird.notes_list.orEmpty()
                         if (notes.isEmpty()) {
                             item {
-                                Text("No notes.",
+                                Text(stringResource(R.string.no_notes),
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                             }
                         } else {
@@ -215,7 +221,7 @@ fun BirdDetailScreen(
                                     value = noteContent,
                                     onValueChange = { noteContent = it },
                                     modifier = Modifier.weight(1f),
-                                    label = { Text("Add note") },
+                                    label = { Text(stringResource(R.string.add_note)) },
                                     singleLine = true,
                                 )
                                 Button(
@@ -226,7 +232,7 @@ fun BirdDetailScreen(
                                         }
                                     },
                                     modifier = Modifier.align(Alignment.CenterVertically),
-                                ) { Text("Add") }
+                                ) { Text(stringResource(R.string.add)) }
                             }
                         }
                     }
@@ -235,12 +241,11 @@ fun BirdDetailScreen(
         }
     }
 
-    // Bottom sheet: choose camera or gallery
     if (showImageSheet) {
         ModalBottomSheet(onDismissRequest = { showImageSheet = false }) {
             Column(Modifier.padding(bottom = 32.dp)) {
                 ListItem(
-                    headlineContent = { Text("Take a photo") },
+                    headlineContent = { Text(stringResource(R.string.take_photo)) },
                     leadingContent = { Icon(Icons.Default.CameraAlt, null) },
                     modifier = Modifier.clickable {
                         showImageSheet = false
@@ -248,7 +253,7 @@ fun BirdDetailScreen(
                     },
                 )
                 ListItem(
-                    headlineContent = { Text("Choose from gallery") },
+                    headlineContent = { Text(stringResource(R.string.choose_from_gallery)) },
                     leadingContent = { Icon(Icons.Default.Photo, null) },
                     modifier = Modifier.clickable {
                         showImageSheet = false

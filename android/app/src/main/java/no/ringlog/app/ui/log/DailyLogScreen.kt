@@ -11,10 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import no.ringlog.app.R
 import no.ringlog.app.data.api.Flock
 import no.ringlog.app.data.api.LogEntry
 import no.ringlog.app.ui.components.ErrorScreen
@@ -28,7 +30,7 @@ fun DailyLogScreen(vm: LogViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.init() }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Daily Log") }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.daily_log)) }) }) { padding ->
         Box(Modifier.padding(padding)) {
             when (val s = state) {
                 is LogViewModel.State.Loading -> LoadingScreen()
@@ -43,21 +45,20 @@ fun DailyLogScreen(vm: LogViewModel = hiltViewModel()) {
 private fun LogContent(s: LogViewModel.State.Ready, vm: LogViewModel) {
     val fmt = DateTimeFormatter.ofPattern("EEE d MMM yyyy")
     Column {
-        // Date navigator
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             IconButton(onClick = { vm.loadDate(vm.selectedDate.minusDays(1)) }) {
-                Icon(Icons.Default.KeyboardArrowLeft, "Previous day")
+                Icon(Icons.Default.KeyboardArrowLeft, stringResource(R.string.previous_day))
             }
             Text(vm.selectedDate.format(fmt), style = MaterialTheme.typography.titleSmall)
             IconButton(
                 onClick = { vm.loadDate(vm.selectedDate.plusDays(1)) },
                 enabled = vm.selectedDate < LocalDate.now(),
             ) {
-                Icon(Icons.Default.KeyboardArrowRight, "Next day")
+                Icon(Icons.Default.KeyboardArrowRight, stringResource(R.string.next_day))
             }
         }
         HorizontalDivider()
@@ -77,6 +78,9 @@ private fun FlockLogRow(flock: Flock, existing: LogEntry?, vm: LogViewModel) {
     var notes   by remember(flock.id, vm.selectedDate) { mutableStateOf(existing?.notes ?: "") }
     var saved   by remember(flock.id, vm.selectedDate) { mutableStateOf(false) }
 
+    val saveLabel  = stringResource(R.string.save)
+    val savedLabel = stringResource(R.string.saved)
+
     Card(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
         Column(Modifier.padding(12.dp)) {
             Text(flock.name, style = MaterialTheme.typography.titleSmall)
@@ -84,30 +88,30 @@ private fun FlockLogRow(flock: Flock, existing: LogEntry?, vm: LogViewModel) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = eggs, onValueChange = { eggs = it; saved = false },
-                    label = { Text("Eggs") }, modifier = Modifier.weight(1f),
+                    label = { Text(stringResource(R.string.eggs)) }, modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true,
                 )
                 OutlinedTextField(
                     value = light, onValueChange = { light = it; saved = false },
-                    label = { Text("Light h") }, modifier = Modifier.weight(1f),
+                    label = { Text(stringResource(R.string.light_hours)) }, modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true,
                 )
             }
             Spacer(Modifier.height(4.dp))
             OutlinedTextField(
                 value = notes, onValueChange = { notes = it; saved = false },
-                label = { Text("Notes") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                label = { Text(stringResource(R.string.notes)) }, modifier = Modifier.fillMaxWidth(), singleLine = true,
             )
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = bedding, onCheckedChange = { bedding = it; saved = false })
-                    Text("Bedding changed", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.bedding_changed), style = MaterialTheme.typography.bodySmall)
                 }
                 Button(onClick = {
                     vm.save(flock.id, eggs.toIntOrNull(), light.toFloatOrNull(), bedding, notes.ifBlank { null })
                     saved = true
-                }) { Text(if (saved) "Saved ✓" else "Save") }
+                }) { Text(if (saved) savedLabel else saveLabel) }
             }
         }
     }

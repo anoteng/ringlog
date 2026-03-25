@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bird_registry">Fugleregister</string>
+
+    <string name="username">Brukernavn</string>
+    <string name="password">Passord</string>
+    <string name="log_in">Logg inn</string>
+
+    <string name="back">Tilbake</string>
+    <string name="retry">Prøv igjen</string>
+    <string name="report">Rapport</string>
+    <string name="settings">Innstillinger</string>
+    <string name="notes">Notater</string>
+    <string name="save">Lagre</string>
+    <string name="saved">Lagret ✓</string>
+    <string name="add">Legg til</string>
+    <string name="yes">ja</string>
+    <string name="unknown">Ukjent</string>
+
+    <string name="my_flocks">Mine flokker</string>
+    <string name="my_flocks_header">MINE FLOKKER</string>
+    <string name="shared_with_me">DELT MED MEG</string>
+    <string name="no_flocks">Ingen flokker ennå. Opprett en på ringlog.no.</string>
+    <string name="no_birds_in_flock">Ingen fugler i denne flokken.</string>
+    <string name="deceased_sold">DØD / SOLGT</string>
+    <plurals name="bird_count">
+        <item quantity="one">%1$d fugl</item>
+        <item quantity="other">%1$d fugler</item>
+    </plurals>
+
+    <string name="flock_report_title">%1$s — Rapport</string>
+    <string name="total_eggs">Egg totalt</string>
+    <string name="daily_avg">Daglig snitt</string>
+    <string name="best_day">Beste dag</string>
+    <string name="days_logged">Dager logget</string>
+    <string name="laying_hens">Verpehøner</string>
+    <string name="date">Dato</string>
+    <string name="eggs">Egg</string>
+    <string name="avg_per_hen">Snitt/høne</string>
+    <string name="light">Lys</string>
+
+    <string name="bird">Fugl</string>
+    <string name="ring">Ring</string>
+    <string name="name">Navn</string>
+    <string name="species">Art</string>
+    <string name="breed">Rase</string>
+    <string name="sex">Kjønn</string>
+    <string name="born">Født</string>
+    <string name="deceased">Død</string>
+    <string name="sold">Solgt</string>
+    <string name="no_notes">Ingen notater.</string>
+    <string name="add_note">Legg til notat</string>
+    <string name="change_photo">Endre bilde</string>
+    <string name="take_photo">Ta et bilde</string>
+    <string name="choose_from_gallery">Velg fra galleri</string>
+
+    <string name="daily_log">Dagslogg</string>
+    <string name="light_hours">Lys t</string>
+    <string name="bedding_changed">Strø byttet</string>
+    <string name="previous_day">Forrige dag</string>
+    <string name="next_day">Neste dag</string>
+
+    <string name="hatches">Klekkeplaner</string>
+    <string name="hatch">Klekkeplan</string>
+    <string name="my_hatches">MINE KLEKKEPLANER</string>
+    <string name="no_hatches">Ingen klekkeplaner.</string>
+    <string name="hatch_number">Klekkeplan #%1$d</string>
+    <string name="progress">Fremdrift</string>
+    <string name="progress_detail">%1$d%% · %2$d dager igjen</string>
+    <string name="status">Status</string>
+    <string name="started">Startet</string>
+    <string name="expected_hatch">Forventet klekkedato</string>
+    <string name="set">Satt inn</string>
+    <string name="discarded">Kassert</string>
+    <string name="to_brooder">Til kvekker</string>
+    <string name="hatched">Klekket</string>
+    <string name="incubation">Ruging</string>
+    <string name="incubation_days">%1$d dager</string>
+    <string name="lockdown">Nedstenging</string>
+    <string name="lockdown_day">Nedstengingsdag</string>
+    <string name="lockdown_day_value">dag %1$d</string>
+    <string name="humidity_incubation">Fuktighet (rug.)</string>
+    <string name="humidity_lockdown">Fuktighet (ned.)</string>
+    <string name="status_incubating_label">Ruger</string>
+    <string name="status_lockdown_label">Nedstenging</string>
+    <string name="status_hatching_label">Klekker</string>
+    <string name="status_done_label">Ferdig</string>
+    <string name="status_incubating">Ruger · %1$d dager igjen</string>
+    <string name="status_hatching">Klekker!</string>
+    <string name="status_done_hatched">Ferdig · klekket %1$s</string>
+</resources>

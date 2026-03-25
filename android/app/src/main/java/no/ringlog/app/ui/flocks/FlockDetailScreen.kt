@@ -10,9 +10,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import no.ringlog.app.R
 import no.ringlog.app.data.api.Bird
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
@@ -29,15 +31,22 @@ fun FlockDetailScreen(
     val state by vm.detailState.collectAsStateWithLifecycle()
     LaunchedEffect(flockId) { vm.loadFlock(flockId) }
 
-    val flockName = (state as? FlockViewModel.DetailState.Success)?.flock?.name ?: "Flock"
+    val flockName = (state as? FlockViewModel.DetailState.Success)?.flock?.name
+        ?: stringResource(R.string.my_flocks)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(flockName) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
+                    }
+                },
                 actions = {
-                    TextButton(onClick = { onReportClick(flockId, flockName) }) { Text("Report") }
+                    TextButton(onClick = { onReportClick(flockId, flockName) }) {
+                        Text(stringResource(R.string.report))
+                    }
                 },
             )
         }
@@ -53,15 +62,20 @@ fun FlockDetailScreen(
                     LazyColumn {
                         if (alive.isEmpty() && dead.isEmpty()) {
                             item { Spacer(Modifier.height(32.dp)) }
-                            item { Text("No birds in this flock.", Modifier.padding(16.dp),
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
+                            item {
+                                Text(stringResource(R.string.no_birds_in_flock),
+                                     Modifier.padding(16.dp),
+                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                            }
                         }
                         items(alive) { BirdRow(it, onBirdClick) }
                         if (dead.isNotEmpty()) {
-                            item { Text("DECEASED / SOLD",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)) }
+                            item {
+                                Text(stringResource(R.string.deceased_sold),
+                                     style = MaterialTheme.typography.labelSmall,
+                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                     modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp))
+                            }
                             items(dead) { BirdRow(it, onBirdClick) }
                         }
                     }
