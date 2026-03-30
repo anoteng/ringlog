@@ -7,6 +7,12 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="log_in">Log in</string>
+    <string name="register">Register</string>
+    <string name="create_account">Create account</string>
+    <string name="email_optional">Email (optional)</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="back_to_login">Back to login</string>
+    <string name="no_account">Don\'t have an account?</string>
 
     <!-- Navigation / common -->
     <string name="back">Back</string>

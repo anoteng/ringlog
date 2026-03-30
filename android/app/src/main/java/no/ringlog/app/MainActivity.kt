@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.data.local.TokenStore
 import no.ringlog.app.data.repository.AuthRepository
 import no.ringlog.app.ui.auth.LoginScreen
+import no.ringlog.app.ui.auth.RegisterScreen
 import no.ringlog.app.ui.birds.BirdDetailScreen
 import no.ringlog.app.ui.flocks.FlockDetailScreen
 import no.ringlog.app.ui.flocks.FlockListScreen
@@ -67,7 +68,21 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
     val loggedIn by auth.loggedIn.collectAsStateWithLifecycle()
 
     if (!loggedIn) {
-        LoginScreen(onLoggedIn = {})
+        val authNav = rememberNavController()
+        NavHost(authNav, startDestination = "login") {
+            composable("login") {
+                LoginScreen(
+                    onLoggedIn = {},
+                    onRegister = { authNav.navigate("register") },
+                )
+            }
+            composable("register") {
+                RegisterScreen(
+                    onRegistered = {},
+                    onBack = { authNav.popBackStack() },
+                )
+            }
+        }
         return
     }
 

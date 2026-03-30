@@ -1,6 +1,7 @@
 package no.ringlog.app.data.api
 
 data class LoginRequest(val username: String, val password: String, val device_name: String = "Android")
+data class RegisterRequest(val username: String, val password: String, val email: String? = null, val device_name: String = "Android")
 data class LoginResponse(val token: String, val username: String, val user_id: Int)
 data class MeResponse(val id: Int, val username: String, val lang: String)
 

@@ -11,6 +11,9 @@ interface RingLogApi {
     @POST("auth/login")
     suspend fun login(@Body body: LoginRequest): Response<LoginResponse>
 
+    @POST("auth/register")
+    suspend fun register(@Body body: RegisterRequest): Response<LoginResponse>
+
     @POST("auth/logout")
     suspend fun logout(): Response<OkResponse>
 

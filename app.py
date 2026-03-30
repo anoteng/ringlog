@@ -1530,6 +1530,38 @@ def api_login():
     return jsonify({"token": token, "username": user["username"], "user_id": user["id"]})
 
 
+@app.route("/api/v1/auth/register", methods=["POST"])
+def api_register():
+    data     = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    email    = (data.get("email") or "").strip() or None
+    password = data.get("password") or ""
+    device   = (data.get("device_name") or "")[:128]
+    if not username or len(username) < 3:
+        return jsonify({"error": "Username must be at least 3 characters"}), 400
+    if not username.replace("_", "").isalnum():
+        return jsonify({"error": "Username may only contain letters, numbers, and underscores"}), 400
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters"}), 400
+    db = get_db()
+    try:
+        db.execute(
+            "INSERT INTO users (username, email, password_hash, terms_accepted_at) VALUES (?, ?, ?, NOW())",
+            (username, email, generate_password_hash(password))
+        )
+        db.commit()
+    except pymysql.IntegrityError as e:
+        if "email" in str(e).lower():
+            return jsonify({"error": "That email address is already registered"}), 409
+        return jsonify({"error": "Username already taken"}), 409
+    user  = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    token = secrets.token_hex(32)
+    db.execute("INSERT INTO user_tokens (user_id, token, device_name) VALUES (?,?,?)",
+               (user["id"], token, device or None))
+    db.commit()
+    return jsonify({"token": token, "username": user["username"], "user_id": user["id"]}), 201
+
+
 @app.route("/api/v1/auth/logout", methods=["POST"])
 @api_login_required
 def api_logout():
