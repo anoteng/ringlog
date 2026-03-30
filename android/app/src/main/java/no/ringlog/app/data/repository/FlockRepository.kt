@@ -47,7 +47,7 @@ class FlockRepository @Inject constructor(private val api: RingLogApi) {
                 it.toRequestBody(imageMime?.toMediaTypeOrNull() ?: "image/jpeg".toMediaTypeOrNull()))
         }
         val resp = api.updateBird(birdId, parts, imagePart)
-        if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to update bird")
+        if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to update bird (${resp.code()}): ${resp.errorBody()?.string()}")
     }
 
     suspend fun uploadBirdImage(birdId: Int, bytes: ByteArray, mime: String): Result<Unit> = runCatching {

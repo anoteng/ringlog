@@ -26,8 +26,10 @@ class AuthRepository @Inject constructor(
         }
     }
 
+    fun logoutLocal() = tokenStore.clear()
+
     suspend fun logout() {
-        runCatching { api.logout() }
         tokenStore.clear()
+        runCatching { api.logout() }
     }
 }

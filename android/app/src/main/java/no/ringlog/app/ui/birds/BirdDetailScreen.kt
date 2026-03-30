@@ -385,7 +385,7 @@ private fun EditBirdForm(
     soldDate: String, onSoldDateChange: (String) -> Unit,
     errorMsg: String?,
 ) {
-    val sexOptions = listOf("hen", "rooster", "unknown")
+    val sexOptions = listOf("female", "male", "unknown")
     var sexExpanded by remember { mutableStateOf(false) }
 
     Column(

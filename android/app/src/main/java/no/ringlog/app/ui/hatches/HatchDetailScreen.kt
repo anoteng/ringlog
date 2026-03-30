@@ -94,8 +94,6 @@ fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, vm: HatchViewModel = hil
                             h.species.replaceFirstChar { it.uppercase() })
                         DetailRow(stringResource(R.string.incubation),
                             stringResource(R.string.incubation_days, h.incubation_days))
-                        DetailRow(stringResource(R.string.lockdown_day),
-                            stringResource(R.string.lockdown_day_value, h.lockdown_day))
                         if (h.humidity_incubation != null)
                             DetailRow(stringResource(R.string.humidity_incubation), "${h.humidity_incubation}%")
                         if (h.humidity_lockdown != null)
