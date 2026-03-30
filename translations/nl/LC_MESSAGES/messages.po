@@ -821,7 +821,7 @@ msgstr "Startdatum en tijd"
 #: templates/hatch_form.html:34 templates/hatch_view.html:54
 #: templates/hatch_view.html:86
 msgid "Eggs set"
-msgstr "Eieren ingelegd"
+msgstr "Gestart"
 
 #: templates/hatch_form.html:36
 msgid "e.g. 12"
@@ -1010,7 +1010,7 @@ msgstr "Gestart"
 
 #: templates/hatches.html:55
 msgid "d left"
-msgstr "d over"
+msgstr "d resterend"
 
 #: templates/hatches.html:59
 msgid "hatched"

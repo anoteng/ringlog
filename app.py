@@ -1965,7 +1965,7 @@ def api_hatch_detail(hatch_id):
         "timeline": {
             "status": tl["status"], "days_remaining": tl.get("days_remaining"),
             "progress_pct": tl.get("progress_pct"),
-            "lockdown_dt": str(tl["lockdown_dt"]) if tl.get("lockdown_dt") else None,
+            "lockdown_dt": str(tl["lockdown"]) if tl.get("lockdown") else None,
             "hatch_dt": str(tl["hatch_dt"]) if tl.get("hatch_dt") else None,
         },
     })

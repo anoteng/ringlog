@@ -37,9 +37,8 @@ import no.ringlog.app.data.local.TokenStore
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
 import no.ringlog.app.ui.flocks.FlockViewModel
+import no.ringlog.app.ui.util.formatIsoDate
 import java.io.File
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 private fun createCameraImageUri(context: android.content.Context): Uri {
     val dir = File(context.cacheDir, "camera").also { it.mkdirs() }
@@ -282,13 +281,13 @@ fun BirdDetailScreen(
                                     b.sex.replaceFirstChar { it.uppercase() })
                                 if (b.birth_date != null)
                                     DetailRow(stringResource(R.string.born),
-                                        "${if (b.birth_approximate) "~" else ""}${b.birth_date}")
+                                        "${if (b.birth_approximate) "~" else ""}${formatIsoDate(b.birth_date)}")
                                 if (b.is_dead)
                                     DetailRow(stringResource(R.string.deceased),
-                                        b.death_date ?: stringResource(R.string.yes))
+                                        b.death_date?.let { formatIsoDate(it) } ?: stringResource(R.string.yes))
                                 if (b.is_sold)
                                     DetailRow(stringResource(R.string.sold),
-                                        b.sold_date ?: stringResource(R.string.yes))
+                                        b.sold_date?.let { formatIsoDate(it) } ?: stringResource(R.string.yes))
                                 if (!b.notes.isNullOrBlank())
                                     DetailRow(stringResource(R.string.notes), b.notes)
                                 Spacer(Modifier.height(24.dp))
@@ -305,7 +304,7 @@ fun BirdDetailScreen(
                             } else {
                                 items(notes) { note ->
                                     Column(Modifier.padding(vertical = 6.dp)) {
-                                        Text(note.note_date, style = MaterialTheme.typography.labelSmall,
+                                        Text(formatIsoDate(note.note_date), style = MaterialTheme.typography.labelSmall,
                                              color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f))
                                         Text(note.content, style = MaterialTheme.typography.bodyMedium)
                                         HorizontalDivider(Modifier.padding(top = 6.dp))

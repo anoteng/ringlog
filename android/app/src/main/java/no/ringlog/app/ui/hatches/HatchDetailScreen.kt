@@ -12,19 +12,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import no.ringlog.app.R
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
-
-private fun formatIsoDateTime(dt: String): String {
-    return try {
-        val ldt = LocalDateTime.parse(dt.replace(" ", "T").take(19))
-        ldt.format(DateTimeFormatter.ofPattern("d MMM yyyy  HH:mm", Locale.getDefault()))
-    } catch (_: Exception) { dt.take(16).replace("T", "  ") }
-}
+import no.ringlog.app.ui.util.formatIsoDate
+import no.ringlog.app.ui.util.formatIsoDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +67,7 @@ fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, vm: HatchViewModel = hil
                             else -> tl?.status?.replaceFirstChar { it.uppercase() } ?: "—"
                         }
                         DetailRow(stringResource(R.string.status),         statusLabel)
-                        DetailRow(stringResource(R.string.started),        h.start_datetime.take(10))
+                        DetailRow(stringResource(R.string.started),        formatIsoDate(h.start_datetime))
                         if (tl?.lockdown_dt != null)
                             DetailRow(stringResource(R.string.lockdown),   formatIsoDateTime(tl.lockdown_dt))
                         if (tl?.hatch_dt != null)
