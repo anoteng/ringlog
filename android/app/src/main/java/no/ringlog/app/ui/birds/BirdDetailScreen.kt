@@ -39,6 +39,8 @@ import no.ringlog.app.ui.components.LoadingScreen
 import no.ringlog.app.ui.flocks.FlockViewModel
 import no.ringlog.app.ui.util.formatIsoDate
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 private fun createCameraImageUri(context: android.content.Context): Uri {
     val dir = File(context.cacheDir, "camera").also { it.mkdirs() }
