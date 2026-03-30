@@ -31,7 +31,7 @@ class TokenStore @Inject constructor(@ApplicationContext context: Context) {
                      else prefs.edit().remove(KEY_USERNAME).apply()
 
     fun clear() {
-        prefs.edit().clear().apply()
+        prefs.edit().clear().commit()
     }
 
     companion object {
