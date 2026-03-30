@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import no.ringlog.app.data.api.LoginRequest
+import no.ringlog.app.data.api.RegisterRequest
 import no.ringlog.app.data.api.RingLogApi
 import no.ringlog.app.data.local.TokenStore
 import javax.inject.Inject
