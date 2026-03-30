@@ -13,7 +13,10 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -22,7 +25,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.data.local.TokenStore
 import no.ringlog.app.data.repository.AuthRepository
 import no.ringlog.app.ui.auth.LoginScreen
@@ -64,10 +67,10 @@ private val bottomNavItems = listOf(
 @Composable
 private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
     val navController = rememberNavController()
-    var loggedIn by remember { mutableStateOf(auth.isLoggedIn) }
+    val loggedIn by auth.loggedIn.collectAsStateWithLifecycle()
 
     if (!loggedIn) {
-        LoginScreen(onLoggedIn = { loggedIn = true })
+        LoginScreen(onLoggedIn = {})
         return
     }
 
@@ -147,11 +150,8 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
                 HatchDetailScreen(hatchId = id, onBack = { navController.popBackStack() })
             }
             composable("account") {
-                val scope = rememberCoroutineScope()
                 AccountScreen(username = tokenStore.username ?: "", onLogout = {
                     auth.logoutLocal()
-                    loggedIn = false
-                    scope.launch { runCatching { auth.logout() } }
                 })
             }
         }
