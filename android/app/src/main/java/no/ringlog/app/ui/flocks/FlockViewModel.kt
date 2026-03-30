@@ -34,16 +34,25 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
         data class Error(val msg: String) : ImageUploadState()
     }
 
+    sealed class UpdateBirdState {
+        object Idle : UpdateBirdState()
+        object Loading : UpdateBirdState()
+        object Success : UpdateBirdState()
+        data class Error(val msg: String) : UpdateBirdState()
+    }
+
     private val _listState   = MutableStateFlow<ListState>(ListState.Loading)
     private val _detailState = MutableStateFlow<DetailState>(DetailState.Loading)
     private val _birdState   = MutableStateFlow<BirdState>(BirdState.Loading)
 
-    private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
+    private val _imageUploadState  = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
+    private val _updateBirdState   = MutableStateFlow<UpdateBirdState>(UpdateBirdState.Idle)
 
     val listState        = _listState.asStateFlow()
     val detailState      = _detailState.asStateFlow()
     val birdState        = _birdState.asStateFlow()
     val imageUploadState = _imageUploadState.asStateFlow()
+    val updateBirdState  = _updateBirdState.asStateFlow()
 
     fun loadFlocks() {
         viewModelScope.launch {
@@ -98,6 +107,23 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
     }
 
     fun resetImageUpload() { _imageUploadState.value = ImageUploadState.Idle }
+
+    fun updateBird(birdId: Int, fields: Map<String, String>) {
+        viewModelScope.launch {
+            _updateBirdState.value = UpdateBirdState.Loading
+            repo.updateBird(birdId, fields).fold(
+                onSuccess = {
+                    _birdState.value = BirdState.Success(it)
+                    _updateBirdState.value = UpdateBirdState.Success
+                },
+                onFailure = {
+                    _updateBirdState.value = UpdateBirdState.Error(it.message ?: "Update failed")
+                }
+            )
+        }
+    }
+
+    fun resetUpdateBird() { _updateBirdState.value = UpdateBirdState.Idle }
 
     fun addNote(birdId: Int, date: String, content: String) {
         viewModelScope.launch {

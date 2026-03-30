@@ -149,8 +149,10 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
             composable("account") {
                 val scope = rememberCoroutineScope()
                 AccountScreen(username = tokenStore.username ?: "", onLogout = {
-                    scope.launch { auth.logout() }
-                    loggedIn = false
+                    scope.launch {
+                        auth.logout()
+                        loggedIn = false
+                    }
                 })
             }
         }

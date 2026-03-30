@@ -50,6 +50,11 @@
     <string name="sold">Verkocht</string>
     <string name="no_notes">Nog geen notities.</string>
     <string name="add_note">Notitie toevoegen</string>
+    <string name="edit_bird">Vogel bewerken</string>
+    <string name="breed_mix">Ras mix</string>
+    <string name="birth_approximate">Geboortedatum bij benadering</string>
+    <string name="death_date">Sterfdatum</string>
+    <string name="sold_date">Verkoopdatum</string>
     <string name="change_photo">Foto wijzigen</string>
     <string name="take_photo">Foto maken</string>
     <string name="choose_from_gallery">Kiezen uit galerij</string>

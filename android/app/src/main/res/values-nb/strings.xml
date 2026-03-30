@@ -50,6 +50,11 @@
     <string name="sold">Solgt</string>
     <string name="no_notes">Ingen notater.</string>
     <string name="add_note">Legg til notat</string>
+    <string name="edit_bird">Rediger fugl</string>
+    <string name="breed_mix">Rasemiks</string>
+    <string name="birth_approximate">Omtrentlig fødselsdato</string>
+    <string name="death_date">Dødsdato</string>
+    <string name="sold_date">Salgsdato</string>
     <string name="change_photo">Endre bilde</string>
     <string name="take_photo">Ta et bilde</string>
     <string name="choose_from_gallery">Velg fra galleri</string>

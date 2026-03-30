@@ -56,6 +56,11 @@
     <string name="sold">Sold</string>
     <string name="no_notes">No notes.</string>
     <string name="add_note">Add note</string>
+    <string name="edit_bird">Edit bird</string>
+    <string name="breed_mix">Breed mix</string>
+    <string name="birth_approximate">Birth date approximate</string>
+    <string name="death_date">Date of death</string>
+    <string name="sold_date">Date sold</string>
     <string name="change_photo">Change photo</string>
     <string name="take_photo">Take a photo</string>
     <string name="choose_from_gallery">Choose from gallery</string>
