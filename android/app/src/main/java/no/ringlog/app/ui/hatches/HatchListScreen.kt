@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,11 +23,18 @@ import no.ringlog.app.ui.components.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HatchListScreen(onHatchClick: (Int) -> Unit, vm: HatchViewModel = hiltViewModel()) {
+fun HatchListScreen(onHatchClick: (Int) -> Unit, onNewHatch: () -> Unit, vm: HatchViewModel = hiltViewModel()) {
     val state by vm.listState.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.loadHatches() }
 
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.hatches)) }) }) { padding ->
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.hatches)) }) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onNewHatch) {
+                Icon(Icons.Default.Add, stringResource(R.string.new_hatch))
+            }
+        },
+    ) { padding ->
         Box(Modifier.padding(padding)) {
             when (val s = state) {
                 is HatchViewModel.ListState.Loading -> LoadingScreen()

@@ -105,5 +105,22 @@ data class FlockReport(
     val logs: List<ReportEntry>,
 )
 
+data class HatchRequest(
+    val name: String?,
+    val species: String,
+    val start_datetime: String,
+    val incubation_days: Int,
+    val lockdown_day: Int,
+    val humidity_incubation: Float?,
+    val humidity_lockdown: Float?,
+    val egg_count: Int?,
+    val eggs_brooder: Int?,
+    val eggs_discarded: Int?,
+    val eggs_hatched: Int?,
+    val notes: String?,
+)
+
+data class HatchCreateResponse(val id: Int, val name: String?, val species: String)
+
 data class OkResponse(val ok: Boolean, val error: String? = null)
 data class ErrorResponse(val error: String)

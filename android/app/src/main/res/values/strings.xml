@@ -81,6 +81,11 @@
     <!-- Hatches -->
     <string name="hatches">Hatches</string>
     <string name="hatch">Hatch</string>
+    <string name="new_hatch">New hatch</string>
+    <string name="edit_hatch">Edit hatch</string>
+    <string name="start_datetime">Start date/time</string>
+    <string name="incubation_days_label">Incubation days</string>
+    <string name="lockdown_day_label">Lockdown day</string>
     <string name="my_hatches">MY HATCHES</string>
     <string name="no_hatches">No hatches.</string>
     <string name="hatch_number">Hatch #%1$d</string>

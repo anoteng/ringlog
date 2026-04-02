@@ -32,6 +32,7 @@ import no.ringlog.app.ui.flocks.FlockDetailScreen
 import no.ringlog.app.ui.flocks.FlockListScreen
 import no.ringlog.app.ui.flocks.FlockReportScreen
 import no.ringlog.app.ui.hatches.HatchDetailScreen
+import no.ringlog.app.ui.hatches.HatchFormScreen
 import no.ringlog.app.ui.hatches.HatchListScreen
 import no.ringlog.app.ui.log.DailyLogScreen
 import no.ringlog.app.ui.theme.RingLogTheme
@@ -155,11 +156,49 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
             }
             composable("log")     { DailyLogScreen() }
             composable("hatches") {
-                HatchListScreen(onHatchClick = { navController.navigate("hatch/$it") })
+                HatchListScreen(
+                    onHatchClick = { navController.navigate("hatch/$it") },
+                    onNewHatch   = { navController.navigate("hatch/new") },
+                )
+            }
+            composable("hatch/new") {
+                HatchFormScreen(
+                    hatchId  = null,
+                    initial  = null,
+                    onSaved  = { id ->
+                        navController.navigate("hatch/$id") {
+                            popUpTo("hatch/new") { inclusive = true }
+                        }
+                    },
+                    onBack   = { navController.popBackStack() },
+                )
             }
             composable("hatch/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
                 val id = it.arguments!!.getInt("id")
-                HatchDetailScreen(hatchId = id, onBack = { navController.popBackStack() })
+                HatchDetailScreen(
+                    hatchId = id,
+                    onBack  = { navController.popBackStack() },
+                    onEdit  = { navController.navigate("hatch/$id/edit") },
+                )
+            }
+            composable("hatch/{id}/edit", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
+                val id = it.arguments!!.getInt("id")
+                // We need the existing hatch data to pre-populate the form. Load it via the ViewModel.
+                val vm: no.ringlog.app.ui.hatches.HatchViewModel = androidx.hilt.navigation.compose.hiltViewModel(
+                    remember(id) { navController.getBackStackEntry("hatch/$id") }
+                )
+                val detailState by vm.detailState.collectAsStateWithLifecycle()
+                val hatch = (detailState as? no.ringlog.app.ui.hatches.HatchViewModel.DetailState.Success)?.hatch
+                HatchFormScreen(
+                    hatchId = id,
+                    initial = hatch,
+                    onSaved = {
+                        navController.navigate("hatch/$id") {
+                            popUpTo("hatches") { inclusive = false }
+                        }
+                    },
+                    onBack  = { navController.popBackStack() },
+                )
             }
             composable("account") {
                 AccountScreen(username = tokenStore.username ?: "", onLogout = {

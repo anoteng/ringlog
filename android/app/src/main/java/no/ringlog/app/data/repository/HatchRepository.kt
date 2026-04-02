@@ -1,6 +1,7 @@
 package no.ringlog.app.data.repository
 
 import no.ringlog.app.data.api.Hatch
+import no.ringlog.app.data.api.HatchRequest
 import no.ringlog.app.data.api.HatchesResponse
 import no.ringlog.app.data.api.RingLogApi
 import javax.inject.Inject
@@ -17,6 +18,17 @@ class HatchRepository @Inject constructor(private val api: RingLogApi) {
     suspend fun getHatchDetail(id: Int): Result<Hatch> = runCatching {
         val resp = api.hatchDetail(id)
         if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to load hatch")
+    }
+
+    suspend fun createHatch(req: HatchRequest): Result<Int> = runCatching {
+        val resp = api.createHatch(req)
+        if (resp.isSuccessful) resp.body()!!.id
+        else throw Exception("Failed to create hatch (${resp.code()})")
+    }
+
+    suspend fun updateHatch(id: Int, req: HatchRequest): Result<Unit> = runCatching {
+        val resp = api.updateHatch(id, req)
+        if (!resp.isSuccessful) throw Exception("Failed to update hatch (${resp.code()})")
     }
 
     suspend fun deleteHatch(id: Int): Result<Unit> = runCatching {

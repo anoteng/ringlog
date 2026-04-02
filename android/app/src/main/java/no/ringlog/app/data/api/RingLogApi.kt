@@ -98,6 +98,12 @@ interface RingLogApi {
     @GET("hatches/{id}")
     suspend fun hatchDetail(@Path("id") id: Int): Response<Hatch>
 
+    @POST("hatches")
+    suspend fun createHatch(@Body body: HatchRequest): Response<HatchCreateResponse>
+
+    @PUT("hatches/{id}")
+    suspend fun updateHatch(@Path("id") id: Int, @Body body: HatchRequest): Response<OkResponse>
+
     @DELETE("hatches/{id}")
     suspend fun deleteHatch(@Path("id") id: Int): Response<OkResponse>
 }
