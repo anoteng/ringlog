@@ -617,8 +617,8 @@ def add_bird(username, flock_name):
             db.execute(
                 """INSERT INTO birds
                    (flock_id, ring_number, name, species, breed, breed_mix, sex,
-                    birth_date, birth_approximate, notes, image, image_mime)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    birth_date, birth_approximate, notes, image, image_mime, flock_join_date)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURDATE())""",
                 (
                     flock["id"], ring,
                     request.form.get("name", "").strip() or None,
@@ -1330,9 +1330,17 @@ def flock_report(username, flock_name):
         days = 30
 
     logs = db.execute(
-        """SELECT log_date, eggs_collected, light_hours, bedding_changed
-           FROM flock_log WHERE flock_id = ? AND log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-           ORDER BY log_date""",
+        """SELECT l.log_date, l.eggs_collected, l.light_hours, l.bedding_changed,
+              (SELECT COUNT(*) FROM birds b
+               WHERE b.flock_id = l.flock_id AND b.sex = 'female'
+                 AND b.flock_join_date <= l.log_date
+                 AND (b.death_date IS NULL OR b.death_date > l.log_date)
+                 AND (b.sold_date IS NULL OR b.sold_date > l.log_date)
+                 AND (b.birth_date IS NULL OR b.birth_date <= DATE_SUB(l.log_date, INTERVAL 5 MONTH))
+              ) AS laying_hens
+           FROM flock_log l
+           WHERE l.flock_id = ? AND l.log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+           ORDER BY l.log_date""",
         (flock["id"], days)
     ).fetchall()
 
@@ -1343,18 +1351,16 @@ def flock_report(username, flock_name):
         (flock["id"], days)
     ).fetchall()
 
-    # Active bird count per day is approximated from bird records
     active_count = db.execute(
         """SELECT COUNT(*) AS n FROM birds
            WHERE flock_id = ? AND is_dead = 0 AND is_sold = 0""",
         (flock["id"],)
     ).fetchone()["n"]
 
-    # Laying hens: adult females (sex=female, birth_date unknown or >5 months ago)
     laying_count = db.execute(
         """SELECT COUNT(*) AS n FROM birds
-           WHERE flock_id = ? AND is_dead = 0 AND is_sold = 0
-             AND sex = 'female'
+           WHERE flock_id = ? AND is_dead = 0 AND is_sold = 0 AND sex = 'female'
+             AND flock_join_date <= CURDATE()
              AND (birth_date IS NULL OR birth_date <= DATE_SUB(CURDATE(), INTERVAL 5 MONTH))""",
         (flock["id"],)
     ).fetchone()["n"]
@@ -1675,8 +1681,8 @@ def api_add_bird(flock_id):
     try:
         db.execute(
             """INSERT INTO birds (flock_id, ring_number, name, species, breed, breed_mix, sex,
-               birth_date, birth_approximate, notes, image, image_mime)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+               birth_date, birth_approximate, notes, image, image_mime, flock_join_date)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURDATE())""",
             (flock_id, ring, (f.get("name") or "").strip() or None,
              f.get("species") or "chicken", (f.get("breed") or "").strip() or None,
              (f.get("breed_mix") or "").strip() or None, f.get("sex") or "unknown",
@@ -1876,20 +1882,30 @@ def api_flock_report(flock_id):
     days = min(int(request.args.get("days", 30)), 365)
     db = get_db()
     logs = db.execute(
-        """SELECT log_date, eggs_collected, light_hours, bedding_changed
-           FROM flock_log WHERE flock_id=? AND log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-           ORDER BY log_date""",
+        """SELECT l.log_date, l.eggs_collected, l.light_hours, l.bedding_changed,
+              (SELECT COUNT(*) FROM birds b
+               WHERE b.flock_id = l.flock_id AND b.sex = 'female'
+                 AND b.flock_join_date <= l.log_date
+                 AND (b.death_date IS NULL OR b.death_date > l.log_date)
+                 AND (b.sold_date IS NULL OR b.sold_date > l.log_date)
+                 AND (b.birth_date IS NULL OR b.birth_date <= DATE_SUB(l.log_date, INTERVAL 5 MONTH))
+              ) AS laying_hens
+           FROM flock_log l
+           WHERE l.flock_id=? AND l.log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+           ORDER BY l.log_date""",
         (flock_id, days)
     ).fetchall()
     laying_count = db.execute(
         """SELECT COUNT(*) AS n FROM birds
            WHERE flock_id=? AND is_dead=0 AND is_sold=0 AND sex='female'
+             AND flock_join_date <= CURDATE()
              AND (birth_date IS NULL OR birth_date <= DATE_SUB(CURDATE(), INTERVAL 5 MONTH))""",
         (flock_id,)
     ).fetchone()["n"]
     entries = [{"log_date": str(r["log_date"]), "eggs_collected": r["eggs_collected"],
                 "light_hours": float(r["light_hours"]) if r["light_hours"] is not None else None,
-                "bedding_changed": bool(r["bedding_changed"])} for r in logs]
+                "bedding_changed": bool(r["bedding_changed"]),
+                "laying_hens": r["laying_hens"]} for r in logs]
     egg_days   = [e for e in entries if e["eggs_collected"] is not None]
     total_eggs = sum(e["eggs_collected"] for e in egg_days)
     avg_eggs   = round(total_eggs / len(egg_days), 1) if egg_days else 0

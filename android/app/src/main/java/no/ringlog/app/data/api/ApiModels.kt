@@ -95,6 +95,7 @@ data class ReportEntry(
     val eggs_collected: Int?,
     val light_hours: Float?,
     val bedding_changed: Boolean,
+    val laying_hens: Int?,
 )
 
 data class FlockReport(

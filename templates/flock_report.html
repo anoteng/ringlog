@@ -90,7 +90,7 @@
             <td>{{ row.eggs_collected if row.eggs_collected is not none else '—' }}</td>
             <td>—</td>
             <td>{{ row.light_hours if row.light_hours is not none else '—' }}</td>
-            <td>{{ (row.eggs_collected / laying_count) | round(2) if row.eggs_collected and laying_count else '—' }}</td>
+            <td>{{ (row.eggs_collected / row.laying_hens) | round(2) if row.eggs_collected and row.laying_hens else '—' }}</td>
             <td>{{ '✓' if row.bedding_changed else '' }}</td>
         </tr>
         {% endfor %}

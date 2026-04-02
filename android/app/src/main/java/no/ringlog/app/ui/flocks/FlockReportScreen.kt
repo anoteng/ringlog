@@ -25,6 +25,7 @@ import no.ringlog.app.data.api.FlockReport
 import no.ringlog.app.data.repository.FlockRepository
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
+import no.ringlog.app.ui.util.formatIsoDate
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import javax.inject.Inject
 
@@ -129,10 +130,11 @@ private fun ReportContent(report: FlockReport, flockId: Int, flockName: String, 
 
         val reversed = report.logs.reversed()
         items(reversed) { entry ->
-            val eggsPerHen = if (entry.eggs_collected != null && report.laying_count > 0)
-                "%.2f".format(entry.eggs_collected.toFloat() / report.laying_count) else "—"
+            val hens = entry.laying_hens ?: 0
+            val eggsPerHen = if (entry.eggs_collected != null && hens > 0)
+                "%.2f".format(entry.eggs_collected.toFloat() / hens) else "—"
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
-                Text(entry.log_date,                              Modifier.weight(2f),   style = MaterialTheme.typography.bodySmall)
+                Text(formatIsoDate(entry.log_date),               Modifier.weight(2f),   style = MaterialTheme.typography.bodySmall)
                 Text(entry.eggs_collected?.toString() ?: "—",    Modifier.weight(1f),   style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.End)
                 Text(eggsPerHen,                                  Modifier.weight(1.2f), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.End)
                 Text(entry.light_hours?.let { "%.1f".format(it) } ?: "—", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.End)
