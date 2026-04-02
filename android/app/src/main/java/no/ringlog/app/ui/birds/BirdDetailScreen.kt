@@ -248,8 +248,8 @@ fun BirdDetailScreen(
                                     } else if (b.has_image) {
                                         AsyncImage(
                                             model = ImageRequest.Builder(context)
-                                                .data(BuildConfig.API_BASE_URL.trimEnd('/').dropLast(4) +
-                                                        "v1/birds/${b.id}/image")
+                                                .data(BuildConfig.API_BASE_URL.trimEnd('/') +
+                                                        "/birds/${b.id}/image")
                                                 .addHeader("Authorization",
                                                     "Bearer ${tokenStore.token.orEmpty()}")
                                                 .crossfade(true)
