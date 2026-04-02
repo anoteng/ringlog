@@ -1623,9 +1623,10 @@ def api_flock_detail(flock_id):
         "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id=f.user_id WHERE f.id=?",
         (flock_id,)
     ).fetchone()
-    birds = db.execute(
-        "SELECT * FROM birds WHERE flock_id=? ORDER BY ring_number", (flock_id,)
-    ).fetchall()
+    birds = sorted(
+        db.execute("SELECT * FROM birds WHERE flock_id=?", (flock_id,)).fetchall(),
+        key=lambda b: _natural_key(b["ring_number"])
+    )
     return jsonify({
         **_flock_dict(flock, len(birds), perm == "edit"),
         "can_edit": perm == "edit",
