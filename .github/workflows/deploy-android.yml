@@ -48,4 +48,3 @@ jobs:
           packageName: no.ringlog.app
           releaseFiles: android/app/build/outputs/bundle/release/*.aab
           track: internal
-          changesNotSentForReview: true
