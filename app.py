@@ -107,8 +107,11 @@ def age_filter(birth_date):
         bd = birth_date if isinstance(birth_date, _date) else _date.fromisoformat(str(birth_date))
         today = _date.today()
         months = (today.year - bd.year) * 12 + (today.month - bd.month)
-        if months < 1:
-            return "< 1 mo"
+        weeks  = (today - bd).days // 7
+        if weeks < 1:
+            return "< 1 wk"
+        if weeks < 12:
+            return f"{weeks} wk"
         if months < 24:
             return f"{months} mo"
         return f"{months // 12} yr"

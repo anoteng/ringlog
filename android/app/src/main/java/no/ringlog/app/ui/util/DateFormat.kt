@@ -25,8 +25,10 @@ fun birdAge(birthDate: String?): String? {
     return try {
         val bd = LocalDate.parse(birthDate.take(10))
         val months = java.time.Period.between(bd, LocalDate.now()).toTotalMonths().toInt()
+        val weeks = java.time.temporal.ChronoUnit.WEEKS.between(bd, LocalDate.now()).toInt()
         when {
-            months < 1  -> "< 1 mo"
+            weeks < 1   -> "< 1 wk"
+            weeks < 12  -> "$weeks wk"
             months < 24 -> "$months mo"
             else        -> "${months / 12} yr"
         }
