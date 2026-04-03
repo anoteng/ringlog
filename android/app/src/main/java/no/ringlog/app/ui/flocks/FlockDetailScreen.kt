@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import no.ringlog.app.ui.util.birdAge
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.R
 import no.ringlog.app.data.api.Bird
@@ -94,6 +95,7 @@ private fun BirdRow(bird: Bird, onClick: (Int) -> Unit) {
         append(" · ${bird.species.replaceFirstChar { it.uppercase() }}")
         if (!bird.breed.isNullOrBlank()) append(" ${bird.breed}")
         append(" · ${bird.sex.replaceFirstChar { it.uppercase() }}")
+        birdAge(bird.birth_date)?.let { append(" · $it") }
     }
     ListItem(
         headlineContent   = { Text(label) },
