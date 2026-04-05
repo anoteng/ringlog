@@ -2,10 +2,18 @@
 <resources>
     <string name="bird_registry">Vogelregister</string>
 
+    <!-- Auth -->
     <string name="username">Gebruikersnaam</string>
     <string name="password">Wachtwoord</string>
     <string name="log_in">Inloggen</string>
+    <string name="register">Registreren</string>
+    <string name="create_account">Account aanmaken</string>
+    <string name="email_optional">E-mail (optioneel)</string>
+    <string name="confirm_password">Wachtwoord bevestigen</string>
+    <string name="back_to_login">Terug naar inloggen</string>
+    <string name="no_account">Heb je nog geen account?</string>
 
+    <!-- Navigation / common -->
     <string name="back">Terug</string>
     <string name="retry">Opnieuw proberen</string>
     <string name="report">Rapport</string>
@@ -17,6 +25,7 @@
     <string name="yes">ja</string>
     <string name="unknown">Onbekend</string>
 
+    <!-- Flocks -->
     <string name="my_flocks">Mijn koppels</string>
     <string name="my_flocks_header">MIJN KOPPELS</string>
     <string name="shared_with_me">GEDEELD MET MIJ</string>
@@ -28,6 +37,7 @@
         <item quantity="other">%1$d vogels</item>
     </plurals>
 
+    <!-- Report -->
     <string name="flock_report_title">%1$s — Rapport</string>
     <string name="total_eggs">Eieren totaal</string>
     <string name="daily_avg">Dagelijks gem.</string>
@@ -39,6 +49,7 @@
     <string name="avg_per_hen">Gem./kip</string>
     <string name="light">Licht</string>
 
+    <!-- Birds -->
     <string name="bird">Vogel</string>
     <string name="ring">Ring</string>
     <string name="name">Naam</string>
@@ -59,23 +70,31 @@
     <string name="take_photo">Foto maken</string>
     <string name="choose_from_gallery">Kiezen uit galerij</string>
 
+    <!-- Daily log -->
     <string name="daily_log">Dagboek</string>
     <string name="light_hours">Licht u</string>
     <string name="bedding_changed">Strooisel ververst</string>
     <string name="previous_day">Vorige dag</string>
     <string name="next_day">Volgende dag</string>
 
+    <!-- Hatches -->
     <string name="hatches">Broedplannen</string>
     <string name="hatch">Broedplan</string>
     <string name="my_hatches">MIJN BROEDPLANNEN</string>
     <string name="no_hatches">Geen broedplannen.</string>
     <string name="hatch_number">Broedplan #%1$d</string>
+    <string name="new_hatch">Nieuw broedplan</string>
+    <string name="edit_hatch">Broedplan bewerken</string>
+    <string name="finish_hatch">Broeden afsluiten</string>
+    <string name="start_datetime">Startdatum/-tijd</string>
+    <string name="incubation_days_label">Broeddagen</string>
+    <string name="lockdown_day_label">Lockdowndag</string>
     <string name="progress">Voortgang</string>
     <string name="progress_detail">%1$d%% · %2$d dagen resterend</string>
     <string name="status">Status</string>
     <string name="started">Gestart</string>
     <string name="expected_hatch">Verwachte uitkomstdatum</string>
-    <string name="set">Ingelegd</string>
+    <string name="set">Gestart</string>
     <string name="discarded">Weggegooid</string>
     <string name="to_brooder">Naar opfokbox</string>
     <string name="hatched">Uitgekomen</string>
@@ -90,7 +109,17 @@
     <string name="status_lockdown_label">Lockdown</string>
     <string name="status_hatching_label">Aan het uitkomen</string>
     <string name="status_done_label">Klaar</string>
-    <string name="status_incubating">Broedend · %1$d dagen over</string>
+    <string name="status_incubating">Broedend · %1$d dagen resterend</string>
     <string name="status_hatching">Aan het uitkomen!</string>
     <string name="status_done_hatched">Klaar · uitgekomen %1$s</string>
+
+    <!-- Finish hatch -->
+    <string name="transfer_to_flock">Overdragen aan koppel</string>
+    <string name="existing_flock">Bestaand koppel</string>
+    <string name="new_flock">Nieuw koppel</string>
+    <string name="flock_name">Koppelnaam</string>
+    <string name="flock">Koppel</string>
+    <string name="ring_numbers">Ringnummers</string>
+    <string name="ring_prefix">Voorvoegsel</string>
+    <string name="ring_start">Startnr.</string>
 </resources>

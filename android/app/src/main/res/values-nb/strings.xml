@@ -2,10 +2,18 @@
 <resources>
     <string name="bird_registry">Fugleregister</string>
 
+    <!-- Auth -->
     <string name="username">Brukernavn</string>
     <string name="password">Passord</string>
     <string name="log_in">Logg inn</string>
+    <string name="register">Registrer</string>
+    <string name="create_account">Opprett konto</string>
+    <string name="email_optional">E-post (valgfritt)</string>
+    <string name="confirm_password">Bekreft passord</string>
+    <string name="back_to_login">Tilbake til innlogging</string>
+    <string name="no_account">Har du ikke konto?</string>
 
+    <!-- Navigation / common -->
     <string name="back">Tilbake</string>
     <string name="retry">Prøv igjen</string>
     <string name="report">Rapport</string>
@@ -17,6 +25,7 @@
     <string name="yes">ja</string>
     <string name="unknown">Ukjent</string>
 
+    <!-- Flocks -->
     <string name="my_flocks">Mine flokker</string>
     <string name="my_flocks_header">MINE FLOKKER</string>
     <string name="shared_with_me">DELT MED MEG</string>
@@ -28,6 +37,7 @@
         <item quantity="other">%1$d fugler</item>
     </plurals>
 
+    <!-- Report -->
     <string name="flock_report_title">%1$s — Rapport</string>
     <string name="total_eggs">Egg totalt</string>
     <string name="daily_avg">Daglig snitt</string>
@@ -39,6 +49,7 @@
     <string name="avg_per_hen">Snitt/høne</string>
     <string name="light">Lys</string>
 
+    <!-- Birds -->
     <string name="bird">Fugl</string>
     <string name="ring">Ring</string>
     <string name="name">Navn</string>
@@ -59,17 +70,25 @@
     <string name="take_photo">Ta et bilde</string>
     <string name="choose_from_gallery">Velg fra galleri</string>
 
+    <!-- Daily log -->
     <string name="daily_log">Dagslogg</string>
     <string name="light_hours">Lys t</string>
     <string name="bedding_changed">Strø byttet</string>
     <string name="previous_day">Forrige dag</string>
     <string name="next_day">Neste dag</string>
 
+    <!-- Hatches -->
     <string name="hatches">Klekkeplaner</string>
     <string name="hatch">Klekkeplan</string>
     <string name="my_hatches">MINE KLEKKEPLANER</string>
     <string name="no_hatches">Ingen klekkeplaner.</string>
     <string name="hatch_number">Klekkeplan #%1$d</string>
+    <string name="new_hatch">Ny klekkeplan</string>
+    <string name="edit_hatch">Rediger klekkeplan</string>
+    <string name="finish_hatch">Avslutt klekking</string>
+    <string name="start_datetime">Startdato/-tid</string>
+    <string name="incubation_days_label">Rugingsdager</string>
+    <string name="lockdown_day_label">Nedstengingsdag</string>
     <string name="progress">Fremdrift</string>
     <string name="progress_detail">%1$d%% · %2$d dager igjen</string>
     <string name="status">Status</string>
@@ -77,7 +96,7 @@
     <string name="expected_hatch">Forventet klekkedato</string>
     <string name="set">Satt inn</string>
     <string name="discarded">Kassert</string>
-    <string name="to_brooder">Til kvekker</string>
+    <string name="to_brooder">Til nedlåsing</string>
     <string name="hatched">Klekket</string>
     <string name="incubation">Ruging</string>
     <string name="incubation_days">%1$d dager</string>
@@ -93,4 +112,14 @@
     <string name="status_incubating">Ruger · %1$d dager igjen</string>
     <string name="status_hatching">Klekker!</string>
     <string name="status_done_hatched">Ferdig · klekket %1$s</string>
+
+    <!-- Finish hatch -->
+    <string name="transfer_to_flock">Overfør til flokk</string>
+    <string name="existing_flock">Eksisterende flokk</string>
+    <string name="new_flock">Ny flokk</string>
+    <string name="flock_name">Flokknavn</string>
+    <string name="flock">Flokk</string>
+    <string name="ring_numbers">Ringnumre</string>
+    <string name="ring_prefix">Prefiks</string>
+    <string name="ring_start">Startnr.</string>
 </resources>
