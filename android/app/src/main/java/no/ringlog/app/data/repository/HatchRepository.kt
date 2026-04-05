@@ -1,6 +1,8 @@
 package no.ringlog.app.data.repository
 
 import no.ringlog.app.data.api.Hatch
+import no.ringlog.app.data.api.HatchFinishRequest
+import no.ringlog.app.data.api.HatchFinishResponse
 import no.ringlog.app.data.api.HatchRequest
 import no.ringlog.app.data.api.HatchesResponse
 import no.ringlog.app.data.api.RingLogApi
@@ -29,6 +31,20 @@ class HatchRepository @Inject constructor(private val api: RingLogApi) {
     suspend fun updateHatch(id: Int, req: HatchRequest): Result<Unit> = runCatching {
         val resp = api.updateHatch(id, req)
         if (!resp.isSuccessful) throw Exception("Failed to update hatch (${resp.code()})")
+    }
+
+    suspend fun finishHatch(id: Int, req: HatchFinishRequest): Result<HatchFinishResponse> = runCatching {
+        val resp = api.finishHatch(id, req)
+        if (resp.isSuccessful) resp.body()!!
+        else throw Exception(
+            when (resp.code()) {
+                409  -> resp.errorBody()?.string()?.let {
+                    Regex("\"error\":\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1)
+                } ?: "Ring number already in use"
+                403  -> "No access to target flock"
+                else -> "Failed to finish hatch (${resp.code()})"
+            }
+        )
     }
 
     suspend fun deleteHatch(id: Int): Result<Unit> = runCatching {

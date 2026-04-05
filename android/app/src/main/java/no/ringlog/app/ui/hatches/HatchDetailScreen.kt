@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,7 +22,7 @@ import no.ringlog.app.ui.util.formatIsoDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, vm: HatchViewModel = hiltViewModel()) {
+fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, onFinish: () -> Unit, vm: HatchViewModel = hiltViewModel()) {
     val state by vm.detailState.collectAsStateWithLifecycle()
     LaunchedEffect(hatchId) { vm.loadHatch(hatchId) }
 
@@ -38,6 +39,9 @@ fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, vm: 
                 actions = {
                     val h = (state as? HatchViewModel.DetailState.Success)?.hatch
                     if (h?.can_edit == true) {
+                        IconButton(onClick = onFinish) {
+                            Icon(Icons.Default.CheckCircle, stringResource(R.string.finish_hatch))
+                        }
                         IconButton(onClick = onEdit) {
                             Icon(Icons.Default.Edit, stringResource(R.string.edit_hatch))
                         }

@@ -83,6 +83,15 @@
     <string name="hatch">Hatch</string>
     <string name="new_hatch">New hatch</string>
     <string name="edit_hatch">Edit hatch</string>
+    <string name="finish_hatch">Finish hatch</string>
+    <string name="transfer_to_flock">Transfer to flock</string>
+    <string name="existing_flock">Existing flock</string>
+    <string name="new_flock">New flock</string>
+    <string name="flock_name">Flock name</string>
+    <string name="flock">Flock</string>
+    <string name="ring_numbers">Ring numbers</string>
+    <string name="ring_prefix">Prefix</string>
+    <string name="ring_start">Start #</string>
     <string name="start_datetime">Start date/time</string>
     <string name="incubation_days_label">Incubation days</string>
     <string name="lockdown_day_label">Lockdown day</string>

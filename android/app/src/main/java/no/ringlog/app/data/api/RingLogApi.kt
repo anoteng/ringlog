@@ -104,6 +104,9 @@ interface RingLogApi {
     @PUT("hatches/{id}")
     suspend fun updateHatch(@Path("id") id: Int, @Body body: HatchRequest): Response<OkResponse>
 
+    @POST("hatches/{id}/finish")
+    suspend fun finishHatch(@Path("id") id: Int, @Body body: HatchFinishRequest): Response<HatchFinishResponse>
+
     @DELETE("hatches/{id}")
     suspend fun deleteHatch(@Path("id") id: Int): Response<OkResponse>
 }

@@ -122,5 +122,17 @@ data class HatchRequest(
 
 data class HatchCreateResponse(val id: Int, val name: String?, val species: String)
 
+data class HatchFinishRequest(
+    val eggs_hatched: Int?,
+    val eggs_brooder: Int?,
+    val eggs_discarded: Int?,
+    val flock_id: Int?,
+    val new_flock_name: String?,
+    val ring_prefix: String?,
+    val ring_start: Int?,
+)
+
+data class HatchFinishResponse(val ok: Boolean, val flock_id: Int?, val created_bird_ids: List<Int>)
+
 data class OkResponse(val ok: Boolean, val error: String? = null)
 data class ErrorResponse(val error: String)

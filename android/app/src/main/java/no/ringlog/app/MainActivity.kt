@@ -32,6 +32,7 @@ import no.ringlog.app.ui.flocks.FlockDetailScreen
 import no.ringlog.app.ui.flocks.FlockListScreen
 import no.ringlog.app.ui.flocks.FlockReportScreen
 import no.ringlog.app.ui.hatches.HatchDetailScreen
+import no.ringlog.app.ui.hatches.HatchFinishScreen
 import no.ringlog.app.ui.hatches.HatchFormScreen
 import no.ringlog.app.ui.hatches.HatchListScreen
 import no.ringlog.app.ui.log.DailyLogScreen
@@ -176,9 +177,34 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
             composable("hatch/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
                 val id = it.arguments!!.getInt("id")
                 HatchDetailScreen(
-                    hatchId = id,
-                    onBack  = { navController.popBackStack() },
-                    onEdit  = { navController.navigate("hatch/$id/edit") },
+                    hatchId  = id,
+                    onBack   = { navController.popBackStack() },
+                    onEdit   = { navController.navigate("hatch/$id/edit") },
+                    onFinish = { navController.navigate("hatch/$id/finish") },
+                )
+            }
+            composable("hatch/{id}/finish", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
+                val id = it.arguments!!.getInt("id")
+                val vm: HatchViewModel = androidx.hilt.navigation.compose.hiltViewModel(
+                    remember(id) { navController.getBackStackEntry("hatch/$id") }
+                )
+                val hatch = (vm.detailState.collectAsStateWithLifecycle().value
+                    as? HatchViewModel.DetailState.Success)?.hatch
+                HatchFinishScreen(
+                    hatchId             = id,
+                    currentEggsHatched  = hatch?.eggs_hatched,
+                    currentEggsBrooder  = hatch?.eggs_brooder,
+                    currentEggsDiscarded = hatch?.eggs_discarded,
+                    onFinished = { flockId ->
+                        if (flockId != null) {
+                            navController.navigate("flock/$flockId") {
+                                popUpTo("hatches") { inclusive = false }
+                            }
+                        } else {
+                            navController.popBackStack()
+                        }
+                    },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable("hatch/{id}/edit", arguments = listOf(navArgument("id") { type = NavType.IntType })) {

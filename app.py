@@ -2006,6 +2006,73 @@ def api_update_hatch(hatch_id):
     return _save_hatch(hatch_id)
 
 
+@app.route("/api/v1/hatches/<int:hatch_id>/finish", methods=["POST"])
+@api_login_required
+def api_finish_hatch(hatch_id):
+    if get_hatch_permission(hatch_id) not in ("owner", "edit"):
+        return jsonify({"error": "Not found"}), 404
+
+    f = request.get_json(silent=True) or {}
+
+    def _int(key):
+        v = f.get(key)
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return int(v)
+
+    eggs_hatched   = _int("eggs_hatched")
+    eggs_brooder   = _int("eggs_brooder")
+    eggs_discarded = _int("eggs_discarded")
+    flock_id       = _int("flock_id")
+    new_flock_name = (f.get("new_flock_name") or "").strip() or None
+    ring_prefix    = f.get("ring_prefix") or ""
+    ring_start     = int(f.get("ring_start") or 1)
+
+    db = get_db()
+    hatch = db.execute("SELECT * FROM hatches WHERE id=?", (hatch_id,)).fetchone()
+
+    db.execute(
+        "UPDATE hatches SET eggs_hatched=?, eggs_brooder=?, eggs_discarded=? WHERE id=?",
+        (eggs_hatched, eggs_brooder, eggs_discarded, hatch_id)
+    )
+    db.commit()
+
+    created_ids = []
+    result_flock_id = None
+
+    if eggs_hatched and eggs_hatched > 0 and (flock_id or new_flock_name):
+        if not flock_id and new_flock_name:
+            db.execute("INSERT INTO flocks (user_id, name) VALUES (?,?)",
+                       (g.user["id"], new_flock_name))
+            db.commit()
+            flock_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+
+        perm = get_permission(flock_id)
+        if perm not in ("owner", "edit"):
+            return jsonify({"error": "No access to target flock"}), 403
+
+        tl = hatch_timeline(hatch)
+        birth_date = str(tl["hatch_dt"].date())
+
+        for i in range(eggs_hatched):
+            ring = f"{ring_prefix}{ring_start + i}"
+            try:
+                db.execute(
+                    """INSERT INTO birds (flock_id, ring_number, species, sex,
+                       birth_date, birth_approximate, flock_join_date)
+                       VALUES (?,?,?,?,?,0,?)""",
+                    (flock_id, ring, hatch["species"], "unknown", birth_date, birth_date)
+                )
+                db.commit()
+                created_ids.append(db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"])
+            except pymysql.IntegrityError:
+                return jsonify({"error": f"Ring number '{ring}' already in use in that flock"}), 409
+
+        result_flock_id = flock_id
+
+    return jsonify({"ok": True, "flock_id": result_flock_id, "created_bird_ids": created_ids})
+
+
 @app.route("/api/v1/hatches/<int:hatch_id>", methods=["DELETE"])
 @api_login_required
 def api_delete_hatch(hatch_id):
