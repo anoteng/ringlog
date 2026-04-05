@@ -35,6 +35,7 @@ import no.ringlog.app.ui.hatches.HatchDetailScreen
 import no.ringlog.app.ui.hatches.HatchFinishScreen
 import no.ringlog.app.ui.hatches.HatchFormScreen
 import no.ringlog.app.ui.hatches.HatchListScreen
+import no.ringlog.app.ui.hatches.HatchViewModel
 import no.ringlog.app.ui.log.DailyLogScreen
 import no.ringlog.app.ui.theme.RingLogTheme
 import javax.inject.Inject
