@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.R
 import no.ringlog.app.data.api.Flock
 import no.ringlog.app.data.api.HatchFinishRequest
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +50,7 @@ fun HatchFinishScreen(
     var useNewFlock   by remember { mutableStateOf(false) }
     var ringPrefix    by remember { mutableStateOf("") }
     var ringStart     by remember { mutableStateOf("1") }
+    var birthDate     by remember { mutableStateOf(LocalDate.now().toString()) }
     var flockExpanded by remember { mutableStateOf(false) }
 
     val isLoading = finishState is HatchFinishViewModel.FinishState.Loading
@@ -63,6 +65,7 @@ fun HatchFinishScreen(
         new_flock_name = if (addToFlock && useNewFlock) newFlockName.trim().ifBlank { null } else null,
         ring_prefix    = if (addToFlock) ringPrefix else null,
         ring_start     = if (addToFlock) ringStart.toIntOrNull() else null,
+        birth_date     = if (addToFlock) birthDate.ifBlank { null } else null,
     )
 
     Scaffold(
@@ -184,6 +187,13 @@ fun HatchFinishScreen(
                         }
                     }
                 }
+
+                OutlinedTextField(
+                    value = birthDate, onValueChange = { birthDate = it },
+                    label = { Text(stringResource(R.string.born)) },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    placeholder = { Text("YYYY-MM-DD") },
+                )
 
                 if (count > 0) {
                     Text(stringResource(R.string.ring_numbers), style = MaterialTheme.typography.titleSmall)

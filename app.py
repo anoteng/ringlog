@@ -2027,6 +2027,7 @@ def api_finish_hatch(hatch_id):
     new_flock_name = (f.get("new_flock_name") or "").strip() or None
     ring_prefix    = f.get("ring_prefix") or ""
     ring_start     = int(f.get("ring_start") or 1)
+    birth_date_override = (f.get("birth_date") or "").strip() or None
 
     db = get_db()
     hatch = db.execute("SELECT * FROM hatches WHERE id=?", (hatch_id,)).fetchone()
@@ -2052,7 +2053,7 @@ def api_finish_hatch(hatch_id):
             return jsonify({"error": "No access to target flock"}), 403
 
         tl = hatch_timeline(hatch)
-        birth_date = str(tl["hatch_dt"].date())
+        birth_date = birth_date_override or str(tl["hatch_dt"].date())
 
         for i in range(eggs_hatched):
             ring = f"{ring_prefix}{ring_start + i}"
