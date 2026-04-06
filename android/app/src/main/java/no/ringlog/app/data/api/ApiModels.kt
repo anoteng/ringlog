@@ -131,6 +131,7 @@ data class HatchFinishRequest(
     val ring_prefix: String?,
     val ring_start: Int?,
     val birth_date: String?,
+    val breed: String?,
 )
 
 data class HatchFinishResponse(val ok: Boolean, val flock_id: Int?, val created_bird_ids: List<Int>)

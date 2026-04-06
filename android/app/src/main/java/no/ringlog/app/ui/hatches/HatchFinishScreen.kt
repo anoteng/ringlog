@@ -51,6 +51,7 @@ fun HatchFinishScreen(
     var ringPrefix    by remember { mutableStateOf("") }
     var ringStart     by remember { mutableStateOf("1") }
     var birthDate     by remember { mutableStateOf(LocalDate.now().toString()) }
+    var breed         by remember { mutableStateOf("") }
     var flockExpanded by remember { mutableStateOf(false) }
 
     val isLoading = finishState is HatchFinishViewModel.FinishState.Loading
@@ -66,6 +67,7 @@ fun HatchFinishScreen(
         ring_prefix    = if (addToFlock) ringPrefix else null,
         ring_start     = if (addToFlock) ringStart.toIntOrNull() else null,
         birth_date     = if (addToFlock) birthDate.ifBlank { null } else null,
+        breed          = if (addToFlock) breed.trim().ifBlank { null } else null,
     )
 
     Scaffold(
@@ -193,6 +195,11 @@ fun HatchFinishScreen(
                     label = { Text(stringResource(R.string.born)) },
                     modifier = Modifier.fillMaxWidth(), singleLine = true,
                     placeholder = { Text("YYYY-MM-DD") },
+                )
+                OutlinedTextField(
+                    value = breed, onValueChange = { breed = it },
+                    label = { Text(stringResource(R.string.breed)) },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true,
                 )
 
                 if (count > 0) {

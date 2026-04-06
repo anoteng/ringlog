@@ -2028,6 +2028,7 @@ def api_finish_hatch(hatch_id):
     ring_prefix    = f.get("ring_prefix") or ""
     ring_start     = int(f.get("ring_start") or 1)
     birth_date_override = (f.get("birth_date") or "").strip() or None
+    breed_override      = (f.get("breed") or "").strip() or None
 
     db = get_db()
     hatch = db.execute("SELECT * FROM hatches WHERE id=?", (hatch_id,)).fetchone()
@@ -2059,10 +2060,10 @@ def api_finish_hatch(hatch_id):
             ring = f"{ring_prefix}{ring_start + i}"
             try:
                 db.execute(
-                    """INSERT INTO birds (flock_id, ring_number, species, sex,
+                    """INSERT INTO birds (flock_id, ring_number, species, breed, sex,
                        birth_date, birth_approximate, flock_join_date)
-                       VALUES (?,?,?,?,?,0,?)""",
-                    (flock_id, ring, hatch["species"], "unknown", birth_date, birth_date)
+                       VALUES (?,?,?,?,?,?,0,?)""",
+                    (flock_id, ring, hatch["species"], breed_override, "unknown", birth_date, birth_date)
                 )
                 db.commit()
                 created_ids.append(db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"])
