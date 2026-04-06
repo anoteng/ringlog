@@ -39,7 +39,10 @@ class HatchFinishViewModel @Inject constructor(
     fun loadFlocks() {
         viewModelScope.launch {
             flockRepo.getFlocks().fold(
-                onSuccess = { _flocksState.value = FlocksState.Success(it.owned) },
+                onSuccess = {
+                    val flocks = it.owned + it.shared.filter { f -> f.can_edit }
+                    _flocksState.value = FlocksState.Success(flocks)
+                },
                 onFailure = { _flocksState.value = FlocksState.Error(it.message ?: "Error") },
             )
         }
