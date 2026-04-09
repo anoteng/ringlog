@@ -1981,7 +1981,8 @@ def api_hatch_detail(hatch_id):
         "humidity_incubation": h["humidity_incubation"], "humidity_lockdown": h["humidity_lockdown"],
         "egg_count": h["egg_count"], "eggs_brooder": h["eggs_brooder"],
         "eggs_discarded": h["eggs_discarded"], "eggs_hatched": h["eggs_hatched"],
-        "notes": h["notes"], "owner_id": h["user_id"], "can_edit": perm in ("owner", "edit"),
+        "notes": h["notes"], "owner_id": h["user_id"],
+        "can_edit": perm in ("owner", "edit"), "is_owner": perm == "owner",
         "timeline": {
             "status": tl["status"], "days_remaining": tl.get("days_remaining"),
             "progress_pct": tl.get("progress_pct"),
@@ -2083,6 +2084,59 @@ def api_delete_hatch(hatch_id):
         return jsonify({"error": "Not found or not owner"}), 404
     db = get_db()
     db.execute("DELETE FROM hatches WHERE id=?", (hatch_id,))
+    db.commit()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/v1/hatches/<int:hatch_id>/shares")
+@api_login_required
+def api_hatch_shares(hatch_id):
+    if _get_own_hatch(hatch_id) is None:
+        return jsonify({"error": "Not found or not owner"}), 404
+    rows = get_db().execute(
+        """SELECT hs.id, u.username, hs.can_edit
+           FROM hatch_shares hs JOIN users u ON u.id = hs.grantee_id
+           WHERE hs.hatch_id = ? ORDER BY u.username""",
+        (hatch_id,)
+    ).fetchall()
+    return jsonify([{"id": r["id"], "username": r["username"], "can_edit": bool(r["can_edit"])} for r in rows])
+
+
+@app.route("/api/v1/hatches/<int:hatch_id>/shares", methods=["POST"])
+@api_login_required
+def api_add_hatch_share(hatch_id):
+    if _get_own_hatch(hatch_id) is None:
+        return jsonify({"error": "Not found or not owner"}), 404
+    f = request.get_json(silent=True) or {}
+    username = (f.get("username") or "").strip()
+    can_edit = bool(f.get("can_edit"))
+    db = get_db()
+    target = db.execute("SELECT id, username FROM users WHERE username = ?", (username,)).fetchone()
+    if not target:
+        return jsonify({"error": "User not found"}), 404
+    if target["id"] == g.user["id"]:
+        return jsonify({"error": "Cannot share with yourself"}), 400
+    try:
+        db.execute("INSERT INTO hatch_shares (hatch_id, grantee_id, can_edit) VALUES (?,?,?)",
+                   (hatch_id, target["id"], 1 if can_edit else 0))
+    except pymysql.IntegrityError:
+        db.execute("UPDATE hatch_shares SET can_edit=? WHERE hatch_id=? AND grantee_id=?",
+                   (1 if can_edit else 0, hatch_id, target["id"]))
+    db.commit()
+    share = db.execute(
+        "SELECT id FROM hatch_shares WHERE hatch_id=? AND grantee_id=?",
+        (hatch_id, target["id"])
+    ).fetchone()
+    return jsonify({"id": share["id"], "username": target["username"], "can_edit": can_edit}), 201
+
+
+@app.route("/api/v1/hatches/<int:hatch_id>/shares/<int:share_id>", methods=["DELETE"])
+@api_login_required
+def api_revoke_hatch_share(hatch_id, share_id):
+    if _get_own_hatch(hatch_id) is None:
+        return jsonify({"error": "Not found or not owner"}), 404
+    db = get_db()
+    db.execute("DELETE FROM hatch_shares WHERE id=? AND hatch_id=?", (share_id, hatch_id))
     db.commit()
     return jsonify({"ok": True})
 

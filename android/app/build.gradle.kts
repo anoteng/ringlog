@@ -22,8 +22,8 @@ android {
         applicationId = "no.ringlog.app"
         minSdk        = 26
         targetSdk     = 35
-        versionCode   = 20
-        versionName   = "1.8.4"
+        versionCode   = 21
+        versionName   = "1.9.0"
         buildConfigField("String", "API_BASE_URL", "\"https://ringlog.no/api/v1/\"")
     }
 

@@ -109,4 +109,13 @@ interface RingLogApi {
 
     @DELETE("hatches/{id}")
     suspend fun deleteHatch(@Path("id") id: Int): Response<OkResponse>
+
+    @GET("hatches/{id}/shares")
+    suspend fun hatchShares(@Path("id") id: Int): Response<List<HatchShare>>
+
+    @POST("hatches/{id}/shares")
+    suspend fun addHatchShare(@Path("id") id: Int, @Body body: HatchShareRequest): Response<HatchShare>
+
+    @DELETE("hatches/{id}/shares/{shareId}")
+    suspend fun revokeHatchShare(@Path("id") id: Int, @Path("shareId") shareId: Int): Response<OkResponse>
 }

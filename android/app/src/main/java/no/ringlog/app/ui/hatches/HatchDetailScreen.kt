@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,7 +23,7 @@ import no.ringlog.app.ui.util.formatIsoDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, onFinish: () -> Unit, vm: HatchViewModel = hiltViewModel()) {
+fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, onFinish: () -> Unit, onShare: () -> Unit, vm: HatchViewModel = hiltViewModel()) {
     val state by vm.detailState.collectAsStateWithLifecycle()
     LaunchedEffect(hatchId) { vm.loadHatch(hatchId) }
 
@@ -38,6 +39,11 @@ fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, onFi
                 },
                 actions = {
                     val h = (state as? HatchViewModel.DetailState.Success)?.hatch
+                    if (h?.is_owner == true) {
+                        IconButton(onClick = onShare) {
+                            Icon(Icons.Default.Share, stringResource(R.string.share_hatch))
+                        }
+                    }
                     if (h?.can_edit == true) {
                         IconButton(onClick = onFinish) {
                             Icon(Icons.Default.CheckCircle, stringResource(R.string.finish_hatch))

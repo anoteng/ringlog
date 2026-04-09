@@ -113,6 +113,16 @@
     <string name="status_hatching">Klekker!</string>
     <string name="status_done_hatched">Ferdig · klekket %1$s</string>
 
+    <!-- Sharing -->
+    <string name="share_hatch">Del klekkeplan</string>
+    <string name="share_with_user">Del med bruker</string>
+    <string name="can_edit">Kan redigere</string>
+    <string name="no_shares">Ikke delt med noen.</string>
+    <string name="perm_view">Kun visning</string>
+    <string name="perm_view_edit">Visning og redigering</string>
+    <string name="revoke">Fjern tilgang</string>
+    <string name="error">Feil</string>
+
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overfør til flokk</string>
     <string name="existing_flock">Eksisterende flokk</string>

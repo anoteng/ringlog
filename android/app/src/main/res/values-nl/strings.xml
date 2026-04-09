@@ -113,6 +113,16 @@
     <string name="status_hatching">Aan het uitkomen!</string>
     <string name="status_done_hatched">Klaar · uitgekomen %1$s</string>
 
+    <!-- Sharing -->
+    <string name="share_hatch">Broedplan delen</string>
+    <string name="share_with_user">Delen met gebruiker</string>
+    <string name="can_edit">Mag bewerken</string>
+    <string name="no_shares">Niet gedeeld met iemand.</string>
+    <string name="perm_view">Alleen bekijken</string>
+    <string name="perm_view_edit">Bekijken en bewerken</string>
+    <string name="revoke">Toegang intrekken</string>
+    <string name="error">Fout</string>
+
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overdragen aan koppel</string>
     <string name="existing_flock">Bestaand koppel</string>

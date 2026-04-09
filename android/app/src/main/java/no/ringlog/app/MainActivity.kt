@@ -35,6 +35,7 @@ import no.ringlog.app.ui.hatches.HatchDetailScreen
 import no.ringlog.app.ui.hatches.HatchFinishScreen
 import no.ringlog.app.ui.hatches.HatchFormScreen
 import no.ringlog.app.ui.hatches.HatchListScreen
+import no.ringlog.app.ui.hatches.HatchShareScreen
 import no.ringlog.app.ui.hatches.HatchViewModel
 import no.ringlog.app.ui.log.DailyLogScreen
 import no.ringlog.app.ui.theme.RingLogTheme
@@ -182,6 +183,7 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
                     onBack   = { navController.popBackStack() },
                     onEdit   = { navController.navigate("hatch/$id/edit") },
                     onFinish = { navController.navigate("hatch/$id/finish") },
+                    onShare  = { navController.navigate("hatch/$id/share") },
                 )
             }
             composable("hatch/{id}/finish", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
@@ -224,6 +226,13 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
                             popUpTo("hatches") { inclusive = false }
                         }
                     },
+                    onBack  = { navController.popBackStack() },
+                )
+            }
+            composable("hatch/{id}/share", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
+                val id = it.arguments!!.getInt("id")
+                HatchShareScreen(
+                    hatchId = id,
                     onBack  = { navController.popBackStack() },
                 )
             }

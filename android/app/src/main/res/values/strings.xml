@@ -121,4 +121,14 @@
     <string name="status_incubating">Incubating · %1$d days left</string>
     <string name="status_hatching">Hatching!</string>
     <string name="status_done_hatched">Done · hatched %1$s</string>
+
+    <!-- Sharing -->
+    <string name="share_hatch">Share hatch</string>
+    <string name="share_with_user">Share with user</string>
+    <string name="can_edit">Can edit</string>
+    <string name="no_shares">Not shared with anyone.</string>
+    <string name="perm_view">View only</string>
+    <string name="perm_view_edit">View &amp; edit</string>
+    <string name="revoke">Revoke</string>
+    <string name="error">Error</string>
 </resources>

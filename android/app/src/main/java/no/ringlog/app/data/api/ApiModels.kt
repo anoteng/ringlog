@@ -70,6 +70,7 @@ data class Hatch(
     val notes: String?,
     val owner_id: Int,
     val can_edit: Boolean = true,
+    val is_owner: Boolean = false,
     val timeline: HatchTimeline?,
 )
 
@@ -135,6 +136,9 @@ data class HatchFinishRequest(
 )
 
 data class HatchFinishResponse(val ok: Boolean, val flock_id: Int?, val created_bird_ids: List<Int>)
+
+data class HatchShare(val id: Int, val username: String, val can_edit: Boolean)
+data class HatchShareRequest(val username: String, val can_edit: Boolean)
 
 data class OkResponse(val ok: Boolean, val error: String? = null)
 data class ErrorResponse(val error: String)
