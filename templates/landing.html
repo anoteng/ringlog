@@ -49,10 +49,15 @@
     <p style="color:#555; margin-bottom:1.25rem;">
         {{ _('Made for <strong>hobby keepers and small-scale flock owners</strong>. Free to use, no ads, no fluff.') }}
     </p>
-    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:1.25rem;">
         <a href="{{ url_for('register') }}" class="btn btn-primary">{{ _('Create a free account') }}</a>
         <a href="{{ url_for('login') }}" class="btn" style="background:#eee; color:#333;">{{ _('Log in') }}</a>
     </div>
+    <a href="https://play.google.com/store/apps/details?id=no.ringlog.app" target="_blank" rel="noopener"
+       style="display:inline-block;">
+        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+             alt="Get it on Google Play" style="height:56px;">
+    </a>
 </div>
 
 {% endblock %}

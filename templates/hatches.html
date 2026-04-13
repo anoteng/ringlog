@@ -7,7 +7,7 @@
     <a href="{{ url_for('new_hatch') }}" class="btn btn-primary">+ {{ _('New hatch') }}</a>
 </div>
 
-{% if not items and not shared_items %}
+{% if not items and not shared_items and not completed_items %}
 <div class="card" style="text-align:center; color:#666; padding:2.5rem;">
     {{ _('No hatches yet.') }} <a href="{{ url_for('new_hatch') }}">{{ _('Start one') }}</a>.
 </div>
@@ -73,6 +73,11 @@
 {% if shared_items %}
 <h3 style="margin:1.5rem 0 0.5rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">{{ _('Shared with me') }}</h3>
 {{ hatch_table(shared_items, show_owner=true) }}
+{% endif %}
+
+{% if completed_items %}
+<h3 style="margin:1.5rem 0 0.5rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.04em; color:#666;">{{ _('Completed') }}</h3>
+{{ hatch_table(completed_items) }}
 {% endif %}
 
 {% endif %}

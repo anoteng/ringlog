@@ -50,7 +50,7 @@ fun HatchListScreen(onHatchClick: (Int) -> Unit, onNewHatch: () -> Unit, vm: Hat
                             item { SectionHeader(stringResource(R.string.shared_with_me)) }
                             items(all.shared) { HatchRow(it, onHatchClick) }
                         }
-                        if (all.owned.isEmpty() && all.shared.isEmpty()) {
+                        if (all.owned.isEmpty() && all.shared.isEmpty() && all.completed.isEmpty()) {
                             item {
                                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                     Text(stringResource(R.string.no_hatches),
@@ -58,6 +58,10 @@ fun HatchListScreen(onHatchClick: (Int) -> Unit, onNewHatch: () -> Unit, vm: Hat
                                          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                                 }
                             }
+                        }
+                        if (all.completed.isNotEmpty()) {
+                            item { SectionHeader(stringResource(R.string.completed_hatches)) }
+                            items(all.completed) { HatchRow(it, onHatchClick) }
                         }
                     }
                 }

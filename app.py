@@ -921,6 +921,12 @@ def hatch_timeline(h):
     first_pip = start + timedelta(days=int(h["incubation_days"]) - 1)
     hatch_dt  = start + timedelta(days=int(h["incubation_days"]))
     now = datetime.now()
+    if h["finished_at"]:
+        status = "complete"
+        return {
+            "start": start, "lockdown": lockdown, "first_pip": first_pip, "hatch_dt": hatch_dt,
+            "status": status, "days_remaining": 0, "progress_pct": 100,
+        }
     if now < lockdown:
         status = "incubating"
     elif now < first_pip:
@@ -950,10 +956,11 @@ def hatches():
         "SELECT * FROM hatches WHERE user_id = ? ORDER BY start_datetime DESC",
         (g.user["id"],)
     ).fetchall()
-    items = [{"hatch": r, "tl": hatch_timeline(r)} for r in rows]
-    shared_rows = shared_hatches_for(g.user["id"])
-    shared_items = [{"hatch": r, "tl": hatch_timeline(r)} for r in shared_rows]
-    return render_template("hatches.html", items=items, shared_items=shared_items)
+    items          = [{"hatch": r, "tl": hatch_timeline(r)} for r in rows if not r["finished_at"]]
+    completed_items = [{"hatch": r, "tl": hatch_timeline(r)} for r in rows if r["finished_at"]]
+    shared_rows    = shared_hatches_for(g.user["id"])
+    shared_items   = [{"hatch": r, "tl": hatch_timeline(r)} for r in shared_rows if not r["finished_at"]]
+    return render_template("hatches.html", items=items, shared_items=shared_items, completed_items=completed_items)
 
 
 @app.route("/hatch/new", methods=["GET", "POST"])
@@ -1951,6 +1958,7 @@ def api_hatches():
             "eggs_hatched":        h["eggs_hatched"],
             "notes":               h["notes"],
             "owner_id":            h["user_id"],
+            "is_finished":         bool(h["finished_at"]),
             "timeline": {
                 "status":        tl["status"],
                 "days_remaining": tl.get("days_remaining"),
@@ -1961,8 +1969,9 @@ def api_hatches():
         }
 
     return jsonify({
-        "owned":  [_hatch_dict(h) for h in owned],
-        "shared": [_hatch_dict(h) for h in shared],
+        "owned":     [_hatch_dict(h) for h in owned  if not h["finished_at"]],
+        "shared":    [_hatch_dict(h) for h in shared if not h["finished_at"]],
+        "completed": [_hatch_dict(h) for h in owned  if h["finished_at"]],
     })
 
 
@@ -1983,6 +1992,7 @@ def api_hatch_detail(hatch_id):
         "eggs_discarded": h["eggs_discarded"], "eggs_hatched": h["eggs_hatched"],
         "notes": h["notes"], "owner_id": h["user_id"],
         "can_edit": perm in ("owner", "edit"), "is_owner": perm == "owner",
+        "is_finished": bool(h["finished_at"]),
         "timeline": {
             "status": tl["status"], "days_remaining": tl.get("days_remaining"),
             "progress_pct": tl.get("progress_pct"),
@@ -2035,7 +2045,7 @@ def api_finish_hatch(hatch_id):
     hatch = db.execute("SELECT * FROM hatches WHERE id=?", (hatch_id,)).fetchone()
 
     db.execute(
-        "UPDATE hatches SET eggs_hatched=?, eggs_brooder=?, eggs_discarded=? WHERE id=?",
+        "UPDATE hatches SET eggs_hatched=?, eggs_brooder=?, eggs_discarded=?, finished_at=NOW() WHERE id=?",
         (eggs_hatched, eggs_brooder, eggs_discarded, hatch_id)
     )
     db.commit()

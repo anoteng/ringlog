@@ -71,6 +71,7 @@ data class Hatch(
     val owner_id: Int,
     val can_edit: Boolean = true,
     val is_owner: Boolean = false,
+    val is_finished: Boolean = false,
     val timeline: HatchTimeline?,
 )
 
@@ -82,7 +83,7 @@ data class HatchTimeline(
     val hatch_dt: String?,
 )
 
-data class HatchesResponse(val owned: List<Hatch>, val shared: List<Hatch>)
+data class HatchesResponse(val owned: List<Hatch>, val shared: List<Hatch>, val completed: List<Hatch> = emptyList())
 
 data class ReportStats(
     val total_eggs: Int,

@@ -44,7 +44,7 @@ fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, onFi
                             Icon(Icons.Default.Share, stringResource(R.string.share_hatch))
                         }
                     }
-                    if (h?.can_edit == true) {
+                    if (h?.can_edit == true && h.is_finished == false) {
                         IconButton(onClick = onFinish) {
                             Icon(Icons.Default.CheckCircle, stringResource(R.string.finish_hatch))
                         }

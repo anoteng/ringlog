@@ -122,6 +122,7 @@
     <string name="perm_view_edit">Bekijken en bewerken</string>
     <string name="revoke">Toegang intrekken</string>
     <string name="error">Fout</string>
+    <string name="completed_hatches">VOLTOOID</string>
 
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overdragen aan koppel</string>

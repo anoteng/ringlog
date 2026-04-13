@@ -122,6 +122,7 @@
     <string name="perm_view_edit">Visning og redigering</string>
     <string name="revoke">Fjern tilgang</string>
     <string name="error">Feil</string>
+    <string name="completed_hatches">FULLFØRTE</string>
 
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overfør til flokk</string>
