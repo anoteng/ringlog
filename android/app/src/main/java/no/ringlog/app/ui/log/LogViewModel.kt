@@ -30,7 +30,7 @@ class LogViewModel @Inject constructor(private val repo: FlockRepository) : View
     private val _state = MutableStateFlow<State>(State.Loading)
     val state = _state.asStateFlow()
 
-    private val _selectedDate = MutableStateFlow(LocalDate.now().minusDays(1))
+    private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate = _selectedDate.asStateFlow()
 
     private var allFlocks: FlocksResponse? = null
