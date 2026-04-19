@@ -17,15 +17,21 @@ import javax.inject.Inject
 @HiltViewModel
 class LogViewModel @Inject constructor(private val repo: FlockRepository) : ViewModel() {
 
-    sealed class State { object Loading : State()
-        data class Ready(val flocks: List<Flock>, val entries: Map<Int, LogEntry>) : State()
-        data class Error(val msg: String) : State() }
+    sealed class State {
+        object Loading : State()
+        data class Ready(
+            val flocks: List<Flock>,
+            val entries: Map<Int, LogEntry>,
+            val prevEntries: Map<Int, LogEntry>,
+        ) : State()
+        data class Error(val msg: String) : State()
+    }
 
     private val _state = MutableStateFlow<State>(State.Loading)
     val state = _state.asStateFlow()
 
-    var selectedDate: LocalDate = LocalDate.now()
-        private set
+    private val _selectedDate = MutableStateFlow(LocalDate.now().minusDays(1))
+    val selectedDate = _selectedDate.asStateFlow()
 
     private var allFlocks: FlocksResponse? = null
 
@@ -34,7 +40,7 @@ class LogViewModel @Inject constructor(private val repo: FlockRepository) : View
             repo.getFlocks().fold(
                 onSuccess = { resp ->
                     allFlocks = resp
-                    loadDate(selectedDate)
+                    loadDate(_selectedDate.value)
                 },
                 onFailure = { _state.value = State.Error(it.message ?: "Error") },
             )
@@ -43,25 +49,30 @@ class LogViewModel @Inject constructor(private val repo: FlockRepository) : View
 
     fun loadDate(date: LocalDate) {
         val resp = allFlocks ?: return
-        selectedDate = date
+        _selectedDate.value = date
         val dateStr = date.format(DateTimeFormatter.ISO_DATE)
+        val prevStr  = date.minusDays(1).format(DateTimeFormatter.ISO_DATE)
         val editableFlocks = (resp.owned + resp.shared.filter { it.can_edit })
         viewModelScope.launch {
-            val entries = mutableMapOf<Int, LogEntry>()
+            val entries     = mutableMapOf<Int, LogEntry>()
+            val prevEntries = mutableMapOf<Int, LogEntry>()
             for (flock in editableFlocks) {
                 repo.getLog(flock.id, dateStr, dateStr).onSuccess { list ->
                     list.firstOrNull()?.let { entries[flock.id] = it }
                 }
+                repo.getLog(flock.id, prevStr, prevStr).onSuccess { list ->
+                    list.firstOrNull()?.let { prevEntries[flock.id] = it }
+                }
             }
-            _state.value = State.Ready(editableFlocks, entries)
+            _state.value = State.Ready(editableFlocks, entries, prevEntries)
         }
     }
 
     fun save(flockId: Int, eggs: Int?, light: Float?, bedding: Boolean, notes: String?) {
         viewModelScope.launch {
-            val dateStr = selectedDate.format(DateTimeFormatter.ISO_DATE)
+            val dateStr = _selectedDate.value.format(DateTimeFormatter.ISO_DATE)
             repo.upsertLog(flockId, dateStr, eggs, light, bedding, notes)
-            loadDate(selectedDate)
+            loadDate(_selectedDate.value)
         }
     }
 }

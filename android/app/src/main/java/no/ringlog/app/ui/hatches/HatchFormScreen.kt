@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.R
 import no.ringlog.app.data.api.Hatch
 import no.ringlog.app.data.api.HatchRequest
+import no.ringlog.app.ui.components.DatePickerField
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -51,13 +52,12 @@ fun HatchFormScreen(
         }
     }
 
-    val nowStr = remember {
-        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-    }
+    val now = remember { LocalDateTime.now() }
 
-    var name               by remember { mutableStateOf(initial?.name ?: "") }
-    var species            by remember { mutableStateOf(initial?.species ?: "chicken") }
-    var startDatetime      by remember { mutableStateOf(initial?.start_datetime?.take(16) ?: nowStr) }
+    var name           by remember { mutableStateOf(initial?.name ?: "") }
+    var species        by remember { mutableStateOf(initial?.species ?: "chicken") }
+    var startDate      by remember { mutableStateOf(initial?.start_datetime?.take(10) ?: now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) }
+    var startTime      by remember { mutableStateOf(initial?.start_datetime?.substring(11, 16) ?: now.format(DateTimeFormatter.ofPattern("HH:mm"))) }
     var incubationDays     by remember { mutableStateOf(initial?.incubation_days?.toString() ?: "21") }
     var lockdownDay        by remember { mutableStateOf(initial?.lockdown_day?.toString() ?: "18") }
     var humidityIncubation by remember { mutableStateOf(initial?.humidity_incubation?.toString() ?: "") }
@@ -77,7 +77,7 @@ fun HatchFormScreen(
     }
 
     fun buildRequest(): HatchRequest? {
-        val dt = normalizeDateTime(startDatetime)
+        val dt = normalizeDateTime("$startDate $startTime")
         if (dt.length < 19) return null
         return HatchRequest(
             name                = name.trim().ifBlank { null },
@@ -154,12 +154,19 @@ fun HatchFormScreen(
                 }
             }
 
-            OutlinedTextField(
-                value = startDatetime, onValueChange = { startDatetime = it },
-                label = { Text(stringResource(R.string.start_datetime)) },
-                placeholder = { Text("yyyy-MM-dd HH:mm") },
-                modifier = Modifier.fillMaxWidth(), singleLine = true,
-            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                DatePickerField(
+                    value = startDate, onValueChange = { startDate = it },
+                    label = { Text(stringResource(R.string.date)) },
+                    modifier = Modifier.weight(2f),
+                )
+                OutlinedTextField(
+                    value = startTime, onValueChange = { startTime = it },
+                    label = { Text("HH:mm") },
+                    modifier = Modifier.weight(1f), singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(

@@ -34,6 +34,7 @@ import coil.request.ImageRequest
 import no.ringlog.app.BuildConfig
 import no.ringlog.app.R
 import no.ringlog.app.data.local.TokenStore
+import no.ringlog.app.ui.components.DatePickerField
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
 import no.ringlog.app.ui.flocks.FlockViewModel
@@ -428,9 +429,11 @@ private fun EditBirdForm(
             }
         }
 
-        OutlinedTextField(birthDate, onBirthDateChange, Modifier.fillMaxWidth(),
+        DatePickerField(
+            value = birthDate, onValueChange = onBirthDateChange,
             label = { Text(stringResource(R.string.born)) },
-            placeholder = { Text("YYYY-MM-DD") }, singleLine = true)
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.birth_approximate), Modifier.weight(1f),
@@ -449,9 +452,12 @@ private fun EditBirdForm(
             Switch(isDead, onIsDeadChange)
         }
         if (isDead) {
-            OutlinedTextField(deathDate, onDeathDateChange, Modifier.fillMaxWidth(),
+            DatePickerField(
+                value = deathDate.ifBlank { LocalDate.now().toString() },
+                onValueChange = onDeathDateChange,
                 label = { Text(stringResource(R.string.death_date)) },
-                placeholder = { Text("YYYY-MM-DD") }, singleLine = true)
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -460,9 +466,12 @@ private fun EditBirdForm(
             Switch(isSold, onIsSoldChange)
         }
         if (isSold) {
-            OutlinedTextField(soldDate, onSoldDateChange, Modifier.fillMaxWidth(),
+            DatePickerField(
+                value = soldDate.ifBlank { LocalDate.now().toString() },
+                onValueChange = onSoldDateChange,
                 label = { Text(stringResource(R.string.sold_date)) },
-                placeholder = { Text("YYYY-MM-DD") }, singleLine = true)
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
 
         Spacer(Modifier.height(32.dp))

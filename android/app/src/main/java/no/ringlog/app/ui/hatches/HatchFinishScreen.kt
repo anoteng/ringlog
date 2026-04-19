@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.R
 import no.ringlog.app.data.api.Flock
 import no.ringlog.app.data.api.HatchFinishRequest
+import no.ringlog.app.ui.components.DatePickerField
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -190,11 +191,10 @@ fun HatchFinishScreen(
                     }
                 }
 
-                OutlinedTextField(
+                DatePickerField(
                     value = birthDate, onValueChange = { birthDate = it },
                     label = { Text(stringResource(R.string.born)) },
-                    modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    placeholder = { Text("YYYY-MM-DD") },
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = breed, onValueChange = { breed = it },

@@ -19,15 +19,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.R
 import no.ringlog.app.data.api.Flock
 import no.ringlog.app.data.api.LogEntry
-import no.ringlog.app.ui.components.ErrorScreen
-import no.ringlog.app.ui.components.LoadingScreen
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyLogScreen(vm: LogViewModel = hiltViewModel()) {
-    val state by vm.state.collectAsStateWithLifecycle()
+    val state        by vm.state.collectAsStateWithLifecycle()
+    val selectedDate by vm.selectedDate.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.init() }
 
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.daily_log)) }) }) { padding ->
@@ -35,14 +34,32 @@ fun DailyLogScreen(vm: LogViewModel = hiltViewModel()) {
             when (val s = state) {
                 is LogViewModel.State.Loading -> LoadingScreen()
                 is LogViewModel.State.Error   -> ErrorScreen(s.msg) { vm.init() }
-                is LogViewModel.State.Ready   -> LogContent(s, vm)
+                is LogViewModel.State.Ready   -> LogContent(s, selectedDate, vm)
             }
         }
     }
 }
 
 @Composable
-private fun LogContent(s: LogViewModel.State.Ready, vm: LogViewModel) {
+private fun LoadingScreen() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorScreen(msg: String, onRetry: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(msg)
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = onRetry) { Text(stringResource(R.string.retry)) }
+        }
+    }
+}
+
+@Composable
+private fun LogContent(s: LogViewModel.State.Ready, selectedDate: LocalDate, vm: LogViewModel) {
     val fmt = DateTimeFormatter.ofPattern("EEE d MMM yyyy")
     Column {
         Row(
@@ -50,13 +67,13 @@ private fun LogContent(s: LogViewModel.State.Ready, vm: LogViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconButton(onClick = { vm.loadDate(vm.selectedDate.minusDays(1)) }) {
+            IconButton(onClick = { vm.loadDate(selectedDate.minusDays(1)) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.previous_day))
             }
-            Text(vm.selectedDate.format(fmt), style = MaterialTheme.typography.titleSmall)
+            Text(selectedDate.format(fmt), style = MaterialTheme.typography.titleSmall)
             IconButton(
-                onClick = { vm.loadDate(vm.selectedDate.plusDays(1)) },
-                enabled = vm.selectedDate < LocalDate.now(),
+                onClick = { vm.loadDate(selectedDate.plusDays(1)) },
+                enabled = selectedDate < LocalDate.now(),
             ) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.next_day))
             }
@@ -64,19 +81,27 @@ private fun LogContent(s: LogViewModel.State.Ready, vm: LogViewModel) {
         HorizontalDivider()
         LazyColumn {
             items(s.flocks) { flock ->
-                FlockLogRow(flock, s.entries[flock.id], vm)
+                FlockLogRow(flock, s.entries[flock.id], s.prevEntries[flock.id], selectedDate, vm)
             }
         }
     }
 }
 
 @Composable
-private fun FlockLogRow(flock: Flock, existing: LogEntry?, vm: LogViewModel) {
-    var eggs    by remember(flock.id, vm.selectedDate) { mutableStateOf(existing?.eggs_collected?.toString() ?: "") }
-    var light   by remember(flock.id, vm.selectedDate) { mutableStateOf(existing?.light_hours?.toString() ?: "") }
-    var bedding by remember(flock.id, vm.selectedDate) { mutableStateOf(existing?.bedding_changed ?: false) }
-    var notes   by remember(flock.id, vm.selectedDate) { mutableStateOf(existing?.notes ?: "") }
-    var saved   by remember(flock.id, vm.selectedDate) { mutableStateOf(false) }
+private fun FlockLogRow(
+    flock: Flock,
+    existing: LogEntry?,
+    prev: LogEntry?,
+    selectedDate: LocalDate,
+    vm: LogViewModel,
+) {
+    val defaultLight = existing?.light_hours?.toString() ?: prev?.light_hours?.toString() ?: ""
+
+    var eggs    by remember(flock.id, selectedDate) { mutableStateOf(existing?.eggs_collected?.toString() ?: "") }
+    var light   by remember(flock.id, selectedDate) { mutableStateOf(defaultLight) }
+    var bedding by remember(flock.id, selectedDate) { mutableStateOf(existing?.bedding_changed ?: false) }
+    var notes   by remember(flock.id, selectedDate) { mutableStateOf(existing?.notes ?: "") }
+    var saved   by remember(flock.id, selectedDate) { mutableStateOf(false) }
 
     val saveLabel  = stringResource(R.string.save)
     val savedLabel = stringResource(R.string.saved)
