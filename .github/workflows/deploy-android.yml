@@ -10,6 +10,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - uses: actions/checkout@v4
@@ -39,13 +41,10 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx3g -XX:+UseG1GC -XX:MaxMetaspaceSize=512m"
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         run: ./gradlew bundleRelease --no-daemon
 
       - name: Upload to Play Store (internal testing)
         uses: r0adkll/upload-google-play@v1
-        env:
-          NODE_OPTIONS: --no-deprecation
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: no.ringlog.app
