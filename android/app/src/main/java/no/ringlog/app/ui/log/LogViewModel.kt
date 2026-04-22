@@ -52,6 +52,7 @@ class LogViewModel @Inject constructor(private val repo: FlockRepository) : View
     fun loadDate(date: LocalDate) {
         val resp = allFlocks ?: return
         _selectedDate.value = date
+        _state.value = State.Loading
         loadJob?.cancel()
         val dateStr = date.format(DateTimeFormatter.ISO_DATE)
         val prevStr  = date.minusDays(1).format(DateTimeFormatter.ISO_DATE)
