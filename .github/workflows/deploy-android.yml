@@ -44,8 +44,10 @@ jobs:
 
       - name: Upload to Play Store (internal testing)
         uses: r0adkll/upload-google-play@v1
+        env:
+          NODE_OPTIONS: --no-deprecation
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: no.ringlog.app
           releaseFiles: android/app/build/outputs/bundle/release/*.aab
-          track: internal
+          tracks: internal
