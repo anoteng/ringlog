@@ -3,6 +3,7 @@ package no.ringlog.app.ui.log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -34,6 +35,7 @@ class LogViewModel @Inject constructor(private val repo: FlockRepository) : View
     val selectedDate = _selectedDate.asStateFlow()
 
     private var allFlocks: FlocksResponse? = null
+    private var loadJob: Job? = null
 
     fun init() {
         viewModelScope.launch {
@@ -50,10 +52,11 @@ class LogViewModel @Inject constructor(private val repo: FlockRepository) : View
     fun loadDate(date: LocalDate) {
         val resp = allFlocks ?: return
         _selectedDate.value = date
+        loadJob?.cancel()
         val dateStr = date.format(DateTimeFormatter.ISO_DATE)
         val prevStr  = date.minusDays(1).format(DateTimeFormatter.ISO_DATE)
         val editableFlocks = (resp.owned + resp.shared.filter { it.can_edit })
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             val entries     = mutableMapOf<Int, LogEntry>()
             val prevEntries = mutableMapOf<Int, LogEntry>()
             for (flock in editableFlocks) {
