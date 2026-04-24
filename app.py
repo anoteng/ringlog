@@ -1654,7 +1654,7 @@ def api_delete_flock(flock_id):
     bird_count = db.execute("SELECT COUNT(*) AS n FROM birds WHERE flock_id=?", (flock_id,)).fetchone()["n"]
     if bird_count > 0:
         return jsonify({"error": "Flock is not empty"}), 409
-    db.execute("DELETE FROM flock_shares WHERE owner_id=? AND flock_id=?", (g.user["id"], flock_id))
+    db.execute("DELETE FROM flock_shares WHERE flock_id=?", (flock_id,))
     db.execute("DELETE FROM flocks WHERE id=?", (flock_id,))
     db.commit()
     return jsonify({"ok": True})
