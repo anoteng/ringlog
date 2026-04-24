@@ -41,18 +41,27 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
         data class Error(val msg: String) : UpdateBirdState()
     }
 
+    sealed class FlockActionState {
+        object Idle : FlockActionState()
+        object Loading : FlockActionState()
+        data class Success(val flockId: Int) : FlockActionState()
+        data class Error(val msg: String) : FlockActionState()
+    }
+
     private val _listState   = MutableStateFlow<ListState>(ListState.Loading)
     private val _detailState = MutableStateFlow<DetailState>(DetailState.Loading)
     private val _birdState   = MutableStateFlow<BirdState>(BirdState.Loading)
 
     private val _imageUploadState  = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
     private val _updateBirdState   = MutableStateFlow<UpdateBirdState>(UpdateBirdState.Idle)
+    private val _flockActionState  = MutableStateFlow<FlockActionState>(FlockActionState.Idle)
 
     val listState        = _listState.asStateFlow()
     val detailState      = _detailState.asStateFlow()
     val birdState        = _birdState.asStateFlow()
     val imageUploadState = _imageUploadState.asStateFlow()
     val updateBirdState  = _updateBirdState.asStateFlow()
+    val flockActionState = _flockActionState.asStateFlow()
 
     fun loadFlocks() {
         viewModelScope.launch {
@@ -124,6 +133,27 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
     }
 
     fun resetUpdateBird() { _updateBirdState.value = UpdateBirdState.Idle }
+
+    fun createFlock(name: String, description: String?) {
+        viewModelScope.launch {
+            _flockActionState.value = FlockActionState.Loading
+            repo.createFlock(name, description).fold(
+                onSuccess = { _flockActionState.value = FlockActionState.Success(it.id) },
+                onFailure = { _flockActionState.value = FlockActionState.Error(it.message ?: "Error") },
+            )
+        }
+    }
+
+    fun deleteFlock(flockId: Int, onDone: () -> Unit) {
+        viewModelScope.launch {
+            repo.deleteFlock(flockId).fold(
+                onSuccess = { loadFlocks(); onDone() },
+                onFailure = { _flockActionState.value = FlockActionState.Error(it.message ?: "Error") },
+            )
+        }
+    }
+
+    fun resetFlockAction() { _flockActionState.value = FlockActionState.Idle }
 
     fun addNote(birdId: Int, date: String, content: String) {
         viewModelScope.launch {

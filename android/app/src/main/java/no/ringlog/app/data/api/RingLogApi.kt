@@ -30,6 +30,9 @@ interface RingLogApi {
     @POST("flocks")
     suspend fun createFlock(@Body body: Map<String, String>): Response<Flock>
 
+    @DELETE("flocks/{id}")
+    suspend fun deleteFlock(@Path("id") id: Int): Response<OkResponse>
+
     // Birds
     @Multipart
     @POST("flocks/{flockId}/birds")

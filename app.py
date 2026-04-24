@@ -1644,6 +1644,22 @@ def api_flock_detail(flock_id):
     })
 
 
+@app.route("/api/v1/flocks/<int:flock_id>", methods=["DELETE"])
+@api_login_required
+def api_delete_flock(flock_id):
+    db = get_db()
+    flock = db.execute("SELECT * FROM flocks WHERE id=? AND user_id=?", (flock_id, g.user["id"])).fetchone()
+    if not flock:
+        return jsonify({"error": "Not found or not owner"}), 404
+    bird_count = db.execute("SELECT COUNT(*) AS n FROM birds WHERE flock_id=?", (flock_id,)).fetchone()["n"]
+    if bird_count > 0:
+        return jsonify({"error": "Flock is not empty"}), 409
+    db.execute("DELETE FROM flock_shares WHERE owner_id=? AND flock_id=?", (g.user["id"], flock_id))
+    db.execute("DELETE FROM flocks WHERE id=?", (flock_id,))
+    db.commit()
+    return jsonify({"ok": True})
+
+
 @app.route("/api/v1/flocks", methods=["POST"])
 @api_login_required
 def api_create_flock():

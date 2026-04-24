@@ -123,6 +123,10 @@
     <string name="revoke">Toegang intrekken</string>
     <string name="error">Fout</string>
     <string name="completed_hatches">VOLTOOID</string>
+    <string name="description">Beschrijving</string>
+    <string name="delete">Verwijderen</string>
+    <string name="delete_flock">Koppel verwijderen</string>
+    <string name="delete_flock_confirm">«%1$s» verwijderen? Dit kan niet ongedaan worden gemaakt.</string>
 
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overdragen aan koppel</string>

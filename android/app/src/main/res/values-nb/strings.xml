@@ -123,6 +123,10 @@
     <string name="revoke">Fjern tilgang</string>
     <string name="error">Feil</string>
     <string name="completed_hatches">FULLFØRTE</string>
+    <string name="description">Beskrivelse</string>
+    <string name="delete">Slett</string>
+    <string name="delete_flock">Slett flokk</string>
+    <string name="delete_flock_confirm">Slette «%1$s»? Dette kan ikke angres.</string>
 
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overfør til flokk</string>

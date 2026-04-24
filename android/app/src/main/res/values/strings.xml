@@ -132,4 +132,8 @@
     <string name="revoke">Revoke</string>
     <string name="error">Error</string>
     <string name="completed_hatches">COMPLETED</string>
+    <string name="description">Description</string>
+    <string name="delete">Delete</string>
+    <string name="delete_flock">Delete flock</string>
+    <string name="delete_flock_confirm">Delete "%1$s"? This cannot be undone.</string>
 </resources>

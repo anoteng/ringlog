@@ -113,7 +113,7 @@ private fun FlockLogRow(
 
     LaunchedEffect(eggs, light, bedding, notes) {
         if (!isDirty) return@LaunchedEffect
-        delay(1200)
+        delay(2000)
         vm.save(flock.id, eggs.toIntOrNull(), light.toFloatOrNull(), bedding, notes.ifBlank { null })
         showSaved = true
         delay(2000)

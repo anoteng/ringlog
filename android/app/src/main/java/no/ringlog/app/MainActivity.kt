@@ -28,6 +28,7 @@ import no.ringlog.app.data.repository.AuthRepository
 import no.ringlog.app.ui.auth.LoginScreen
 import no.ringlog.app.ui.auth.RegisterScreen
 import no.ringlog.app.ui.birds.BirdDetailScreen
+import no.ringlog.app.ui.flocks.CreateFlockScreen
 import no.ringlog.app.ui.flocks.FlockDetailScreen
 import no.ringlog.app.ui.flocks.FlockListScreen
 import no.ringlog.app.ui.flocks.FlockReportScreen
@@ -123,7 +124,20 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
             modifier = Modifier.padding(padding),
         ) {
             composable("flocks") {
-                FlockListScreen(onFlockClick = { navController.navigate("flock/$it") })
+                FlockListScreen(
+                    onFlockClick = { navController.navigate("flock/$it") },
+                    onNewFlock   = { navController.navigate("flock/new") },
+                )
+            }
+            composable("flock/new") {
+                CreateFlockScreen(
+                    onCreated = { flockId ->
+                        navController.navigate("flock/$flockId") {
+                            popUpTo("flock/new") { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable("flock/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
                 val id = it.arguments!!.getInt("id")

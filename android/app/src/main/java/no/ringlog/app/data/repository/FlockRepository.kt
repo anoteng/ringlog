@@ -15,6 +15,29 @@ import javax.inject.Singleton
 @Singleton
 class FlockRepository @Inject constructor(private val api: RingLogApi) {
 
+    suspend fun createFlock(name: String, description: String? = null): Result<Flock> = runCatching {
+        val body = buildMap<String, String> {
+            put("name", name)
+            if (!description.isNullOrBlank()) put("description", description)
+        }
+        val resp = api.createFlock(body)
+        if (resp.isSuccessful) resp.body()!!
+        else throw Exception(
+            resp.errorBody()?.string()?.let {
+                Regex("\"error\":\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1)
+            } ?: "Failed to create flock (${resp.code()})"
+        )
+    }
+
+    suspend fun deleteFlock(id: Int): Result<Unit> = runCatching {
+        val resp = api.deleteFlock(id)
+        if (!resp.isSuccessful) throw Exception(
+            resp.errorBody()?.string()?.let {
+                Regex("\"error\":\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1)
+            } ?: "Failed to delete flock (${resp.code()})"
+        )
+    }
+
     suspend fun getFlocks(): Result<FlocksResponse> = runCatching {
         val resp = api.flocks()
         if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to load flocks")
