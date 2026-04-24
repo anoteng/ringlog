@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.*
@@ -54,6 +55,7 @@ private fun createCameraImageUri(context: android.content.Context): Uri {
 fun BirdDetailScreen(
     birdId: Int,
     onBack: () -> Unit,
+    onDeleted: () -> Unit = {},
     tokenStore: TokenStore,
     vm: FlockViewModel = hiltViewModel(),
 ) {
@@ -69,6 +71,7 @@ fun BirdDetailScreen(
     var showImageSheet by remember { mutableStateOf(false) }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     var isEditing by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     var editRing by remember { mutableStateOf("") }
     var editName by remember { mutableStateOf("") }
@@ -177,6 +180,34 @@ fun BirdDetailScreen(
         vm.updateBird(birdId, fields)
     }
 
+    if (showDeleteDialog) {
+        val b = (state as? FlockViewModel.BirdState.Success)?.bird
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.delete_bird)) },
+            text  = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.delete_bird_confirm, b?.ring_number ?: ""))
+                    Text(stringResource(R.string.delete_bird_hint),
+                         style = MaterialTheme.typography.bodySmall,
+                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        vm.deleteBird(birdId, b?.flock_id ?: 0) { onDeleted() }
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) { Text(stringResource(R.string.delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.back)) }
+            },
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -200,6 +231,10 @@ fun BirdDetailScreen(
                             TextButton(onClick = ::saveEdits) { Text(stringResource(R.string.save)) }
                         }
                     } else if (bird != null) {
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Default.Delete, stringResource(R.string.delete_bird),
+                                 tint = MaterialTheme.colorScheme.error)
+                        }
                         IconButton(onClick = ::enterEditMode) {
                             Icon(Icons.Default.Edit, stringResource(R.string.edit_bird))
                         }

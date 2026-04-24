@@ -127,6 +127,9 @@
     <string name="delete">Slett</string>
     <string name="delete_flock">Slett flokk</string>
     <string name="delete_flock_confirm">Slette «%1$s»? Dette kan ikke angres.</string>
+    <string name="delete_bird">Slett fugl</string>
+    <string name="delete_bird_confirm">Slette fuglen med ringnummer «%1$s» permanent?</string>
+    <string name="delete_bird_hint">Merk: døde eller solgte fugler bør normalt markeres som det heller enn å slettes.</string>
 
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overfør til flokk</string>

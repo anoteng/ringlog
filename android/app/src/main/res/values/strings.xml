@@ -136,4 +136,7 @@
     <string name="delete">Delete</string>
     <string name="delete_flock">Delete flock</string>
     <string name="delete_flock_confirm">Delete "%1$s"? This cannot be undone.</string>
+    <string name="delete_bird">Delete bird</string>
+    <string name="delete_bird_confirm">Permanently delete bird with ring number "%1$s"?</string>
+    <string name="delete_bird_hint">Note: deceased or sold birds should normally be marked as such rather than deleted.</string>
 </resources>

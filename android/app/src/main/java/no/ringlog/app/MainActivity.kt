@@ -166,8 +166,9 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
             composable("bird/{id}", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
                 val id = it.arguments!!.getInt("id")
                 BirdDetailScreen(
-                    birdId = id,
-                    onBack = { navController.popBackStack() },
+                    birdId    = id,
+                    onBack    = { navController.popBackStack() },
+                    onDeleted = { navController.popBackStack() },
                     tokenStore = tokenStore,
                 )
             }

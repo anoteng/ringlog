@@ -127,6 +127,9 @@
     <string name="delete">Verwijderen</string>
     <string name="delete_flock">Koppel verwijderen</string>
     <string name="delete_flock_confirm">«%1$s» verwijderen? Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="delete_bird">Vogel verwijderen</string>
+    <string name="delete_bird_confirm">Vogel met ringnummer «%1$s» permanent verwijderen?</string>
+    <string name="delete_bird_hint">Let op: gestorven of verkochte vogels worden normaal als zodanig gemarkeerd en niet verwijderd.</string>
 
     <!-- Finish hatch -->
     <string name="transfer_to_flock">Overdragen aan koppel</string>
