@@ -129,9 +129,10 @@ fun BatchAddBirdsScreen(
             SexDropdown(selected = sex, onSelected = { sex = it },
                         modifier = Modifier.fillMaxWidth())
             DatePickerField(
-                label = stringResource(R.string.born),
+                label = { Text(stringResource(R.string.born)) },
                 value = birthDate,
                 onValueChange = { birthDate = it },
+                modifier = Modifier.fillMaxWidth(),
             )
 
             if (errorMsg != null) {
