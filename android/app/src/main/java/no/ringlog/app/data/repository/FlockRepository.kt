@@ -1,7 +1,10 @@
 package no.ringlog.app.data.repository
 
+import no.ringlog.app.data.api.BatchBirdRequest
+import no.ringlog.app.data.api.BatchBirdResponse
 import no.ringlog.app.data.api.Bird
 import no.ringlog.app.data.api.Flock
+import no.ringlog.app.data.api.FlockPatchRequest
 import no.ringlog.app.data.api.FlocksResponse
 import no.ringlog.app.data.api.LogEntry
 import no.ringlog.app.data.api.LogUpsertRequest
@@ -36,6 +39,20 @@ class FlockRepository @Inject constructor(private val api: RingLogApi) {
                 Regex("\"error\":\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1)
             } ?: "Failed to delete flock (${resp.code()})"
         )
+    }
+
+    suspend fun batchAddBirds(flockId: Int, req: BatchBirdRequest): Result<BatchBirdResponse> = runCatching {
+        val resp = api.batchAddBirds(flockId, req)
+        if (resp.isSuccessful) resp.body()!! else throw Exception(
+            resp.errorBody()?.string()?.let {
+                Regex("\"error\":\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1)
+            } ?: "Failed to add birds (${resp.code()})"
+        )
+    }
+
+    suspend fun patchFlock(id: Int, allowRingReuse: Boolean): Result<Flock> = runCatching {
+        val resp = api.patchFlock(id, FlockPatchRequest(allow_ring_reuse = allowRingReuse))
+        if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to update flock (${resp.code()})")
     }
 
     suspend fun getFlocks(): Result<FlocksResponse> = runCatching {

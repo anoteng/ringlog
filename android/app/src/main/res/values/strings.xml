@@ -139,4 +139,29 @@
     <string name="delete_bird">Delete bird</string>
     <string name="delete_bird_confirm">Permanently delete bird with ring number "%1$s"?</string>
     <string name="delete_bird_hint">Note: deceased or sold birds should normally be marked as such rather than deleted.</string>
+
+    <!-- Flock settings -->
+    <string name="allow_ring_reuse">Reuse ring numbers</string>
+    <string name="allow_ring_reuse_desc">Allow ring numbers of deceased/sold birds to be reused</string>
+
+    <!-- Add bird / Batch add -->
+    <string name="add_bird">Add Bird</string>
+    <string name="batch_add">Batch Add Birds</string>
+    <string name="batch_add_result">Added %1$d bird(s). %2$d skipped (ring already in use).</string>
+    <string name="count">Count</string>
+
+    <!-- Species -->
+    <string name="species_chicken">Chicken</string>
+    <string name="species_duck">Duck</string>
+    <string name="species_goose">Goose</string>
+    <string name="species_turkey">Turkey</string>
+    <string name="species_quail">Quail</string>
+    <string name="species_pigeon">Pigeon</string>
+    <string name="species_guinea_fowl">Guinea Fowl</string>
+    <string name="species_peafowl">Peafowl</string>
+
+    <!-- Sex -->
+    <string name="sex_unknown">Unknown</string>
+    <string name="sex_female">Female</string>
+    <string name="sex_male">Male</string>
 </resources>

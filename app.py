@@ -641,6 +641,46 @@ def add_bird(username, flock_name):
     return render_template("form.html", bird=None, flock=flock)
 
 
+@app.route("/flock/<username>/<flock_name>/batch-add", methods=["GET", "POST"])
+@login_required
+def batch_add_birds(username, flock_name):
+    flock = resolve_flock(username, flock_name)
+    if not flock or get_permission(flock["id"]) != "edit":
+        flash(_("Access denied."), "error")
+        return redirect(url_for("flocks"))
+    db = get_db()
+    result = None
+    if request.method == "POST":
+        ring_prefix = request.form.get("ring_prefix", "").strip()
+        ring_start  = request.form.get("ring_start", "").strip()
+        count_str   = request.form.get("count", "").strip()
+        species     = request.form.get("species", "chicken")
+        breed       = request.form.get("breed", "").strip() or None
+        sex         = request.form.get("sex", "unknown")
+        birth_date  = request.form.get("birth_date") or None
+        if not ring_start.isdigit() or not count_str.isdigit():
+            flash(_("Starting ring number and count must be numbers."), "error")
+        else:
+            added = skipped = 0
+            for i in range(min(int(count_str), 500)):
+                ring = f"{ring_prefix}{int(ring_start) + i}"
+                if ring_number_taken(flock, ring):
+                    skipped += 1
+                    continue
+                try:
+                    db.execute(
+                        """INSERT INTO birds (flock_id, ring_number, species, breed, sex, birth_date, flock_join_date)
+                           VALUES (?,?,?,?,?,?,CURDATE())""",
+                        (flock["id"], ring, species, breed, sex, birth_date)
+                    )
+                    added += 1
+                except Exception:
+                    skipped += 1
+            db.commit()
+            result = {"added": added, "skipped": skipped}
+    return render_template("batch_add.html", flock=flock, result=result)
+
+
 @app.route("/bird/<int:bird_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_bird(bird_id):
@@ -1512,14 +1552,16 @@ def _bird_dict(b):
     }
 
 
-def _flock_dict(f, bird_count=None, can_edit=True, owner_username=None):
+def _flock_dict(f, bird_count=None, can_edit=True, owner_username=None, is_owner=False):
     return {
-        "id":             f["id"],
-        "name":           f["name"],
-        "description":    f.get("description"),
-        "owner_username": owner_username or f.get("username"),
-        "can_edit":       can_edit,
-        "bird_count":     bird_count,
+        "id":               f["id"],
+        "name":             f["name"],
+        "description":      f.get("description"),
+        "owner_username":   owner_username or f.get("username"),
+        "can_edit":         can_edit,
+        "bird_count":       bird_count,
+        "allow_ring_reuse": bool(f.get("allow_ring_reuse", 0)),
+        "is_owner":         is_owner,
     }
 
 
@@ -1617,7 +1659,7 @@ def api_flocks():
         (g.user["id"],)
     ).fetchall()
     return jsonify({
-        "owned":  [_flock_dict(f, f["bird_count"], True) for f in owned],
+        "owned":  [_flock_dict(f, f["bird_count"], True, is_owner=True) for f in owned],
         "shared": [_flock_dict(f, f["bird_count"], bool(f["can_edit"])) for f in shared],
     })
 
@@ -1637,8 +1679,9 @@ def api_flock_detail(flock_id):
         db.execute("SELECT * FROM birds WHERE flock_id=?", (flock_id,)).fetchall(),
         key=lambda b: _natural_key(b["ring_number"])
     )
+    is_owner = flock["user_id"] == g.user["id"]
     return jsonify({
-        **_flock_dict(flock, len(birds), perm == "edit"),
+        **_flock_dict(flock, len(birds), perm == "edit", is_owner=is_owner),
         "can_edit": perm == "edit",
         "birds": [_bird_dict(b) for b in birds],
     })
@@ -1660,6 +1703,25 @@ def api_delete_flock(flock_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/v1/flocks/<int:flock_id>", methods=["PATCH"])
+@api_login_required
+def api_patch_flock(flock_id):
+    db = get_db()
+    flock = db.execute("SELECT * FROM flocks WHERE id=? AND user_id=?", (flock_id, g.user["id"])).fetchone()
+    if not flock:
+        return jsonify({"error": "Not found or not owner"}), 404
+    data = request.get_json(silent=True) or {}
+    updates = {}
+    if "allow_ring_reuse" in data:
+        updates["allow_ring_reuse"] = 1 if data["allow_ring_reuse"] else 0
+    if updates:
+        set_clause = ", ".join(f"{k}=?" for k in updates)
+        db.execute(f"UPDATE flocks SET {set_clause} WHERE id=?", list(updates.values()) + [flock_id])
+        db.commit()
+    flock = db.execute("SELECT f.*, u.username FROM flocks f JOIN users u ON u.id=f.user_id WHERE f.id=?", (flock_id,)).fetchone()
+    return jsonify(_flock_dict(flock, None, True, is_owner=True))
+
+
 @app.route("/api/v1/flocks", methods=["POST"])
 @api_login_required
 def api_create_flock():
@@ -1679,7 +1741,7 @@ def api_create_flock():
             "SELECT f.*, u.username FROM flocks f JOIN users u ON u.id=f.user_id WHERE f.id=?",
             (flock_id,)
         ).fetchone()
-        return jsonify(_flock_dict(flock, 0, True)), 201
+        return jsonify(_flock_dict(flock, 0, True, is_owner=True)), 201
     except pymysql.IntegrityError:
         return jsonify({"error": "A flock with that name already exists"}), 409
 
@@ -1722,6 +1784,42 @@ def api_add_bird(flock_id):
         return jsonify(_bird_dict(bird)), 201
     except pymysql.IntegrityError:
         return jsonify({"error": "Ring number already in use"}), 409
+
+
+@app.route("/api/v1/flocks/<int:flock_id>/birds/batch", methods=["POST"])
+@api_login_required
+def api_batch_add_birds(flock_id):
+    if get_permission(flock_id) != "edit":
+        return jsonify({"error": "Permission denied"}), 403
+    db = get_db()
+    flock = db.execute("SELECT * FROM flocks WHERE id=?", (flock_id,)).fetchone()
+    data = request.get_json(silent=True) or {}
+    ring_prefix  = (data.get("ring_prefix") or "").strip()
+    ring_start   = data.get("ring_start")
+    count        = data.get("count")
+    species      = data.get("species") or "chicken"
+    breed        = (data.get("breed") or "").strip() or None
+    sex          = data.get("sex") or "unknown"
+    birth_date   = data.get("birth_date") or None
+    if ring_start is None or not count or int(count) < 1 or int(count) > 500:
+        return jsonify({"error": "ring_start and count (1-500) required"}), 400
+    added = skipped = 0
+    for i in range(int(count)):
+        ring = f"{ring_prefix}{int(ring_start) + i}"
+        if ring_number_taken(flock, ring):
+            skipped += 1
+            continue
+        try:
+            db.execute(
+                """INSERT INTO birds (flock_id, ring_number, species, breed, sex, birth_date, flock_join_date)
+                   VALUES (?,?,?,?,?,?,CURDATE())""",
+                (flock_id, ring, species, breed, sex, birth_date)
+            )
+            added += 1
+        except pymysql.IntegrityError:
+            skipped += 1
+    db.commit()
+    return jsonify({"added": added, "skipped": skipped})
 
 
 @app.route("/api/v1/birds/<int:bird_id>")

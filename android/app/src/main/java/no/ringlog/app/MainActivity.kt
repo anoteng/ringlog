@@ -28,6 +28,8 @@ import no.ringlog.app.data.repository.AuthRepository
 import no.ringlog.app.ui.auth.LoginScreen
 import no.ringlog.app.ui.auth.RegisterScreen
 import no.ringlog.app.ui.birds.BirdDetailScreen
+import no.ringlog.app.ui.flocks.AddBirdScreen
+import no.ringlog.app.ui.flocks.BatchAddBirdsScreen
 import no.ringlog.app.ui.flocks.CreateFlockScreen
 import no.ringlog.app.ui.flocks.FlockDetailScreen
 import no.ringlog.app.ui.flocks.FlockListScreen
@@ -148,6 +150,23 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
                     onReportClick = { fId, name ->
                         navController.navigate("report/$fId/${java.net.URLEncoder.encode(name, "UTF-8")}")
                     },
+                    onAddBird  = { fId -> navController.navigate("flock/$fId/add-bird") },
+                    onBatchAdd = { fId -> navController.navigate("flock/$fId/batch-add") },
+                )
+            }
+            composable("flock/{id}/add-bird", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
+                val id = it.arguments!!.getInt("id")
+                AddBirdScreen(
+                    flockId = id,
+                    onSaved = { navController.navigate("flock/$id") { popUpTo("flock/$id/add-bird") { inclusive = true } } },
+                    onBack  = { navController.popBackStack() },
+                )
+            }
+            composable("flock/{id}/batch-add", arguments = listOf(navArgument("id") { type = NavType.IntType })) {
+                val id = it.arguments!!.getInt("id")
+                BatchAddBirdsScreen(
+                    flockId = id,
+                    onBack  = { navController.popBackStack() },
                 )
             }
             composable(

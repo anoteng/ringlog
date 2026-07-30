@@ -140,4 +140,29 @@
     <string name="ring_numbers">Ringnumre</string>
     <string name="ring_prefix">Prefiks</string>
     <string name="ring_start">Startnr.</string>
+
+    <!-- Flock settings -->
+    <string name="allow_ring_reuse">Gjenbruk ringnumre</string>
+    <string name="allow_ring_reuse_desc">Tillat gjenbruk av ringnumre for døde/solgte fugler</string>
+
+    <!-- Add bird / Batch add -->
+    <string name="add_bird">Legg til fugl</string>
+    <string name="batch_add">Masseregistrer fugler</string>
+    <string name="batch_add_result">La til %1$d fugl(er). %2$d hoppet over (ringnummer allerede i bruk).</string>
+    <string name="count">Antall</string>
+
+    <!-- Species -->
+    <string name="species_chicken">Høne</string>
+    <string name="species_duck">And</string>
+    <string name="species_goose">Gås</string>
+    <string name="species_turkey">Kalkun</string>
+    <string name="species_quail">Vaktel</string>
+    <string name="species_pigeon">Due</string>
+    <string name="species_guinea_fowl">Perlehøne</string>
+    <string name="species_peafowl">Påfugl</string>
+
+    <!-- Sex -->
+    <string name="sex_unknown">Ukjent</string>
+    <string name="sex_female">Hunn</string>
+    <string name="sex_male">Hann</string>
 </resources>

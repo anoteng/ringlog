@@ -13,9 +13,25 @@ data class Flock(
     val can_edit: Boolean,
     val bird_count: Int?,
     val birds: List<Bird>? = null,
+    val allow_ring_reuse: Boolean = false,
+    val is_owner: Boolean = false,
 )
 
 data class FlocksResponse(val owned: List<Flock>, val shared: List<Flock>)
+
+data class FlockPatchRequest(val allow_ring_reuse: Boolean? = null)
+
+data class BatchBirdRequest(
+    val ring_prefix: String? = null,
+    val ring_start: Int,
+    val count: Int,
+    val species: String = "chicken",
+    val breed: String? = null,
+    val sex: String = "unknown",
+    val birth_date: String? = null,
+)
+
+data class BatchBirdResponse(val added: Int, val skipped: Int)
 
 data class Bird(
     val id: Int,

@@ -140,4 +140,29 @@
     <string name="ring_numbers">Ringnummers</string>
     <string name="ring_prefix">Voorvoegsel</string>
     <string name="ring_start">Startnr.</string>
+
+    <!-- Flock settings -->
+    <string name="allow_ring_reuse">Ringnummers hergebruiken</string>
+    <string name="allow_ring_reuse_desc">Sta hergebruik van ringnummers van gestorven/verkochte vogels toe</string>
+
+    <!-- Add bird / Batch add -->
+    <string name="add_bird">Vogel toevoegen</string>
+    <string name="batch_add">Vogels batch toevoegen</string>
+    <string name="batch_add_result">%1$d vogel(s) toegevoegd. %2$d overgeslagen (ringnummer al in gebruik).</string>
+    <string name="count">Aantal</string>
+
+    <!-- Species -->
+    <string name="species_chicken">Kip</string>
+    <string name="species_duck">Eend</string>
+    <string name="species_goose">Gans</string>
+    <string name="species_turkey">Kalkoen</string>
+    <string name="species_quail">Kwartel</string>
+    <string name="species_pigeon">Duif</string>
+    <string name="species_guinea_fowl">Parelhoen</string>
+    <string name="species_peafowl">Pauw</string>
+
+    <!-- Sex -->
+    <string name="sex_unknown">Onbekend</string>
+    <string name="sex_female">Vrouw</string>
+    <string name="sex_male">Man</string>
 </resources>

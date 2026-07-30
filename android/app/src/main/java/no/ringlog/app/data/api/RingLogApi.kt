@@ -33,6 +33,12 @@ interface RingLogApi {
     @DELETE("flocks/{id}")
     suspend fun deleteFlock(@Path("id") id: Int): Response<OkResponse>
 
+    @PATCH("flocks/{id}")
+    suspend fun patchFlock(@Path("id") id: Int, @Body body: FlockPatchRequest): Response<Flock>
+
+    @POST("flocks/{id}/birds/batch")
+    suspend fun batchAddBirds(@Path("id") flockId: Int, @Body body: BatchBirdRequest): Response<BatchBirdResponse>
+
     // Birds
     @Multipart
     @POST("flocks/{flockId}/birds")

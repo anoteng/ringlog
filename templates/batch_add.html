@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>{{ _('Batch Add Birds') }}</h2>
+    <p style="color:#888; font-size:0.9rem; margin-top:0.25rem;">
+        {{ _('Flock:') }} <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}">{{ flock.name }}</a>
+        {% if flock.user_id != current_user.id %} ({{ flock.username }}){% endif %}
+    </p>
+
+    {% if result %}
+    <div class="alert alert-{{ 'success' if result.added > 0 else 'warning' }}" style="margin-top:1rem; padding:0.75rem 1rem; border-radius:6px; background:{{ '#d4edda' if result.added > 0 else '#fff3cd' }}; border:1px solid {{ '#c3e6cb' if result.added > 0 else '#ffeeba' }};">
+        {{ _('Added %(added)d bird(s).', added=result.added) }}
+        {% if result.skipped %} {{ _('%(skipped)d skipped (ring already in use).', skipped=result.skipped) }}{% endif %}
+    </div>
+    {% endif %}
+
+    <form method="post" style="margin-top:1rem;">
+        <div class="form-row">
+            <div class="form-group" style="flex:1;">
+                <label for="ring_prefix">{{ _('Ring Prefix') }}</label>
+                <input type="text" id="ring_prefix" name="ring_prefix" placeholder="{{ _('Optional, e.g. A') }}" value="{{ request.form.get('ring_prefix', '') }}">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label for="ring_start">{{ _('Starting Number') }} *</label>
+                <input type="number" id="ring_start" name="ring_start" min="0" required value="{{ request.form.get('ring_start', '') }}">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label for="count">{{ _('Count') }} *</label>
+                <input type="number" id="count" name="count" min="1" max="500" required value="{{ request.form.get('count', '') }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="species">{{ _('Species') }} *</label>
+                <select id="species" name="species" required>
+                    {% set sel = request.form.get('species', 'chicken') %}
+                    <option value="chicken"     {{ 'selected' if sel == 'chicken' }}>{{ _('Chicken') }}</option>
+                    <option value="duck"        {{ 'selected' if sel == 'duck' }}>{{ _('Duck') }}</option>
+                    <option value="goose"       {{ 'selected' if sel == 'goose' }}>{{ _('Goose') }}</option>
+                    <option value="turkey"      {{ 'selected' if sel == 'turkey' }}>{{ _('Turkey') }}</option>
+                    <option value="quail"       {{ 'selected' if sel == 'quail' }}>{{ _('Quail') }}</option>
+                    <option value="pigeon"      {{ 'selected' if sel == 'pigeon' }}>{{ _('Pigeon') }}</option>
+                    <option value="guinea fowl" {{ 'selected' if sel == 'guinea fowl' }}>{{ _('Guinea Fowl') }}</option>
+                    <option value="peafowl"     {{ 'selected' if sel == 'peafowl' }}>{{ _('Peafowl') }}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sex">{{ _('Sex') }}</label>
+                <select id="sex" name="sex">
+                    {% set s = request.form.get('sex', 'unknown') %}
+                    <option value="unknown" {{ 'selected' if s == 'unknown' }}>{{ _('Unknown') }}</option>
+                    <option value="female"  {{ 'selected' if s == 'female' }}>{{ _('Female') }}</option>
+                    <option value="male"    {{ 'selected' if s == 'male' }}>{{ _('Male') }}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="breed">{{ _('Breed') }}</label>
+                <input type="text" id="breed" name="breed" placeholder="{{ _('Optional') }}" value="{{ request.form.get('breed', '') }}">
+            </div>
+            <div class="form-group">
+                <label for="birth_date">{{ _('Date of Birth') }}</label>
+                <input type="date" id="birth_date" name="birth_date" value="{{ request.form.get('birth_date', '') }}">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">{{ _('Add Birds') }}</button>
+        <a href="{{ url_for('view_flock', username=flock.username, flock_name=flock.name) }}" style="margin-left:1rem;">{{ _('Cancel') }}</a>
+    </form>
+</div>
+{% endblock %}

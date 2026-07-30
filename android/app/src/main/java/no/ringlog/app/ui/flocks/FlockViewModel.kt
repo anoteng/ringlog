@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import no.ringlog.app.data.api.BatchBirdRequest
 import no.ringlog.app.data.api.Bird
 import no.ringlog.app.data.api.Flock
 import no.ringlog.app.data.api.FlocksResponse
@@ -48,6 +49,20 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
         data class Error(val msg: String) : FlockActionState()
     }
 
+    sealed class AddBirdState {
+        object Idle : AddBirdState()
+        object Loading : AddBirdState()
+        object Success : AddBirdState()
+        data class Error(val msg: String) : AddBirdState()
+    }
+
+    sealed class BatchAddState {
+        object Idle : BatchAddState()
+        object Loading : BatchAddState()
+        data class Success(val added: Int, val skipped: Int) : BatchAddState()
+        data class Error(val msg: String) : BatchAddState()
+    }
+
     private val _listState   = MutableStateFlow<ListState>(ListState.Loading)
     private val _detailState = MutableStateFlow<DetailState>(DetailState.Loading)
     private val _birdState   = MutableStateFlow<BirdState>(BirdState.Loading)
@@ -55,6 +70,8 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
     private val _imageUploadState  = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
     private val _updateBirdState   = MutableStateFlow<UpdateBirdState>(UpdateBirdState.Idle)
     private val _flockActionState  = MutableStateFlow<FlockActionState>(FlockActionState.Idle)
+    private val _addBirdState      = MutableStateFlow<AddBirdState>(AddBirdState.Idle)
+    private val _batchAddState     = MutableStateFlow<BatchAddState>(BatchAddState.Idle)
 
     val listState        = _listState.asStateFlow()
     val detailState      = _detailState.asStateFlow()
@@ -62,6 +79,8 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
     val imageUploadState = _imageUploadState.asStateFlow()
     val updateBirdState  = _updateBirdState.asStateFlow()
     val flockActionState = _flockActionState.asStateFlow()
+    val addBirdState     = _addBirdState.asStateFlow()
+    val batchAddState    = _batchAddState.asStateFlow()
 
     fun loadFlocks() {
         viewModelScope.launch {
@@ -154,6 +173,54 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
     }
 
     fun resetFlockAction() { _flockActionState.value = FlockActionState.Idle }
+
+    fun addBird(flockId: Int, fields: Map<String, String>) {
+        viewModelScope.launch {
+            _addBirdState.value = AddBirdState.Loading
+            repo.addBird(flockId, fields).fold(
+                onSuccess = { _addBirdState.value = AddBirdState.Success },
+                onFailure = { _addBirdState.value = AddBirdState.Error(it.message ?: "Error") },
+            )
+        }
+    }
+
+    fun resetAddBird() { _addBirdState.value = AddBirdState.Idle }
+
+    fun batchAddBirds(
+        flockId: Int, ringPrefix: String?, ringStart: Int, count: Int,
+        species: String, breed: String?, sex: String, birthDate: String?,
+    ) {
+        viewModelScope.launch {
+            _batchAddState.value = BatchAddState.Loading
+            repo.batchAddBirds(flockId, BatchBirdRequest(
+                ring_prefix = ringPrefix?.ifBlank { null },
+                ring_start  = ringStart,
+                count       = count,
+                species     = species,
+                breed       = breed?.ifBlank { null },
+                sex         = sex,
+                birth_date  = birthDate?.ifBlank { null },
+            )).fold(
+                onSuccess = { _batchAddState.value = BatchAddState.Success(it.added, it.skipped) },
+                onFailure = { _batchAddState.value = BatchAddState.Error(it.message ?: "Error") },
+            )
+        }
+    }
+
+    fun resetBatchAdd() { _batchAddState.value = BatchAddState.Idle }
+
+    fun setAllowRingReuse(flockId: Int, enabled: Boolean) {
+        viewModelScope.launch {
+            repo.patchFlock(flockId, enabled).onSuccess { updated ->
+                val current = _detailState.value
+                if (current is DetailState.Success) {
+                    _detailState.value = DetailState.Success(
+                        current.flock.copy(allow_ring_reuse = updated.allow_ring_reuse)
+                    )
+                }
+            }
+        }
+    }
 
     fun addNote(birdId: Int, date: String, content: String) {
         viewModelScope.launch {

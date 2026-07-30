@@ -33,6 +33,7 @@
                class="btn btn-sm" style="background:#eee; color:#333;">&#x2b07; {{ _('Export') }}</a>
             {% if can_edit %}
             <a href="{{ url_for('add_bird', username=flock.username, flock_name=flock.name) }}" class="btn btn-sm btn-primary">+ {{ _('Add Bird') }}</a>
+            <a href="{{ url_for('batch_add_birds', username=flock.username, flock_name=flock.name) }}" class="btn btn-sm" style="background:#eee; color:#333;">++ {{ _('Batch Add') }}</a>
             {% endif %}
         </div>
     </div>
