@@ -15,15 +15,15 @@ val keystoreProps = Properties().apply {
 
 android {
     namespace         = "no.ringlog.app"
-    compileSdk        = 35
-    buildToolsVersion = "34.0.0"
+    compileSdk        = 36
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         applicationId = "no.ringlog.app"
         minSdk        = 26
-        targetSdk     = 35
-        versionCode   = 31
-        versionName   = "1.12.0"
+        targetSdk     = 36
+        versionCode   = 32
+        versionName   = "1.12.1"
         buildConfigField("String", "API_BASE_URL", "\"https://ringlog.no/api/v1/\"")
     }
 
