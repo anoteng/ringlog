@@ -15,7 +15,10 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -60,13 +63,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private data class NavItem(val route: String, val label: String, val icon: ImageVector)
+private data class NavItem(val route: String, @StringRes val label: Int, val icon: ImageVector)
 
 private val bottomNavItems = listOf(
-    NavItem("flocks",  "Flocks",  Icons.Default.Home),
-    NavItem("log",     "Log",     Icons.Default.DateRange),
-    NavItem("hatches", "Hatches", Icons.Default.Star),
-    NavItem("account", "Account", Icons.Default.Person),
+    NavItem("flocks",  R.string.nav_flocks,  Icons.Default.Home),
+    NavItem("log",     R.string.nav_log,     Icons.Default.DateRange),
+    NavItem("hatches", R.string.nav_hatches, Icons.Default.Star),
+    NavItem("account", R.string.nav_account, Icons.Default.Person),
 )
 
 @Composable
@@ -112,8 +115,8 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
                                     restoreState = true
                                 }
                             },
-                            icon = { Icon(item.icon, item.label) },
-                            label = { Text(item.label) },
+                            icon = { Icon(item.icon, stringResource(item.label)) },
+                            label = { Text(stringResource(item.label)) },
                         )
                     }
                 }
@@ -271,8 +274,9 @@ private fun RingLogNavHost(auth: AuthRepository, tokenStore: TokenStore) {
                 )
             }
             composable("account") {
+                val scope = rememberCoroutineScope()
                 AccountScreen(username = tokenStore.username ?: "", onLogout = {
-                    auth.logoutLocal()
+                    scope.launch { auth.logout() }
                 })
             }
         }
@@ -286,20 +290,20 @@ private fun AccountScreen(username: String, onLogout: () -> Unit) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Log out?") },
-            text  = { Text("You will need to log in again to use the app.") },
-            confirmButton = { TextButton(onClick = { showDialog = false; onLogout() }) { Text("Log out") } },
-            dismissButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } },
+            title = { Text(stringResource(R.string.log_out_confirm_title)) },
+            text  = { Text(stringResource(R.string.log_out_confirm_text)) },
+            confirmButton = { TextButton(onClick = { showDialog = false; onLogout() }) { Text(stringResource(R.string.log_out)) } },
+            dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
-    Scaffold(topBar = { TopAppBar(title = { Text("Account") }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.account)) }) }) { padding ->
         Column(Modifier.padding(padding).padding(16.dp)) {
-            Text("Logged in as $username", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.logged_in_as, username), style = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.height(16.dp))
             Button(
                 onClick = { showDialog = true },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-            ) { Text("Log out") }
+            ) { Text(stringResource(R.string.log_out)) }
         }
     }
 }

@@ -162,9 +162,48 @@
     <string name="species_pigeon">Due</string>
     <string name="species_guinea_fowl">Perlehøne</string>
     <string name="species_peafowl">Påfugl</string>
+    <string name="species_muscovy">Moskusand</string>
+    <string name="species_custom">Egendefinert</string>
 
     <!-- Sex -->
     <string name="sex_unknown">Ukjent</string>
     <string name="sex_female">Hunn</string>
     <string name="sex_male">Hann</string>
+
+    <!-- Navigation, account, errors -->
+    <string name="nav_flocks">Flokker</string>
+    <string name="nav_log">Logg</string>
+    <string name="nav_hatches">Klekking</string>
+    <string name="nav_account">Konto</string>
+    <string name="account">Konto</string>
+    <string name="log_out">Logg ut</string>
+    <string name="log_out_confirm_title">Logge ut?</string>
+    <string name="log_out_confirm_text">Du må logge inn igjen for å bruke appen.</string>
+    <string name="logged_in_as">Logget inn som %1$s</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Avbryt</string>
+    <string name="err_network">Får ikke kontakt med serveren. Sjekk internettforbindelsen.</string>
+    <string name="err_load">Kunne ikke laste data (feil %1$d).</string>
+    <string name="err_save">Kunne ikke lagre (feil %1$d).</string>
+    <string name="err_delete">Kunne ikke slette (feil %1$d).</string>
+    <string name="err_upload">Opplasting av bilde feilet (feil %1$d).</string>
+    <string name="err_server">Serverfeil (%1$d). Prøv igjen senere.</string>
+    <string name="err_permission">Du har ikke tilgang til å gjøre dette.</string>
+    <string name="err_not_found">Ikke funnet. Det kan ha blitt slettet.</string>
+    <string name="err_too_many_attempts">For mange mislykkede innloggingsforsøk. Prøv igjen om 15 minutter.</string>
+    <string name="err_flock_name_taken">Du har allerede en flokk med det navnet.</string>
+    <string name="err_flock_not_empty">Flokken har fortsatt fugler. Fjern dem først.</string>
+    <string name="err_batch_count">Skriv inn mellom 1 og 500 fugler totalt.</string>
+    <string name="err_ring_in_use">Ringnummeret er allerede i bruk i denne flokken.</string>
+    <string name="err_ring_required">Ringnummer må fylles ut.</string>
+    <string name="err_image_type">Bildeformatet støttes ikke.</string>
+    <string name="err_image_too_large">Bildet er for stort.</string>
+    <string name="err_hatch_invalid">Rugetiden må være minst 1 dag, og lockdown-dagen kan ikke være etter klekkedagen.</string>
+    <string name="err_user_not_found">Fant ikke brukeren.</string>
+    <string name="err_share_self">Du kan ikke dele med deg selv.</string>
+    <string name="err_login_invalid">Feil brukernavn eller passord.</string>
+    <string name="err_login_failed">Innlogging feilet (feil %1$d).</string>
+    <string name="err_username_taken">Brukernavnet eller e-postadressen er allerede registrert.</string>
+    <string name="err_register_invalid">Brukernavnet må ha minst 3 tegn (bokstaver, tall, understrek) og passordet minst 8.</string>
+    <string name="err_register_failed">Registrering feilet (feil %1$d).</string>
 </resources>

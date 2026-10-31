@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,10 +31,16 @@ class TokenStore @Inject constructor(@ApplicationContext private val context: Co
         open()
     }
 
+    private val _loggedIn = MutableStateFlow(prefs.getString(KEY_TOKEN, null) != null)
+    val loggedIn: StateFlow<Boolean> = _loggedIn.asStateFlow()
+
     var token: String?
         get() = prefs.getString(KEY_TOKEN, null)
-        set(value) = if (value != null) prefs.edit().putString(KEY_TOKEN, value).apply()
-                     else prefs.edit().remove(KEY_TOKEN).apply()
+        set(value) {
+            if (value != null) prefs.edit().putString(KEY_TOKEN, value).apply()
+            else prefs.edit().remove(KEY_TOKEN).apply()
+            _loggedIn.value = value != null
+        }
 
     var username: String?
         get() = prefs.getString(KEY_USERNAME, null)
@@ -40,6 +49,13 @@ class TokenStore @Inject constructor(@ApplicationContext private val context: Co
 
     fun clear() {
         prefs.edit().clear().commit()
+        _loggedIn.value = false
+    }
+
+    /** Clears the session only if [rejectedToken] is still the current one (a newer login wins). */
+    @Synchronized
+    fun clearIfCurrent(rejectedToken: String) {
+        if (token == rejectedToken) clear()
     }
 
     companion object {

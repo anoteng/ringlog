@@ -40,7 +40,7 @@ fun FlockListScreen(
             onDismissRequest = { vm.resetFlockAction() },
             title   = { Text(stringResource(R.string.error)) },
             text    = { Text(errorMsg) },
-            confirmButton = { TextButton(onClick = { vm.resetFlockAction() }) { Text("OK") } },
+            confirmButton = { TextButton(onClick = { vm.resetFlockAction() }) { Text(stringResource(R.string.ok)) } },
         )
     }
 

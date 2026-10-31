@@ -15,6 +15,11 @@ class AuthInterceptor @Inject constructor(private val tokenStore: TokenStore) : 
         } else {
             chain.request()
         }
-        return chain.proceed(request)
+        val response = chain.proceed(request)
+        // Token revoked or expired: drop it so the app returns to the login screen.
+        if (response.code == 401 && token != null) {
+            tokenStore.clearIfCurrent(token)
+        }
+        return response
     }
 }

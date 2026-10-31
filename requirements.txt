@@ -3,3 +3,4 @@ gunicorn
 PyMySQL
 python-dotenv
 Flask-Babel
+Pillow

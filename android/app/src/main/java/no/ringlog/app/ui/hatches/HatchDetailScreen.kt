@@ -20,6 +20,7 @@ import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
 import no.ringlog.app.ui.util.formatIsoDate
 import no.ringlog.app.ui.util.formatIsoDateTime
+import no.ringlog.app.ui.components.speciesLabel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +83,7 @@ fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, onFi
                             "incubating" -> stringResource(R.string.status_incubating_label)
                             "lockdown"   -> stringResource(R.string.status_lockdown_label)
                             "hatching"   -> stringResource(R.string.status_hatching_label)
-                            "done"       -> stringResource(R.string.status_done_label)
+                            "complete", "done" -> stringResource(R.string.status_done_label)
                             else -> tl?.status?.replaceFirstChar { it.uppercase() } ?: "—"
                         }
                         DetailRow(stringResource(R.string.status),         statusLabel)
@@ -101,8 +102,7 @@ fun HatchDetailScreen(hatchId: Int, onBack: () -> Unit, onEdit: () -> Unit, onFi
                         Spacer(Modifier.height(8.dp))
 
                         Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleSmall)
-                        DetailRow(stringResource(R.string.species),
-                            h.species.replaceFirstChar { it.uppercase() })
+                        DetailRow(stringResource(R.string.species), speciesLabel(h.species))
                         DetailRow(stringResource(R.string.incubation),
                             stringResource(R.string.incubation_days, h.incubation_days))
                         if (h.humidity_incubation != null)

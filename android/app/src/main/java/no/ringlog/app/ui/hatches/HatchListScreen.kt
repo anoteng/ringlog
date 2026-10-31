@@ -20,6 +20,7 @@ import no.ringlog.app.data.api.Hatch
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
 import no.ringlog.app.ui.components.SectionHeader
+import no.ringlog.app.ui.components.speciesLabel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +78,7 @@ private fun HatchRow(hatch: Hatch, onClick: (Int) -> Unit) {
         "incubating" -> stringResource(R.string.status_incubating, tl.days_remaining ?: 0)
         "lockdown"   -> stringResource(R.string.lockdown)
         "hatching"   -> stringResource(R.string.status_hatching)
-        "done"       -> stringResource(R.string.status_done_hatched, hatch.eggs_hatched?.toString() ?: "?")
+        "complete", "done" -> stringResource(R.string.status_done_hatched, hatch.eggs_hatched?.toString() ?: "?")
         else         -> tl?.status?.replaceFirstChar { it.uppercase() } ?: stringResource(R.string.unknown)
     }
     Column(Modifier.clickable { onClick(hatch.id) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
@@ -86,7 +87,7 @@ private fun HatchRow(hatch: Hatch, onClick: (Int) -> Unit) {
                  style = MaterialTheme.typography.bodyLarge)
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
         }
-        Text("${hatch.species.replaceFirstChar { it.uppercase() }} · $statusText",
+        Text("${speciesLabel(hatch.species)} · $statusText",
              style = MaterialTheme.typography.bodySmall,
              color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         if (tl?.progress_pct != null && tl.status in listOf("incubating", "lockdown")) {

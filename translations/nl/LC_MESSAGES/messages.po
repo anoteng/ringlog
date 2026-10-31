@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  RingLog\n"
 "Report-Msgid-Bugs-To: ringlog@noteng.no\n"
-"POT-Creation-Date: 2026-03-19 11:36+0000\n"
+"POT-Creation-Date: 2026-10-31 11:30+0000\n"
 "PO-Revision-Date: 2026-03-13 12:35+0000\n"
 "Last-Translator: RingLog <ringlog@noteng.no>\n"
 "Language: nl\n"
@@ -16,208 +16,235 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:139
+#: app.py:222
 msgid "Please log in to continue."
 msgstr "Log in om verder te gaan."
 
-#: app.py:253
+#: app.py:401
 msgid "You must accept the Terms of Use to register."
 msgstr "Je moet de gebruiksvoorwaarden accepteren om te registreren."
 
-#: app.py:255
+#: app.py:403
 msgid "Username must be at least 3 characters."
 msgstr "Gebruikersnaam moet minimaal 3 tekens bevatten."
 
-#: app.py:257
+#: app.py:405
 msgid "Username may only contain letters, numbers, and underscores."
 msgstr "Gebruikersnaam mag alleen letters, cijfers en underscores bevatten."
 
-#: app.py:259 app.py:380
+#: app.py:407 app.py:535
 msgid "Password must be at least 8 characters."
 msgstr "Wachtwoord moet minimaal 8 tekens bevatten."
 
-#: app.py:261 app.py:382 templates/register.html:44
+#: app.py:409 app.py:537 templates/register.html:44
 msgid "Passwords do not match."
 msgstr "Wachtwoorden komen niet overeen."
 
-#: app.py:273
+#: app.py:421
 #, python-format
 msgid "Welcome, %(name)s!"
 msgstr "Welkom, %(name)s!"
 
-#: app.py:277
+#: app.py:425
 msgid "That email address is already registered."
 msgstr "Dit e-mailadres is al geregistreerd."
 
-#: app.py:279
+#: app.py:427
 msgid "Username already taken."
 msgstr "Gebruikersnaam al in gebruik."
 
-#: app.py:297
+#: app.py:439
+#, python-format
+msgid "Too many failed login attempts. Please try again in %(minutes)d minutes."
+msgstr ""
+"Te veel mislukte inlogpogingen. Probeer het over %(minutes)d minuten "
+"opnieuw."
+
+#: app.py:452
 #, python-format
 msgid "Welcome back, %(name)s!"
 msgstr "Welkom terug, %(name)s!"
 
-#: app.py:299
+#: app.py:454
 msgid "Invalid username or password."
 msgstr "Ongeldige gebruikersnaam of wachtwoord."
 
-#: app.py:355
+#: app.py:510
 msgid "Failed to send email. Please try again later."
 msgstr "E-mail verzenden mislukt. Probeer het later opnieuw."
 
-#: app.py:358
+#: app.py:513
 msgid "If that email address is registered, a reset link has been sent."
 msgstr "Als dat e-mailadres geregistreerd is, is er een herstellink verzonden."
 
-#: app.py:373
+#: app.py:528
 msgid "This reset link is invalid or has expired."
 msgstr "Deze herstellink is ongeldig of verlopen."
 
-#: app.py:390
+#: app.py:545
 msgid "Password updated. You can now log in."
 msgstr "Wachtwoord bijgewerkt. Je kunt nu inloggen."
 
-#: app.py:420
+#: app.py:575
 msgid "Flock name is required."
 msgstr "Koppelnaam is vereist."
 
-#: app.py:428
+#: app.py:583
 #, python-format
 msgid "Flock '%(name)s' created."
 msgstr "Koppel '%(name)s' aangemaakt."
 
-#: app.py:431
+#: app.py:586
 msgid "You already have a flock with that name."
 msgstr "Je hebt al een koppel met die naam."
 
-#: app.py:450 app.py:531 app.py:599 app.py:647 app.py:717 app.py:780 app.py:802
-#: app.py:990 app.py:1035 app.py:1245 app.py:1324
+#: app.py:605 app.py:686 app.py:754 app.py:800 app.py:840 app.py:913 app.py:976
+#: app.py:998 app.py:1193 app.py:1238 app.py:1453 app.py:1532
 msgid "Access denied."
 msgstr "Toegang geweigerd."
 
-#: app.py:461
+#: app.py:616
 #, python-format
 msgid "Flock '%(name)s' deleted."
 msgstr "Koppel '%(name)s' verwijderd."
 
-#: app.py:476 app.py:528 app.py:842 app.py:1241 app.py:1320
+#: app.py:631 app.py:683 app.py:1038 app.py:1449 app.py:1528
 msgid "Flock not found."
 msgstr "Koppel niet gevonden."
 
-#: app.py:481
+#: app.py:636
 msgid "You don't have access to that flock."
 msgstr "Je hebt geen toegang tot dat koppel."
 
-#: app.py:615 app.py:679
+#: app.py:769 app.py:875
 msgid "Ring number already in use in this flock."
 msgstr "Ringnummer is al in gebruik in dit koppel."
 
-#: app.py:635
+#: app.py:789
 msgid "Bird registered!"
 msgstr "Vogel geregistreerd!"
 
-#: app.py:698
+#: app.py:820
+msgid "Starting ring number must be a number."
+msgstr "Het startnummer moet een getal zijn."
+
+#: app.py:822
+msgid "Total count must be between 1 and 500."
+msgstr "Het totale aantal moet tussen 1 en 500 liggen."
+
+#: app.py:894
 msgid "Bird updated!"
 msgstr "Vogel bijgewerkt!"
 
-#: app.py:712 app.py:749
+#: app.py:908 app.py:945
 msgid "Bird not found."
 msgstr "Vogel niet gevonden."
 
-#: app.py:758
+#: app.py:954
 msgid "Only the flock owner can delete birds."
 msgstr "Alleen de eigenaar van het koppel kan vogels verwijderen."
 
-#: app.py:766
+#: app.py:962
 msgid "Bird deleted."
 msgstr "Vogel verwijderd."
 
-#: app.py:786
+#: app.py:982
 msgid "Date and content are required."
 msgstr "Datum en inhoud zijn vereist."
 
-#: app.py:828
+#: app.py:1024
 msgid "Email address updated."
 msgstr "E-mailadres bijgewerkt."
 
-#: app.py:830
+#: app.py:1026
 msgid "That email address is already registered to another account."
 msgstr "Dat e-mailadres is al geregistreerd bij een ander account."
 
-#: app.py:844 app.py:996
+#: app.py:1040 app.py:1199
 msgid "User not found."
 msgstr "Gebruiker niet gevonden."
 
-#: app.py:846 app.py:998
+#: app.py:1042 app.py:1201
 msgid "You can't share with yourself."
 msgstr "Je kunt niet met jezelf delen."
 
-#: app.py:859 app.py:1012
+#: app.py:1055 app.py:1215
 msgid "view & edit"
 msgstr "bekijken en bewerken"
 
-#: app.py:859 app.py:1012
+#: app.py:1055 app.py:1215
 msgid "view"
 msgstr "bekijken"
 
-#: app.py:860
+#: app.py:1056
 #, python-format
 msgid "Flock shared with %(username)s (%(perm)s)."
 msgstr "Koppel gedeeld met %(username)s (%(perm)s)."
 
-#: app.py:871 app.py:1027
+#: app.py:1067 app.py:1230
 msgid "Share removed."
 msgstr "Deling verwijderd."
 
-#: app.py:881
+#: app.py:1077
 msgid "Ring number policy updated."
 msgstr "Ringnummerbeleid bijgewerkt."
 
-#: app.py:969 app.py:1039
+#: app.py:1172 app.py:1242
 msgid "Hatch not found."
 msgstr "Broedsel niet gevonden."
 
-#: app.py:1013
+#: app.py:1216
 #, python-format
 msgid "Hatch shared with %(username)s (%(perm)s)."
 msgstr "Broedsel gedeeld met %(username)s (%(perm)s)."
 
-#: app.py:1054
+#: app.py:1257
 msgid "Hatch deleted."
 msgstr "Broedsel verwijderd."
 
-#: app.py:1109
+#: app.py:1312
 msgid "Incubation days and lockdown day must be numbers."
 msgstr "Broeddagen en lockdowndag moeten getallen zijn."
 
-#: app.py:1145
+#: app.py:1317
+msgid ""
+"Incubation days must be at least 1, and lockdown day can't be after hatch"
+" day."
+msgstr ""
+"Het aantal broeddagen moet minimaal 1 zijn en de lockdowndag mag niet na "
+"de uitkomstdag liggen."
+
+#: app.py:1353
 msgid "Hatch started!"
 msgstr "Broedsel gestart!"
 
-#: app.py:1164
+#: app.py:1372
 msgid "Hatch updated."
 msgstr "Broedsel bijgewerkt."
 
-#: app.py:1215
+#: app.py:1423
 msgid "Log saved."
 msgstr "Logboek opgeslagen."
 
-#: app.py:1269
+#: app.py:1477
 msgid "Entry saved."
 msgstr "Invoer opgeslagen."
 
-#: app.py:1275
+#: app.py:1483
 msgid "Entry deleted."
 msgstr "Invoer verwijderd."
 
-#: app.py:1287
+#: app.py:1495
 msgid "Stash logged."
 msgstr "Verborgen nest geregistreerd."
 
-#: app.py:1293
+#: app.py:1501
 msgid "Stash entry deleted."
 msgstr "Nestinvoer verwijderd."
+
+#: app.py:1614
+msgid "Your account and all data have been permanently deleted."
+msgstr "Je account en alle gegevens zijn permanent verwijderd."
 
 #: templates/base.html:102 templates/flocks.html:6
 msgid "My Flocks"
@@ -261,6 +288,130 @@ msgstr "Trakteer me op een koffie ☕"
 msgid "to support the project."
 msgstr "om het project te steunen."
 
+#: templates/base.html:139 templates/privacy.html:2 templates/privacy.html:5
+msgid "Privacy Policy"
+msgstr "Privacybeleid"
+
+#: templates/base.html:141 templates/data_deletion.html:2
+#: templates/data_deletion.html:5
+msgid "Data Deletion"
+msgstr "Gegevens verwijderen"
+
+#: templates/batch_add.html:4
+msgid "Batch Add Birds"
+msgstr "Vogels batch toevoegen"
+
+#: templates/batch_add.html:6 templates/form.html:6
+msgid "Flock:"
+msgstr "Koppel:"
+
+#: templates/batch_add.html:12
+#, python-format
+msgid "Added %(added)d bird(s)."
+msgstr "%(added)d vogel(s) toegevoegd."
+
+#: templates/batch_add.html:13
+#, python-format
+msgid "%(skipped)d ring number(s) were already in use and skipped."
+msgstr "%(skipped)d ringnummer(s) waren al in gebruik en zijn overgeslagen."
+
+#: templates/batch_add.html:20
+msgid "Ring Prefix"
+msgstr "Ringvoorvoegsel"
+
+#: templates/batch_add.html:21
+msgid "Optional, e.g. A"
+msgstr "Optioneel, bijv. A"
+
+#: templates/batch_add.html:24
+msgid "Starting Number"
+msgstr "Startnummer"
+
+#: templates/batch_add.html:25
+msgid "Lowest available"
+msgstr "Laagst beschikbare"
+
+#: templates/batch_add.html:29
+msgid ""
+"Leave starting number blank to use the lowest available number. Taken "
+"ring numbers are skipped automatically."
+msgstr ""
+"Laat het startnummer leeg om het laagst beschikbare nummer te gebruiken. "
+"Ringnummers die al in gebruik zijn worden automatisch overgeslagen."
+
+#: templates/batch_add.html:34
+msgid "Males"
+msgstr "Mannetjes"
+
+#: templates/batch_add.html:38
+msgid "Females"
+msgstr "Vrouwtjes"
+
+#: templates/batch_add.html:42 templates/form.html:38
+msgid "Unknown"
+msgstr "Onbekend"
+
+#: templates/batch_add.html:49 templates/form.html:23
+#: templates/hatch_form.html:16 templates/hatch_view.html:77
+#: templates/hatches.html:32 templates/index.html:83
+msgid "Species"
+msgstr "Soort"
+
+#: templates/batch_add.html:52 templates/form.html:25
+msgid "Chicken"
+msgstr "Kip"
+
+#: templates/batch_add.html:53 templates/form.html:26
+msgid "Duck"
+msgstr "Eend"
+
+#: templates/batch_add.html:54 templates/form.html:27
+msgid "Goose"
+msgstr "Gans"
+
+#: templates/batch_add.html:55 templates/form.html:28
+msgid "Turkey"
+msgstr "Kalkoen"
+
+#: templates/batch_add.html:56 templates/form.html:29 templates/index.html:50
+msgid "Quail"
+msgstr "Kwartel"
+
+#: templates/batch_add.html:57 templates/form.html:30
+msgid "Pigeon"
+msgstr "Duif"
+
+#: templates/batch_add.html:58 templates/form.html:31 templates/index.html:52
+msgid "Guinea Fowl"
+msgstr "Parelhoen"
+
+#: templates/batch_add.html:59 templates/form.html:32 templates/index.html:53
+msgid "Peafowl"
+msgstr "Pauw"
+
+#: templates/batch_add.html:66 templates/form.html:47 templates/index.html:87
+#: templates/view.html:29
+msgid "Breed"
+msgstr "Ras"
+
+#: templates/batch_add.html:67 templates/flocks.html:20 templates/form.html:17
+msgid "Optional"
+msgstr "Optioneel"
+
+#: templates/batch_add.html:70 templates/form.html:58 templates/view.html:32
+msgid "Date of Birth"
+msgstr "Geboortedatum"
+
+#: templates/batch_add.html:75
+msgid "Add Birds"
+msgstr "Vogels toevoegen"
+
+#: templates/batch_add.html:76 templates/delete_confirm.html:24
+#: templates/delete_flock_confirm.html:18 templates/flocks.html:24
+#: templates/form.html:117 templates/hatch_form.html:95
+msgid "Cancel"
+msgstr "Annuleren"
+
 #: templates/daily_log.html:15
 msgid "You don't have any flocks yet."
 msgstr "Je hebt nog geen koppels."
@@ -302,6 +453,120 @@ msgstr "Opslaan"
 msgid "Today"
 msgstr "Vandaag"
 
+#: templates/data_deletion.html:6 templates/privacy.html:6
+msgid "Last updated: March 2025"
+msgstr "Laatst bijgewerkt: maart 2025"
+
+#: templates/data_deletion.html:8
+msgid ""
+"You can delete your data at any time, either partially or completely. "
+"This page explains how."
+msgstr ""
+"Je kunt je gegevens op elk moment verwijderen, gedeeltelijk of volledig. "
+"Op deze pagina leggen we uit hoe."
+
+#: templates/data_deletion.html:10
+msgid "Delete individual records"
+msgstr "Afzonderlijke gegevens verwijderen"
+
+#: templates/data_deletion.html:11
+msgid ""
+"You can delete individual birds, flocks, log entries, and hatches "
+"directly in the app:"
+msgstr ""
+"Je kunt individuele vogels, koppels, logboekregels en broedplannen "
+"rechtstreeks in de app verwijderen:"
+
+#: templates/data_deletion.html:13
+msgid ""
+"To delete a bird: open the bird's page and use the Delete button at the "
+"bottom."
+msgstr ""
+"Vogel verwijderen: open de pagina van de vogel en gebruik de knop "
+"Verwijderen onderaan."
+
+#: templates/data_deletion.html:14
+msgid ""
+"To delete a flock and all its birds: go to Settings and delete the flock "
+"from there."
+msgstr ""
+"Koppel verwijderen inclusief alle vogels: ga naar Instellingen en "
+"verwijder het koppel van daaruit."
+
+#: templates/data_deletion.html:15
+msgid ""
+"To delete a log entry: open the Daily Log and click the delete icon next "
+"to the entry."
+msgstr ""
+"Logboekregel verwijderen: open het Dagboek en klik op het "
+"verwijderpictogram naast de regel."
+
+#: templates/data_deletion.html:16
+msgid "To delete a hatching plan: open the hatch and use the Delete button."
+msgstr "Broedplan verwijderen: open het broedplan en gebruik de knop Verwijderen."
+
+#: templates/data_deletion.html:19
+msgid "Delete your entire account"
+msgstr "Volledig account verwijderen"
+
+#: templates/data_deletion.html:20
+msgid ""
+"Deleting your account permanently removes all data associated with it, "
+"including:"
+msgstr ""
+"Het verwijderen van je account wist permanent alle bijbehorende gegevens,"
+" waaronder:"
+
+#: templates/data_deletion.html:22
+msgid "Your username, email address, and password."
+msgstr "Je gebruikersnaam, e-mailadres en wachtwoord."
+
+#: templates/data_deletion.html:23
+msgid "All flocks, birds, notes, and photos you have created."
+msgstr "Alle koppels, vogels, notities en foto's die je hebt aangemaakt."
+
+#: templates/data_deletion.html:24
+msgid "All daily log entries and hatching plans."
+msgstr "Alle dagboekregels en broedplannen."
+
+#: templates/data_deletion.html:25
+msgid "Any flock shares you have set up."
+msgstr "Alle koppelingen die je hebt ingesteld."
+
+#: templates/data_deletion.html:27
+msgid ""
+"This action is immediate and cannot be undone. There is no recovery "
+"option."
+msgstr ""
+"Deze actie is direct en kan niet ongedaan worden gemaakt. Er is geen "
+"herstelmogelijkheid."
+
+#: templates/data_deletion.html:31
+msgid ""
+"This will permanently delete your account and all your data. There is no "
+"undo. Are you sure?"
+msgstr ""
+"Dit verwijdert permanent je account en alle gegevens. Dit kan niet "
+"ongedaan worden gemaakt. Weet je het zeker?"
+
+#: templates/data_deletion.html:32
+msgid "Delete my account and all data"
+msgstr "Mijn account en alle gegevens verwijderen"
+
+#: templates/data_deletion.html:36
+msgid "Log in to delete your account"
+msgstr "Log in om je account te verwijderen"
+
+#: templates/data_deletion.html:40 templates/privacy.html:33
+msgid "Contact"
+msgstr "Contact"
+
+#: templates/data_deletion.html:41
+msgid "If you cannot log in and need your data deleted, contact us at"
+msgstr ""
+"Als je niet kunt inloggen en je gegevens wilt laten verwijderen, neem dan"
+" contact op via"
+
 #: templates/delete_confirm.html:4
 #, python-format
 msgid "Delete %(name)s?"
@@ -328,7 +593,7 @@ msgstr "overleden"
 msgid "or"
 msgstr "of"
 
-#: templates/delete_confirm.html:9 templates/index.html:113
+#: templates/delete_confirm.html:9 templates/index.html:114
 #: templates/view.html:10
 msgid "sold"
 msgstr "verkocht"
@@ -361,12 +626,6 @@ msgstr ""
 #: templates/delete_confirm.html:22 templates/delete_flock_confirm.html:16
 msgid "Yes, delete permanently"
 msgstr "Ja, permanent verwijderen"
-
-#: templates/delete_confirm.html:24 templates/delete_flock_confirm.html:18
-#: templates/flocks.html:24 templates/form.html:117
-#: templates/hatch_form.html:95
-msgid "Cancel"
-msgstr "Annuleren"
 
 #: templates/delete_flock_confirm.html:4
 #, python-format
@@ -587,16 +846,12 @@ msgstr "bijv. Eenden, Kippen, Tuin"
 msgid "Description"
 msgstr "Omschrijving"
 
-#: templates/flocks.html:20 templates/form.html:17
-msgid "Optional"
-msgstr "Optioneel"
-
 #: templates/flocks.html:22
 msgid "Create"
 msgstr "Aanmaken"
 
 #: templates/flocks.html:32 templates/form.html:16 templates/hatch_form.html:11
-#: templates/hatches.html:30 templates/index.html:78
+#: templates/hatches.html:30 templates/index.html:79
 msgid "Name"
 msgstr "Naam"
 
@@ -668,59 +923,13 @@ msgstr "Vogel bewerken"
 msgid "Register New Bird"
 msgstr "Nieuwe vogel registreren"
 
-#: templates/form.html:6
-msgid "Flock:"
-msgstr "Koppel:"
-
 #: templates/form.html:12
 msgid "Ring Number"
 msgstr "Ringnummer"
 
-#: templates/form.html:23 templates/hatch_form.html:16
-#: templates/hatch_view.html:77 templates/hatches.html:32
-#: templates/index.html:82
-msgid "Species"
-msgstr "Soort"
-
-#: templates/form.html:25
-msgid "Chicken"
-msgstr "Kip"
-
-#: templates/form.html:26
-msgid "Duck"
-msgstr "Eend"
-
-#: templates/form.html:27
-msgid "Goose"
-msgstr "Gans"
-
-#: templates/form.html:28
-msgid "Turkey"
-msgstr "Kalkoen"
-
-#: templates/form.html:29 templates/index.html:49
-msgid "Quail"
-msgstr "Kwartel"
-
-#: templates/form.html:30
-msgid "Pigeon"
-msgstr "Duif"
-
-#: templates/form.html:31 templates/index.html:51
-msgid "Guinea Fowl"
-msgstr "Parelhoen"
-
-#: templates/form.html:32 templates/index.html:52
-msgid "Peafowl"
-msgstr "Pauw"
-
-#: templates/form.html:36 templates/index.html:90 templates/view.html:26
+#: templates/form.html:36 templates/index.html:91 templates/view.html:26
 msgid "Sex"
 msgstr "Geslacht"
-
-#: templates/form.html:38
-msgid "Unknown"
-msgstr "Onbekend"
 
 #: templates/form.html:39
 msgid "Female"
@@ -729,10 +938,6 @@ msgstr "Vrouwelijk"
 #: templates/form.html:40
 msgid "Male"
 msgstr "Mannelijk"
-
-#: templates/form.html:47 templates/index.html:86 templates/view.html:29
-msgid "Breed"
-msgstr "Ras"
 
 #: templates/form.html:48
 msgid "e.g. Pekin, Muscovy, hybrid"
@@ -745,10 +950,6 @@ msgstr "Hybridemix"
 #: templates/form.html:52
 msgid "e.g. Pekin x Muscovy"
 msgstr "bijv. Peking x Muskuseend"
-
-#: templates/form.html:58 templates/view.html:32
-msgid "Date of Birth"
-msgstr "Geboortedatum"
 
 #: templates/form.html:64
 msgid "Approximate date"
@@ -1020,6 +1221,10 @@ msgstr "uitgekomen"
 msgid "View"
 msgstr "Bekijken"
 
+#: templates/hatches.html:79
+msgid "Completed"
+msgstr "Voltooid"
+
 #: templates/index.html:33
 msgid "Export"
 msgstr "Exporteren"
@@ -1028,88 +1233,92 @@ msgstr "Exporteren"
 msgid "Add Bird"
 msgstr "Vogel toevoegen"
 
-#: templates/index.html:42
+#: templates/index.html:36
+msgid "Batch Add"
+msgstr "Batch toevoegen"
+
+#: templates/index.html:43
 msgid "Species:"
 msgstr "Soort:"
 
-#: templates/index.html:44 templates/index.html:59
+#: templates/index.html:45 templates/index.html:60
 msgid "All"
 msgstr "Alle"
 
-#: templates/index.html:45
+#: templates/index.html:46
 msgid "Chickens"
 msgstr "Kippen"
 
-#: templates/index.html:46
+#: templates/index.html:47
 msgid "Ducks"
 msgstr "Eenden"
 
-#: templates/index.html:47
+#: templates/index.html:48
 msgid "Geese"
 msgstr "Ganzen"
 
-#: templates/index.html:48
+#: templates/index.html:49
 msgid "Turkeys"
 msgstr "Kalkoenen"
 
-#: templates/index.html:50
+#: templates/index.html:51
 msgid "Pigeons"
 msgstr "Duiven"
 
-#: templates/index.html:54
+#: templates/index.html:55
 msgid "Status:"
 msgstr "Status:"
 
-#: templates/index.html:56
+#: templates/index.html:57
 msgid "Alive"
 msgstr "Levend"
 
-#: templates/index.html:57
+#: templates/index.html:58
 msgid "Dead"
 msgstr "Gestorven"
 
-#: templates/index.html:58
+#: templates/index.html:59
 msgid "Sold"
 msgstr "Verkocht"
 
-#: templates/index.html:62
+#: templates/index.html:63
 msgid "Search…"
 msgstr "Zoeken…"
 
-#: templates/index.html:64
+#: templates/index.html:65
 msgid "Clear filters"
 msgstr "Filters wissen"
 
-#: templates/index.html:74
+#: templates/index.html:75
 msgid "Ring #"
 msgstr "Ring #"
 
-#: templates/index.html:75 templates/index.html:79 templates/index.html:83
-#: templates/index.html:87 templates/index.html:91 templates/index.html:95
+#: templates/index.html:76 templates/index.html:80 templates/index.html:84
+#: templates/index.html:88 templates/index.html:92 templates/index.html:96
 msgid "Filter…"
 msgstr "Filteren…"
 
-#: templates/index.html:94
+#: templates/index.html:95
 msgid "Born"
 msgstr "Geboren"
 
-#: templates/index.html:98
+#: templates/index.html:99
 msgid "Age"
 msgstr "Leeftijd"
 
-#: templates/index.html:112
+#: templates/index.html:113
 msgid "dead"
 msgstr "gestorven"
 
-#: templates/index.html:125
+#: templates/index.html:126
 msgid "No birds match your filters."
 msgstr "Geen vogels komen overeen met je filters."
 
-#: templates/index.html:128
+#: templates/index.html:129
 msgid "No birds registered yet. Add your first bird!"
 msgstr "Nog geen vogels geregistreerd. Voeg je eerste vogel toe!"
 
-#: templates/index.html:129
+#: templates/index.html:130
 msgid "This flock has no birds yet."
 msgstr "Dit koppel heeft nog geen vogels."
 
@@ -1241,21 +1450,14 @@ msgstr "Nog geen account?"
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
-#: templates/privacy.html:2 templates/privacy.html:5
-msgid "Privacy Policy"
-msgstr "Privacybeleid"
-
-#: templates/privacy.html:6
-msgid "Last updated: March 2025"
-msgstr "Laatst bijgewerkt: maart 2025"
-
 #: templates/privacy.html:8
 msgid ""
 "RingLog is a free hobby tool run by a single person. This policy explains"
 " what data is stored and how it is used."
 msgstr ""
-"RingLog is een gratis hobbytoepassing beheerd door één persoon. Dit beleid "
-"legt uit welke gegevens worden opgeslagen en hoe ze worden gebruikt."
+"RingLog is een gratis hobbytoepassing beheerd door één persoon. Dit "
+"beleid legt uit welke gegevens worden opgeslagen en hoe ze worden "
+"gebruikt."
 
 #: templates/privacy.html:10
 msgid "What data we store"
@@ -1275,7 +1477,9 @@ msgstr ""
 
 #: templates/privacy.html:14
 msgid "Daily egg logs, light hours, and bedding notes you record for your flocks."
-msgstr "Dagelijkse eierregistraties, lichturen en strooiselnotities die je bijhoudt voor je koppels."
+msgstr ""
+"Dagelijkse eierregistraties, lichturen en strooiselnotities die je "
+"bijhoudt voor je koppels."
 
 #: templates/privacy.html:15
 msgid "Hatching plans and incubation records you create."
@@ -1290,8 +1494,9 @@ msgid ""
 "Your data is used solely to provide the RingLog service to you. It is "
 "never sold, shared with third parties, or used for advertising."
 msgstr ""
-"Je gegevens worden uitsluitend gebruikt om de RingLog-dienst aan jou te leveren. "
-"Ze worden nooit verkocht, gedeeld met derden of gebruikt voor advertenties."
+"Je gegevens worden uitsluitend gebruikt om de RingLog-dienst aan jou te "
+"leveren. Ze worden nooit verkocht, gedeeld met derden of gebruikt voor "
+"advertenties."
 
 #: templates/privacy.html:22
 msgid ""
@@ -1299,9 +1504,10 @@ msgid ""
 " see — and depending on permissions, edit — the bird records in that "
 "flock. You can revoke access at any time from your settings."
 msgstr ""
-"Als je een koppel deelt met een andere RingLog-gebruiker, kan die gebruiker "
-"de vogelgegevens in dat koppel bekijken — en afhankelijk van de rechten ook "
-"bewerken. Je kunt de toegang op elk moment intrekken via je instellingen."
+"Als je een koppel deelt met een andere RingLog-gebruiker, kan die "
+"gebruiker de vogelgegevens in dat koppel bekijken — en afhankelijk van de"
+" rechten ook bewerken. Je kunt de toegang op elk moment intrekken via je "
+"instellingen."
 
 #: templates/privacy.html:24
 msgid "Data retention"
@@ -1313,9 +1519,9 @@ msgid ""
 " have been inactive for more than 6 months may be deleted without prior "
 "notice."
 msgstr ""
-"Je kunt je vogels, koppels en account op elk moment verwijderen. Accounts die "
-"meer dan 6 maanden inactief zijn geweest, kunnen zonder voorafgaande kennisgeving "
-"worden verwijderd."
+"Je kunt je vogels, koppels en account op elk moment verwijderen. Accounts"
+" die meer dan 6 maanden inactief zijn geweest, kunnen zonder voorafgaande"
+" kennisgeving worden verwijderd."
 
 #: templates/privacy.html:27
 msgid "Cookies"
@@ -1327,8 +1533,9 @@ msgid ""
 "optional language preference cookie. No tracking or advertising cookies "
 "are used."
 msgstr ""
-"RingLog gebruikt één sessiecookie om je ingelogd te houden en een optionele "
-"taalkeuze-cookie. Er worden geen tracking- of reclamecookies gebruikt."
+"RingLog gebruikt één sessiecookie om je ingelogd te houden en een "
+"optionele taalkeuze-cookie. Er worden geen tracking- of reclamecookies "
+"gebruikt."
 
 #: templates/privacy.html:30
 msgid "Your rights"
@@ -1340,13 +1547,9 @@ msgid ""
 " about you. To request this, contact us by e-mail or simply delete your "
 "account and data directly in the app."
 msgstr ""
-"Je hebt het recht om alle over jou opgeslagen persoonsgegevens in te zien, "
-"te corrigeren of te verwijderen. Neem hiervoor contact met ons op via e-mail "
-"of verwijder je account en gegevens rechtstreeks in de app."
-
-#: templates/privacy.html:33
-msgid "Contact"
-msgstr "Contact"
+"Je hebt het recht om alle over jou opgeslagen persoonsgegevens in te "
+"zien, te corrigeren of te verwijderen. Neem hiervoor contact met ons op "
+"via e-mail of verwijder je account en gegevens rechtstreeks in de app."
 
 #: templates/privacy.html:34
 msgid "Questions or requests regarding your data can be sent to"
@@ -1478,83 +1681,3 @@ msgstr "Toevoegen"
 msgid "No notes yet."
 msgstr "Nog geen notities."
 
-
-#: templates/data_deletion.html templates/base.html
-msgid "Data Deletion"
-msgstr "Gegevens verwijderen"
-
-#: templates/data_deletion.html
-msgid "You can delete your data at any time, either partially or completely. This page explains how."
-msgstr "Je kunt je gegevens op elk moment verwijderen, gedeeltelijk of volledig. Op deze pagina leggen we uit hoe."
-
-#: templates/data_deletion.html
-msgid "Delete individual records"
-msgstr "Afzonderlijke gegevens verwijderen"
-
-#: templates/data_deletion.html
-msgid "You can delete individual birds, flocks, log entries, and hatches directly in the app:"
-msgstr "Je kunt individuele vogels, koppels, logboekregels en broedplannen rechtstreeks in de app verwijderen:"
-
-#: templates/data_deletion.html
-msgid "To delete a bird: open the bird's page and use the Delete button at the bottom."
-msgstr "Vogel verwijderen: open de pagina van de vogel en gebruik de knop Verwijderen onderaan."
-
-#: templates/data_deletion.html
-msgid "To delete a flock and all its birds: go to Settings and delete the flock from there."
-msgstr "Koppel verwijderen inclusief alle vogels: ga naar Instellingen en verwijder het koppel van daaruit."
-
-#: templates/data_deletion.html
-msgid "To delete a log entry: open the Daily Log and click the delete icon next to the entry."
-msgstr "Logboekregel verwijderen: open het Dagboek en klik op het verwijderpictogram naast de regel."
-
-#: templates/data_deletion.html
-msgid "To delete a hatching plan: open the hatch and use the Delete button."
-msgstr "Broedplan verwijderen: open het broedplan en gebruik de knop Verwijderen."
-
-#: templates/data_deletion.html
-msgid "Delete your entire account"
-msgstr "Volledig account verwijderen"
-
-#: templates/data_deletion.html
-msgid "Deleting your account permanently removes all data associated with it, including:"
-msgstr "Het verwijderen van je account wist permanent alle bijbehorende gegevens, waaronder:"
-
-#: templates/data_deletion.html
-msgid "Your username, email address, and password."
-msgstr "Je gebruikersnaam, e-mailadres en wachtwoord."
-
-#: templates/data_deletion.html
-msgid "All flocks, birds, notes, and photos you have created."
-msgstr "Alle koppels, vogels, notities en foto's die je hebt aangemaakt."
-
-#: templates/data_deletion.html
-msgid "All daily log entries and hatching plans."
-msgstr "Alle dagboekregels en broedplannen."
-
-#: templates/data_deletion.html
-msgid "Any flock shares you have set up."
-msgstr "Alle koppelingen die je hebt ingesteld."
-
-#: templates/data_deletion.html
-msgid "This action is immediate and cannot be undone. There is no recovery option."
-msgstr "Deze actie is direct en kan niet ongedaan worden gemaakt. Er is geen herstelmogelijkheid."
-
-#: templates/data_deletion.html
-msgid "This will permanently delete your account and all your data. There is no undo. Are you sure?"
-msgstr "Dit verwijdert permanent je account en alle gegevens. Dit kan niet ongedaan worden gemaakt. Weet je het zeker?"
-
-#: templates/data_deletion.html
-msgid "Delete my account and all data"
-msgstr "Mijn account en alle gegevens verwijderen"
-
-#: templates/data_deletion.html
-msgid "Log in to delete your account"
-msgstr "Log in om je account te verwijderen"
-
-#: templates/data_deletion.html
-msgid "If you cannot log in and need your data deleted, contact us at"
-msgstr "Als je niet kunt inloggen en je gegevens wilt laten verwijderen, neem dan contact op via"
-
-#: app.py
-msgid "Your account and all data have been permanently deleted."
-msgstr "Je account en alle gegevens zijn permanent verwijderd."

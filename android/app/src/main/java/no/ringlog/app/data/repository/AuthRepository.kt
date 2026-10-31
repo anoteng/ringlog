@@ -1,8 +1,7 @@
 package no.ringlog.app.data.repository
 
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import no.ringlog.app.R
 import no.ringlog.app.data.api.LoginRequest
 import no.ringlog.app.data.api.RegisterRequest
 import no.ringlog.app.data.api.RingLogApi
@@ -14,50 +13,39 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val api: RingLogApi,
     private val tokenStore: TokenStore,
+    private val errors: ApiErrors,
 ) {
-    private val _loggedIn = MutableStateFlow(tokenStore.token != null)
-    val loggedIn: StateFlow<Boolean> = _loggedIn.asStateFlow()
+    val loggedIn: StateFlow<Boolean> = tokenStore.loggedIn
 
     val username get() = tokenStore.username
 
-    suspend fun register(username: String, password: String, email: String?): Result<String> = runCatching {
+    suspend fun register(username: String, password: String, email: String?): Result<String> = errors.call {
         val resp = api.register(RegisterRequest(username.trim(), password, email?.trim()?.ifBlank { null }))
-        if (resp.isSuccessful) {
-            val body = resp.body()!!
-            tokenStore.token    = body.token
-            tokenStore.username = body.username
-            _loggedIn.value = true
-            body.username
-        } else {
-            val msg = resp.code()
-            throw Exception(when (msg) {
-                409 -> "Username already taken"
-                400 -> "Invalid username or password requirements"
-                else -> "Registration failed"
-            })
-        }
+        if (!resp.isSuccessful) throw errors.of(resp, R.string.err_register_failed,
+            409 to R.string.err_username_taken, 400 to R.string.err_register_invalid)
+        val body = resp.body()!!
+        tokenStore.username = body.username
+        tokenStore.token    = body.token
+        body.username
     }
 
-    suspend fun login(username: String, password: String): Result<String> = runCatching {
+    suspend fun login(username: String, password: String): Result<String> = errors.call {
         val resp = api.login(LoginRequest(username.trim(), password))
-        if (resp.isSuccessful) {
-            val body = resp.body()!!
-            tokenStore.token    = body.token
-            tokenStore.username = body.username
-            _loggedIn.value = true
-            body.username
-        } else {
-            throw Exception(if (resp.code() == 401) "Invalid username or password" else "Login failed")
-        }
+        if (!resp.isSuccessful) throw errors.of(resp, R.string.err_login_failed,
+            401 to R.string.err_login_invalid)
+        val body = resp.body()!!
+        tokenStore.username = body.username
+        tokenStore.token    = body.token
+        body.username
     }
 
     fun logoutLocal() {
         tokenStore.clear()
-        _loggedIn.value = false
     }
 
+    /** Revokes the token on the server (best effort), then forgets it locally. */
     suspend fun logout() {
-        logoutLocal()
         runCatching { api.logout() }
+        logoutLocal()
     }
 }

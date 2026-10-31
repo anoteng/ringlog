@@ -22,6 +22,8 @@ import no.ringlog.app.R
 import no.ringlog.app.data.api.Bird
 import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
+import no.ringlog.app.ui.components.speciesLabel
+import no.ringlog.app.ui.components.sexLabel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,12 +138,14 @@ fun FlockDetailScreen(
 @Composable
 private fun BirdRow(bird: Bird, onClick: (Int) -> Unit) {
     val label = bird.name ?: bird.ring_number
+    val species = speciesLabel(bird.species)
+    val sex = sexLabel(bird.sex)
     val sub = buildString {
         append(bird.ring_number)
         if (bird.name != null) append(" · ${bird.name}")
-        append(" · ${bird.species.replaceFirstChar { it.uppercase() }}")
+        append(" · $species")
         if (!bird.breed.isNullOrBlank()) append(" ${bird.breed}")
-        append(" · ${bird.sex.replaceFirstChar { it.uppercase() }}")
+        append(" · $sex")
         birdAge(bird.birth_date)?.let { append(" · $it") }
     }
     ListItem(

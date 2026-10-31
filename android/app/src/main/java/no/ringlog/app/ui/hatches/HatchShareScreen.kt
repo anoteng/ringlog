@@ -36,7 +36,7 @@ fun HatchShareScreen(
             onDismissRequest = { vm.clearError() },
             title   = { Text(stringResource(R.string.error)) },
             text    = { Text(actionError!!) },
-            confirmButton = { TextButton(onClick = { vm.clearError() }) { Text("OK") } },
+            confirmButton = { TextButton(onClick = { vm.clearError() }) { Text(stringResource(R.string.ok)) } },
         )
     }
 

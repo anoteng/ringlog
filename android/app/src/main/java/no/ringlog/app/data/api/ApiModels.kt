@@ -52,6 +52,8 @@ data class Bird(
     val sold_date: String?,
     val has_image: Boolean,
     val notes_list: List<BirdNote>? = null,
+    val can_edit: Boolean = false,
+    val is_owner: Boolean = false,
 )
 
 data class BirdNote(val id: Int, val bird_id: Int? = null, val note_date: String, val content: String)

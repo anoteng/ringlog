@@ -1,5 +1,6 @@
 package no.ringlog.app.data.repository
 
+import no.ringlog.app.R
 import no.ringlog.app.data.api.Hatch
 import no.ringlog.app.data.api.HatchFinishRequest
 import no.ringlog.app.data.api.HatchFinishResponse
@@ -12,65 +13,57 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class HatchRepository @Inject constructor(private val api: RingLogApi) {
+class HatchRepository @Inject constructor(
+    private val api: RingLogApi,
+    private val errors: ApiErrors,
+) {
 
-    suspend fun getHatches(): Result<HatchesResponse> = runCatching {
+    suspend fun getHatches(): Result<HatchesResponse> = errors.call {
         val resp = api.hatches()
-        if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to load hatches")
+        if (resp.isSuccessful) resp.body()!! else throw errors.of(resp, R.string.err_load)
     }
 
-    suspend fun getHatchDetail(id: Int): Result<Hatch> = runCatching {
+    suspend fun getHatchDetail(id: Int): Result<Hatch> = errors.call {
         val resp = api.hatchDetail(id)
-        if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to load hatch")
+        if (resp.isSuccessful) resp.body()!! else throw errors.of(resp, R.string.err_load)
     }
 
-    suspend fun createHatch(req: HatchRequest): Result<Int> = runCatching {
+    suspend fun createHatch(req: HatchRequest): Result<Int> = errors.call {
         val resp = api.createHatch(req)
         if (resp.isSuccessful) resp.body()!!.id
-        else throw Exception("Failed to create hatch (${resp.code()})")
+        else throw errors.of(resp, R.string.err_save, 400 to R.string.err_hatch_invalid)
     }
 
-    suspend fun updateHatch(id: Int, req: HatchRequest): Result<Unit> = runCatching {
+    suspend fun updateHatch(id: Int, req: HatchRequest): Result<Unit> = errors.call {
         val resp = api.updateHatch(id, req)
-        if (!resp.isSuccessful) throw Exception("Failed to update hatch (${resp.code()})")
+        if (!resp.isSuccessful) throw errors.of(resp, R.string.err_save, 400 to R.string.err_hatch_invalid)
     }
 
-    suspend fun finishHatch(id: Int, req: HatchFinishRequest): Result<HatchFinishResponse> = runCatching {
+    suspend fun finishHatch(id: Int, req: HatchFinishRequest): Result<HatchFinishResponse> = errors.call {
         val resp = api.finishHatch(id, req)
         if (resp.isSuccessful) resp.body()!!
-        else throw Exception(
-            when (resp.code()) {
-                409  -> resp.errorBody()?.string()?.let {
-                    Regex("\"error\":\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1)
-                } ?: "Ring number already in use"
-                403  -> "No access to target flock"
-                else -> "Failed to finish hatch (${resp.code()})"
-            }
-        )
+        else throw errors.of(resp, R.string.err_save, 409 to R.string.err_flock_name_taken)
     }
 
-    suspend fun deleteHatch(id: Int): Result<Unit> = runCatching {
+    suspend fun deleteHatch(id: Int): Result<Unit> = errors.call {
         val resp = api.deleteHatch(id)
-        if (!resp.isSuccessful) throw Exception("Failed to delete hatch")
+        if (!resp.isSuccessful) throw errors.of(resp, R.string.err_delete)
     }
 
-    suspend fun getShares(id: Int): Result<List<HatchShare>> = runCatching {
+    suspend fun getShares(id: Int): Result<List<HatchShare>> = errors.call {
         val resp = api.hatchShares(id)
-        if (resp.isSuccessful) resp.body()!! else throw Exception("Failed to load shares")
+        if (resp.isSuccessful) resp.body()!! else throw errors.of(resp, R.string.err_load)
     }
 
-    suspend fun addShare(id: Int, username: String, canEdit: Boolean): Result<HatchShare> = runCatching {
+    suspend fun addShare(id: Int, username: String, canEdit: Boolean): Result<HatchShare> = errors.call {
         val resp = api.addHatchShare(id, HatchShareRequest(username, canEdit))
         if (resp.isSuccessful) resp.body()!!
-        else throw Exception(
-            resp.errorBody()?.string()?.let {
-                Regex("\"error\":\\s*\"([^\"]+)\"").find(it)?.groupValues?.get(1)
-            } ?: "Failed to share (${resp.code()})"
-        )
+        else throw errors.of(resp, R.string.err_save,
+            404 to R.string.err_user_not_found, 400 to R.string.err_share_self)
     }
 
-    suspend fun revokeShare(hatchId: Int, shareId: Int): Result<Unit> = runCatching {
+    suspend fun revokeShare(hatchId: Int, shareId: Int): Result<Unit> = errors.call {
         val resp = api.revokeHatchShare(hatchId, shareId)
-        if (!resp.isSuccessful) throw Exception("Failed to revoke share")
+        if (!resp.isSuccessful) throw errors.of(resp, R.string.err_delete)
     }
 }

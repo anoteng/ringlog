@@ -161,9 +161,48 @@
     <string name="species_pigeon">Pigeon</string>
     <string name="species_guinea_fowl">Guinea Fowl</string>
     <string name="species_peafowl">Peafowl</string>
+    <string name="species_muscovy">Muscovy duck</string>
+    <string name="species_custom">Custom</string>
 
     <!-- Sex -->
     <string name="sex_unknown">Unknown</string>
     <string name="sex_female">Female</string>
     <string name="sex_male">Male</string>
+
+    <!-- Navigation, account, errors -->
+    <string name="nav_flocks">Flocks</string>
+    <string name="nav_log">Log</string>
+    <string name="nav_hatches">Hatches</string>
+    <string name="nav_account">Account</string>
+    <string name="account">Account</string>
+    <string name="log_out">Log out</string>
+    <string name="log_out_confirm_title">Log out?</string>
+    <string name="log_out_confirm_text">You will need to log in again to use the app.</string>
+    <string name="logged_in_as">Logged in as %1$s</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="err_network">Can\'t reach the server. Check your internet connection.</string>
+    <string name="err_load">Couldn\'t load data (error %1$d).</string>
+    <string name="err_save">Couldn\'t save (error %1$d).</string>
+    <string name="err_delete">Couldn\'t delete (error %1$d).</string>
+    <string name="err_upload">Photo upload failed (error %1$d).</string>
+    <string name="err_server">Server error (%1$d). Please try again later.</string>
+    <string name="err_permission">You don\'t have permission to do this.</string>
+    <string name="err_not_found">Not found. It may have been deleted.</string>
+    <string name="err_too_many_attempts">Too many failed login attempts. Try again in 15 minutes.</string>
+    <string name="err_flock_name_taken">You already have a flock with that name.</string>
+    <string name="err_flock_not_empty">The flock still has birds. Remove them first.</string>
+    <string name="err_batch_count">Enter between 1 and 500 birds in total.</string>
+    <string name="err_ring_in_use">Ring number already in use in this flock.</string>
+    <string name="err_ring_required">Ring number is required.</string>
+    <string name="err_image_type">Unsupported image type.</string>
+    <string name="err_image_too_large">The image is too large.</string>
+    <string name="err_hatch_invalid">Incubation days must be at least 1, and lockdown day can\'t be after hatch day.</string>
+    <string name="err_user_not_found">User not found.</string>
+    <string name="err_share_self">You can\'t share with yourself.</string>
+    <string name="err_login_invalid">Invalid username or password.</string>
+    <string name="err_login_failed">Login failed (error %1$d).</string>
+    <string name="err_username_taken">Username or email address is already registered.</string>
+    <string name="err_register_invalid">Username needs at least 3 characters (letters, numbers, underscore) and password at least 8.</string>
+    <string name="err_register_failed">Registration failed (error %1$d).</string>
 </resources>

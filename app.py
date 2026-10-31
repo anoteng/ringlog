@@ -19,6 +19,7 @@ from flask import (
 from flask_babel import Babel, gettext as _, ngettext
 from werkzeug.security import generate_password_hash, check_password_hash
 from io import BytesIO
+from PIL import Image, ImageOps
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -29,6 +30,7 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "1") == "1",
     SESSION_COOKIE_HTTPONLY=True,
+    MAX_CONTENT_LENGTH=10 * 1024 * 1024,
 )
 
 SUPPORTED_LANGS = ["en", "nb", "nl"]
@@ -105,6 +107,28 @@ def _image_mime(mime):
     return mime if mime in ALLOWED_IMAGE_MIMES else None
 
 
+MAX_IMAGE_SIDE = 1600
+
+
+def _compress_image(data, mime):
+    """Downscale to MAX_IMAGE_SIDE and re-encode as JPEG; keeps the original if Pillow can't decode it."""
+    try:
+        img = ImageOps.exif_transpose(Image.open(BytesIO(data)))
+        img.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
+        if img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGBA")
+            bg = Image.new("RGB", img.size, "white")
+            bg.paste(img, mask=img.getchannel("A"))
+            img = bg
+        elif img.mode != "RGB":
+            img = img.convert("RGB")
+        out = BytesIO()
+        img.save(out, "JPEG", quality=85, optimize=True)
+        return out.getvalue(), "image/jpeg"
+    except Exception:
+        return data, mime
+
+
 def _image_response(data, mime):
     resp = send_file(BytesIO(data), mimetype=_image_mime(mime) or "application/octet-stream")
     resp.headers["X-Content-Type-Options"] = "nosniff"
@@ -154,6 +178,41 @@ def load_user():
 def inject_user():
     from flask_babel import get_locale
     return {"current_user": g.user, "get_locale": get_locale}
+
+
+LOGIN_WINDOW_MINUTES = 15
+MAX_FAILS_PER_USER = 10
+MAX_FAILS_PER_IP = 30
+
+
+def _client_ip():
+    # gunicorn only listens on localhost behind nginx, which sets X-Real-IP
+    return (request.headers.get("X-Real-IP") or request.remote_addr or "")[:64]
+
+
+def login_blocked(username):
+    """True if this username or client IP has too many recent failed logins."""
+    ip, user = _client_ip(), username.lower()
+    row = get_db().execute(
+        """SELECT COALESCE(SUM(username = ?), 0) AS by_user, COALESCE(SUM(ip = ?), 0) AS by_ip
+           FROM login_failures
+           WHERE created_at > NOW() - INTERVAL ? MINUTE AND (username = ? OR ip = ?)""",
+        (user, ip, LOGIN_WINDOW_MINUTES, user, ip)
+    ).fetchone()
+    return row["by_user"] >= MAX_FAILS_PER_USER or row["by_ip"] >= MAX_FAILS_PER_IP
+
+
+def record_login_failure(username):
+    db = get_db()
+    db.execute("INSERT INTO login_failures (username, ip) VALUES (?, ?)", (username.lower(), _client_ip()))
+    db.execute("DELETE FROM login_failures WHERE created_at < NOW() - INTERVAL 1 DAY")
+    db.commit()
+
+
+def clear_login_failures(username):
+    db = get_db()
+    db.execute("DELETE FROM login_failures WHERE username = ?", (username.lower(),))
+    db.commit()
 
 
 def login_required(f):
@@ -376,8 +435,15 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
+        if login_blocked(username):
+            flash(_("Too many failed login attempts. Please try again in %(minutes)d minutes.",
+                    minutes=LOGIN_WINDOW_MINUTES), "error")
+            return render_template("login.html")
         user = get_db().execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-        if user and check_password_hash(user["password_hash"], password):
+        if not (user and check_password_hash(user["password_hash"], password)):
+            record_login_failure(username)
+        else:
+            clear_login_failures(username)
             session.clear()
             session["user_id"] = user["id"]
             next_url = request.args.get("next", "")
@@ -693,8 +759,7 @@ def add_bird(username, flock_name):
         image_data, image_mime = None, None
         file = request.files.get("image")
         if file and file.filename and _image_mime(file.content_type):
-            image_data = file.read()
-            image_mime = _image_mime(file.content_type)
+            image_data, image_mime = _compress_image(file.read(), _image_mime(file.content_type))
 
         breed     = request.form.get("breed", "").strip()
         breed_mix = request.form.get("breed_mix", "").strip() if breed == "hybrid" else ""
@@ -787,8 +852,7 @@ def edit_bird(bird_id):
             image_data, image_mime = None, None
         file = request.files.get("image")
         if file and file.filename and _image_mime(file.content_type):
-            image_data = file.read()
-            image_mime = _image_mime(file.content_type)
+            image_data, image_mime = _compress_image(file.read(), _image_mime(file.content_type))
 
         breed     = request.form.get("breed", "").strip()
         breed_mix = request.form.get("breed_mix", "").strip() if breed == "hybrid" else ""
@@ -1649,7 +1713,7 @@ def _bird_dict(b):
         "death_date":       str(b["death_date"]) if b["death_date"] else None,
         "is_sold":          bool(b["is_sold"]),
         "sold_date":        str(b["sold_date"]) if b["sold_date"] else None,
-        "has_image":        bool(b["image"]),
+        "has_image":        bool(b["has_image"] if "has_image" in b else b["image"]),
     }
 
 
@@ -1676,10 +1740,14 @@ def api_login():
     device   = (data.get("device_name") or "")[:128]
     if not username or not password:
         return jsonify({"error": "username and password required"}), 400
+    if login_blocked(username):
+        return jsonify({"error": "Too many failed login attempts, try again later"}), 429
     db = get_db()
     user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
     if not user or not check_password_hash(user["password_hash"], password):
+        record_login_failure(username)
         return jsonify({"error": "Invalid username or password"}), 401
+    clear_login_failures(username)
     token = secrets.token_hex(32)
     db.execute(
         "INSERT INTO user_tokens (user_id, token, device_name) VALUES (?,?,?)",
@@ -1777,7 +1845,13 @@ def api_flock_detail(flock_id):
         (flock_id,)
     ).fetchone()
     birds = sorted(
-        db.execute("SELECT * FROM birds WHERE flock_id=?", (flock_id,)).fetchall(),
+        db.execute(
+            """SELECT id, flock_id, ring_number, name, species, breed, breed_mix, sex,
+                      birth_date, birth_approximate, notes, is_dead, death_date, is_sold, sold_date,
+                      image IS NOT NULL AS has_image
+               FROM birds WHERE flock_id=?""",
+            (flock_id,)
+        ).fetchall(),
         key=lambda b: _natural_key(b["ring_number"])
     )
     is_owner = flock["user_id"] == g.user["id"]
@@ -1868,7 +1942,7 @@ def api_add_bird(flock_id):
         image_mime = _image_mime(img.mimetype)
         if not image_mime:
             return jsonify({"error": "Unsupported image type"}), 400
-        image_data = img.read()
+        image_data, image_mime = _compress_image(img.read(), image_mime)
     birth_approx = 1 if f.get("birth_approximate") in (True, "true", "1", 1) else 0
     try:
         db.execute(
@@ -1935,14 +2009,18 @@ def api_batch_add_birds(flock_id):
 def api_bird_detail(bird_id):
     db = get_db()
     bird = db.execute("SELECT * FROM birds WHERE id=?", (bird_id,)).fetchone()
-    if not bird or not get_permission(bird["flock_id"]):
+    perm = get_permission(bird["flock_id"]) if bird else None
+    if not perm:
         return jsonify({"error": "Not found"}), 404
+    owner_id = db.execute("SELECT user_id FROM flocks WHERE id=?", (bird["flock_id"],)).fetchone()["user_id"]
     notes = db.execute(
         "SELECT id, note_date, content, created_at FROM bird_notes WHERE bird_id=? ORDER BY note_date DESC, id DESC",
         (bird_id,)
     ).fetchall()
     return jsonify({
         **_bird_dict(bird),
+        "can_edit": perm == "edit",
+        "is_owner": owner_id == g.user["id"],
         "notes_list": [{"id": n["id"], "note_date": str(n["note_date"]), "content": n["content"]} for n in notes],
     })
 
@@ -1966,7 +2044,7 @@ def api_update_bird(bird_id):
         image_mime = _image_mime(img.mimetype)
         if not image_mime:
             return jsonify({"error": "Unsupported image type"}), 400
-        image_data = img.read()
+        image_data, image_mime = _compress_image(img.read(), image_mime)
     birth_approx = 1 if f.get("birth_approximate") in (True, "true", "1", 1) else 0
     is_dead = 1 if f.get("is_dead") in (True, "true", "1", 1) else 0
     is_sold = 1 if f.get("is_sold") in (True, "true", "1", 1) else 0
@@ -2005,8 +2083,9 @@ def api_upload_bird_image(bird_id):
     mime = _image_mime(img.mimetype)
     if not mime:
         return jsonify({"error": "Unsupported image type"}), 400
+    data, mime = _compress_image(img.read(), mime)
     db.execute("UPDATE birds SET image=?, image_mime=? WHERE id=?",
-               (img.read(), mime, bird_id))
+               (data, mime, bird_id))
     db.commit()
     return jsonify({"ok": True})
 

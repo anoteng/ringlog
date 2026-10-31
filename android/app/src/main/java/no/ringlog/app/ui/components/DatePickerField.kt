@@ -5,6 +5,8 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import no.ringlog.app.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -52,10 +54,10 @@ fun DatePickerField(
                         onValueChange(date.toString())
                     }
                     showPicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showPicker = false }) { Text("Avbryt") }
+                TextButton(onClick = { showPicker = false }) { Text(stringResource(R.string.cancel)) }
             },
         ) {
             DatePicker(state = pickerState)

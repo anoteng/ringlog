@@ -141,7 +141,13 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
             _updateBirdState.value = UpdateBirdState.Loading
             repo.updateBird(birdId, fields).fold(
                 onSuccess = {
-                    _birdState.value = BirdState.Success(it)
+                    // The update response has no notes or permissions; keep the ones already loaded.
+                    val prev = (_birdState.value as? BirdState.Success)?.bird
+                    _birdState.value = BirdState.Success(it.copy(
+                        notes_list = prev?.notes_list,
+                        can_edit   = prev?.can_edit ?: false,
+                        is_owner   = prev?.is_owner ?: false,
+                    ))
                     _updateBirdState.value = UpdateBirdState.Success
                 },
                 onFailure = {

@@ -162,9 +162,48 @@
     <string name="species_pigeon">Duif</string>
     <string name="species_guinea_fowl">Parelhoen</string>
     <string name="species_peafowl">Pauw</string>
+    <string name="species_muscovy">Muskuseend</string>
+    <string name="species_custom">Aangepast</string>
 
     <!-- Sex -->
     <string name="sex_unknown">Onbekend</string>
     <string name="sex_female">Vrouw</string>
     <string name="sex_male">Man</string>
+
+    <!-- Navigation, account, errors -->
+    <string name="nav_flocks">Koppels</string>
+    <string name="nav_log">Dagboek</string>
+    <string name="nav_hatches">Broeden</string>
+    <string name="nav_account">Account</string>
+    <string name="account">Account</string>
+    <string name="log_out">Uitloggen</string>
+    <string name="log_out_confirm_title">Uitloggen?</string>
+    <string name="log_out_confirm_text">Je moet opnieuw inloggen om de app te gebruiken.</string>
+    <string name="logged_in_as">Ingelogd als %1$s</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Annuleren</string>
+    <string name="err_network">Kan de server niet bereiken. Controleer je internetverbinding.</string>
+    <string name="err_load">Kon gegevens niet laden (fout %1$d).</string>
+    <string name="err_save">Kon niet opslaan (fout %1$d).</string>
+    <string name="err_delete">Kon niet verwijderen (fout %1$d).</string>
+    <string name="err_upload">Uploaden van foto mislukt (fout %1$d).</string>
+    <string name="err_server">Serverfout (%1$d). Probeer het later opnieuw.</string>
+    <string name="err_permission">Je hebt geen toestemming om dit te doen.</string>
+    <string name="err_not_found">Niet gevonden. Mogelijk is het verwijderd.</string>
+    <string name="err_too_many_attempts">Te veel mislukte inlogpogingen. Probeer het over 15 minuten opnieuw.</string>
+    <string name="err_flock_name_taken">Je hebt al een koppel met die naam.</string>
+    <string name="err_flock_not_empty">Het koppel bevat nog vogels. Verwijder ze eerst.</string>
+    <string name="err_batch_count">Voer in totaal tussen 1 en 500 vogels in.</string>
+    <string name="err_ring_in_use">Ringnummer is al in gebruik in dit koppel.</string>
+    <string name="err_ring_required">Ringnummer is verplicht.</string>
+    <string name="err_image_type">Afbeeldingstype wordt niet ondersteund.</string>
+    <string name="err_image_too_large">De afbeelding is te groot.</string>
+    <string name="err_hatch_invalid">Het aantal broeddagen moet minimaal 1 zijn en de lockdowndag mag niet na de uitkomstdag liggen.</string>
+    <string name="err_user_not_found">Gebruiker niet gevonden.</string>
+    <string name="err_share_self">Je kunt niet met jezelf delen.</string>
+    <string name="err_login_invalid">Ongeldige gebruikersnaam of wachtwoord.</string>
+    <string name="err_login_failed">Inloggen mislukt (fout %1$d).</string>
+    <string name="err_username_taken">Gebruikersnaam of e-mailadres is al geregistreerd.</string>
+    <string name="err_register_invalid">Gebruikersnaam moet minstens 3 tekens hebben (letters, cijfers, underscore) en het wachtwoord minstens 8.</string>
+    <string name="err_register_failed">Registratie mislukt (fout %1$d).</string>
 </resources>

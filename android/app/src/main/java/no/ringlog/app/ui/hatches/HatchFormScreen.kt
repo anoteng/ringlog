@@ -20,6 +20,7 @@ import no.ringlog.app.data.api.HatchRequest
 import no.ringlog.app.ui.components.DatePickerField
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import no.ringlog.app.ui.components.speciesLabel
 
 private val SPECIES = listOf("chicken", "duck", "muscovy", "custom")
 private val PRESETS = mapOf(
@@ -134,7 +135,7 @@ fun HatchFormScreen(
 
             ExposedDropdownMenuBox(expanded = speciesExpanded, onExpandedChange = { speciesExpanded = it }) {
                 OutlinedTextField(
-                    value = species.replaceFirstChar { it.uppercase() },
+                    value = speciesLabel(species),
                     onValueChange = {},
                     readOnly = true,
                     label = { Text(stringResource(R.string.species)) },
@@ -144,7 +145,7 @@ fun HatchFormScreen(
                 ExposedDropdownMenu(expanded = speciesExpanded, onDismissRequest = { speciesExpanded = false }) {
                     SPECIES.forEach { s ->
                         DropdownMenuItem(
-                            text = { Text(s.replaceFirstChar { it.uppercase() }) },
+                            text = { Text(speciesLabel(s)) },
                             onClick = {
                                 if (species != s) { species = s; applyPreset(s) }
                                 speciesExpanded = false

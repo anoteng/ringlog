@@ -40,9 +40,14 @@ import no.ringlog.app.ui.components.ErrorScreen
 import no.ringlog.app.ui.components.LoadingScreen
 import no.ringlog.app.ui.flocks.FlockViewModel
 import no.ringlog.app.ui.util.formatIsoDate
+import no.ringlog.app.ui.util.readCompressedImage
+import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import no.ringlog.app.ui.components.speciesLabel
+import no.ringlog.app.ui.components.sexLabel
+import no.ringlog.app.ui.components.SexDropdown
 
 private fun createCameraImageUri(context: android.content.Context): Uri {
     val dir = File(context.cacheDir, "camera").also { it.mkdirs() }
@@ -102,10 +107,11 @@ fun BirdDetailScreen(
         }
     }
 
+    val scope = rememberCoroutineScope()
+
     fun readAndUpload(uri: Uri) {
-        val mime = context.contentResolver.getType(uri) ?: "image/jpeg"
-        context.contentResolver.openInputStream(uri)?.use { stream ->
-            vm.uploadImage(birdId, stream.readBytes(), mime)
+        scope.launch {
+            readCompressedImage(context, uri)?.let { (bytes, mime) -> vm.uploadImage(birdId, bytes, mime) }
         }
     }
 
@@ -231,15 +237,19 @@ fun BirdDetailScreen(
                             TextButton(onClick = ::saveEdits) { Text(stringResource(R.string.save)) }
                         }
                     } else if (bird != null) {
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Default.Delete, stringResource(R.string.delete_bird),
-                                 tint = MaterialTheme.colorScheme.error)
+                        if (bird.is_owner) {
+                            IconButton(onClick = { showDeleteDialog = true }) {
+                                Icon(Icons.Default.Delete, stringResource(R.string.delete_bird),
+                                     tint = MaterialTheme.colorScheme.error)
+                            }
                         }
-                        IconButton(onClick = ::enterEditMode) {
-                            Icon(Icons.Default.Edit, stringResource(R.string.edit_bird))
-                        }
-                        IconButton(onClick = { showImageSheet = true }) {
-                            Icon(Icons.Default.CameraAlt, stringResource(R.string.change_photo))
+                        if (bird.can_edit) {
+                            IconButton(onClick = ::enterEditMode) {
+                                Icon(Icons.Default.Edit, stringResource(R.string.edit_bird))
+                            }
+                            IconButton(onClick = { showImageSheet = true }) {
+                                Icon(Icons.Default.CameraAlt, stringResource(R.string.change_photo))
+                            }
                         }
                     }
                 },
@@ -308,15 +318,13 @@ fun BirdDetailScreen(
 
                                 DetailRow(stringResource(R.string.ring), b.ring_number)
                                 if (b.name != null) DetailRow(stringResource(R.string.name), b.name)
-                                DetailRow(stringResource(R.string.species),
-                                    b.species.replaceFirstChar { it.uppercase() })
+                                DetailRow(stringResource(R.string.species), speciesLabel(b.species))
                                 if (!b.breed.isNullOrBlank()) {
                                     val breedText = if (!b.breed_mix.isNullOrBlank())
                                         "${b.breed} (${b.breed_mix})" else b.breed
                                     DetailRow(stringResource(R.string.breed), breedText)
                                 }
-                                DetailRow(stringResource(R.string.sex),
-                                    b.sex.replaceFirstChar { it.uppercase() })
+                                DetailRow(stringResource(R.string.sex), sexLabel(b.sex))
                                 if (b.birth_date != null)
                                     DetailRow(stringResource(R.string.born),
                                         "${if (b.birth_approximate) "~" else ""}${formatIsoDate(b.birth_date)}")
@@ -350,7 +358,7 @@ fun BirdDetailScreen(
                                 }
                             }
 
-                            item {
+                            if (b.can_edit) item {
                                 Spacer(Modifier.height(16.dp))
                                 Row(Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -422,9 +430,6 @@ private fun EditBirdForm(
     soldDate: String, onSoldDateChange: (String) -> Unit,
     errorMsg: String?,
 ) {
-    val sexOptions = listOf("female", "male", "unknown")
-    var sexExpanded by remember { mutableStateOf(false) }
-
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -445,24 +450,7 @@ private fun EditBirdForm(
         OutlinedTextField(breedMix, onBreedMixChange, Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.breed_mix)) }, singleLine = true)
 
-        ExposedDropdownMenuBox(expanded = sexExpanded, onExpandedChange = { sexExpanded = it }) {
-            OutlinedTextField(
-                value = sex.replaceFirstChar { it.uppercase() },
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.sex)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(sexExpanded) },
-                modifier = Modifier.fillMaxWidth().menuAnchor(),
-            )
-            ExposedDropdownMenu(expanded = sexExpanded, onDismissRequest = { sexExpanded = false }) {
-                sexOptions.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option.replaceFirstChar { it.uppercase() }) },
-                        onClick = { onSexChange(option); sexExpanded = false },
-                    )
-                }
-            }
-        }
+        SexDropdown(selected = sex, onSelected = onSexChange, modifier = Modifier.fillMaxWidth())
 
         DatePickerField(
             value = birthDate, onValueChange = onBirthDateChange,
