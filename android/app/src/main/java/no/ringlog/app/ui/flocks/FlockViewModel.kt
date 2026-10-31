@@ -187,19 +187,21 @@ class FlockViewModel @Inject constructor(private val repo: FlockRepository) : Vi
     fun resetAddBird() { _addBirdState.value = AddBirdState.Idle }
 
     fun batchAddBirds(
-        flockId: Int, ringPrefix: String?, ringStart: Int, count: Int,
-        species: String, breed: String?, sex: String, birthDate: String?,
+        flockId: Int, ringPrefix: String?, ringStart: Int?,
+        maleCount: Int, femaleCount: Int, unknownCount: Int,
+        species: String, breed: String?, birthDate: String?,
     ) {
         viewModelScope.launch {
             _batchAddState.value = BatchAddState.Loading
             repo.batchAddBirds(flockId, BatchBirdRequest(
-                ring_prefix = ringPrefix?.ifBlank { null },
-                ring_start  = ringStart,
-                count       = count,
-                species     = species,
-                breed       = breed?.ifBlank { null },
-                sex         = sex,
-                birth_date  = birthDate?.ifBlank { null },
+                ring_prefix   = ringPrefix?.ifBlank { null },
+                ring_start    = ringStart,
+                male_count    = maleCount,
+                female_count  = femaleCount,
+                unknown_count = unknownCount,
+                species       = species,
+                breed         = breed?.ifBlank { null },
+                birth_date    = birthDate?.ifBlank { null },
             )).fold(
                 onSuccess = { _batchAddState.value = BatchAddState.Success(it.added, it.skipped) },
                 onFailure = { _batchAddState.value = BatchAddState.Error(it.message ?: "Error") },

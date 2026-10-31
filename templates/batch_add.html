@@ -10,7 +10,7 @@
     {% if result %}
     <div class="alert alert-{{ 'success' if result.added > 0 else 'warning' }}" style="margin-top:1rem; padding:0.75rem 1rem; border-radius:6px; background:{{ '#d4edda' if result.added > 0 else '#fff3cd' }}; border:1px solid {{ '#c3e6cb' if result.added > 0 else '#ffeeba' }};">
         {{ _('Added %(added)d bird(s).', added=result.added) }}
-        {% if result.skipped %} {{ _('%(skipped)d skipped (ring already in use).', skipped=result.skipped) }}{% endif %}
+        {% if result.skipped %} {{ _('%(skipped)d ring number(s) were already in use and skipped.', skipped=result.skipped) }}{% endif %}
     </div>
     {% endif %}
 
@@ -21,12 +21,26 @@
                 <input type="text" id="ring_prefix" name="ring_prefix" placeholder="{{ _('Optional, e.g. A') }}" value="{{ request.form.get('ring_prefix', '') }}">
             </div>
             <div class="form-group" style="flex:1;">
-                <label for="ring_start">{{ _('Starting Number') }} *</label>
-                <input type="number" id="ring_start" name="ring_start" min="0" required value="{{ request.form.get('ring_start', '') }}">
+                <label for="ring_start">{{ _('Starting Number') }}</label>
+                <input type="number" id="ring_start" name="ring_start" min="0" placeholder="{{ _('Lowest available') }}" value="{{ request.form.get('ring_start', '') }}">
+            </div>
+        </div>
+        <p style="color:#888; font-size:0.85rem; margin-top:-0.5rem;">
+            {{ _('Leave starting number blank to use the lowest available number. Taken ring numbers are skipped automatically.') }}
+        </p>
+
+        <div class="form-row">
+            <div class="form-group" style="flex:1;">
+                <label for="male_count">{{ _('Males') }}</label>
+                <input type="number" id="male_count" name="male_count" min="0" max="500" value="{{ request.form.get('male_count', '0') }}">
             </div>
             <div class="form-group" style="flex:1;">
-                <label for="count">{{ _('Count') }} *</label>
-                <input type="number" id="count" name="count" min="1" max="500" required value="{{ request.form.get('count', '') }}">
+                <label for="female_count">{{ _('Females') }}</label>
+                <input type="number" id="female_count" name="female_count" min="0" max="500" value="{{ request.form.get('female_count', '0') }}">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label for="unknown_count">{{ _('Unknown') }}</label>
+                <input type="number" id="unknown_count" name="unknown_count" min="0" max="500" value="{{ request.form.get('unknown_count', '0') }}">
             </div>
         </div>
 
@@ -43,15 +57,6 @@
                     <option value="pigeon"      {{ 'selected' if sel == 'pigeon' }}>{{ _('Pigeon') }}</option>
                     <option value="guinea fowl" {{ 'selected' if sel == 'guinea fowl' }}>{{ _('Guinea Fowl') }}</option>
                     <option value="peafowl"     {{ 'selected' if sel == 'peafowl' }}>{{ _('Peafowl') }}</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="sex">{{ _('Sex') }}</label>
-                <select id="sex" name="sex">
-                    {% set s = request.form.get('sex', 'unknown') %}
-                    <option value="unknown" {{ 'selected' if s == 'unknown' }}>{{ _('Unknown') }}</option>
-                    <option value="female"  {{ 'selected' if s == 'female' }}>{{ _('Female') }}</option>
-                    <option value="male"    {{ 'selected' if s == 'male' }}>{{ _('Male') }}</option>
                 </select>
             </div>
         </div>

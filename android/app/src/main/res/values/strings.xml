@@ -147,8 +147,10 @@
     <!-- Add bird / Batch add -->
     <string name="add_bird">Add Bird</string>
     <string name="batch_add">Batch Add Birds</string>
-    <string name="batch_add_result">Added %1$d bird(s). %2$d skipped (ring already in use).</string>
+    <string name="batch_add_result">Added %1$d bird(s). %2$d ring number(s) already in use were skipped.</string>
     <string name="count">Count</string>
+    <string name="lowest_available">Lowest available</string>
+    <string name="ring_start_optional_hint">Leave blank to use the lowest available number. Taken ring numbers are skipped automatically.</string>
 
     <!-- Species -->
     <string name="species_chicken">Chicken</string>

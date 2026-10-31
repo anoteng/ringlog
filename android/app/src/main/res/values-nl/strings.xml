@@ -148,8 +148,10 @@
     <!-- Add bird / Batch add -->
     <string name="add_bird">Vogel toevoegen</string>
     <string name="batch_add">Vogels batch toevoegen</string>
-    <string name="batch_add_result">%1$d vogel(s) toegevoegd. %2$d overgeslagen (ringnummer al in gebruik).</string>
+    <string name="batch_add_result">%1$d vogel(s) toegevoegd. %2$d ringnummer(s) waren al in gebruik en zijn overgeslagen.</string>
     <string name="count">Aantal</string>
+    <string name="lowest_available">Laagst beschikbare</string>
+    <string name="ring_start_optional_hint">Laat leeg om het laagst beschikbare nummer te gebruiken. Ringnummers die al in gebruik zijn worden automatisch overgeslagen.</string>
 
     <!-- Species -->
     <string name="species_chicken">Kip</string>

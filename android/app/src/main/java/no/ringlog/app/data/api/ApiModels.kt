@@ -23,11 +23,12 @@ data class FlockPatchRequest(val allow_ring_reuse: Boolean? = null)
 
 data class BatchBirdRequest(
     val ring_prefix: String? = null,
-    val ring_start: Int,
-    val count: Int,
+    val ring_start: Int? = null,
+    val male_count: Int = 0,
+    val female_count: Int = 0,
+    val unknown_count: Int = 0,
     val species: String = "chicken",
     val breed: String? = null,
-    val sex: String = "unknown",
     val birth_date: String? = null,
 )
 

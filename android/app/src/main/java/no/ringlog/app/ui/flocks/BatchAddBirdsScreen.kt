@@ -17,7 +17,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.ringlog.app.R
 import no.ringlog.app.ui.components.DatePickerField
 import no.ringlog.app.ui.components.SpeciesDropdown
-import no.ringlog.app.ui.components.SexDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,23 +27,29 @@ fun BatchAddBirdsScreen(
 ) {
     val batchState by vm.batchAddState.collectAsStateWithLifecycle()
 
-    var ringPrefix by remember { mutableStateOf("") }
-    var ringStart  by remember { mutableStateOf("") }
-    var count      by remember { mutableStateOf("") }
-    var species    by remember { mutableStateOf("chicken") }
-    var breed      by remember { mutableStateOf("") }
-    var sex        by remember { mutableStateOf("unknown") }
-    var birthDate  by remember { mutableStateOf("") }
+    var ringPrefix   by remember { mutableStateOf("") }
+    var ringStart    by remember { mutableStateOf("") }
+    var maleCount    by remember { mutableStateOf("") }
+    var femaleCount  by remember { mutableStateOf("") }
+    var unknownCount by remember { mutableStateOf("") }
+    var species      by remember { mutableStateOf("chicken") }
+    var breed        by remember { mutableStateOf("") }
+    var birthDate    by remember { mutableStateOf("") }
 
     val isLoading = batchState is FlockViewModel.BatchAddState.Loading
     val result    = batchState as? FlockViewModel.BatchAddState.Success
     val errorMsg  = (batchState as? FlockViewModel.BatchAddState.Error)?.msg
 
+    val totalCount = (maleCount.toIntOrNull() ?: 0) + (femaleCount.toIntOrNull() ?: 0) + (unknownCount.toIntOrNull() ?: 0)
+
     fun submit() {
-        val start = ringStart.trim().toIntOrNull() ?: return
-        val n     = count.trim().toIntOrNull() ?: return
-        vm.batchAddBirds(flockId, ringPrefix.trim().ifBlank { null }, start, n,
-                         species, breed.trim(), sex, birthDate.ifBlank { null })
+        vm.batchAddBirds(
+            flockId, ringPrefix.trim().ifBlank { null }, ringStart.trim().toIntOrNull(),
+            maleCount.trim().toIntOrNull() ?: 0,
+            femaleCount.trim().toIntOrNull() ?: 0,
+            unknownCount.trim().toIntOrNull() ?: 0,
+            species, breed.trim(), birthDate.ifBlank { null },
+        )
     }
 
     Scaffold(
@@ -59,7 +64,7 @@ fun BatchAddBirdsScreen(
                 actions = {
                     TextButton(
                         onClick = ::submit,
-                        enabled = ringStart.toIntOrNull() != null && count.toIntOrNull()?.let { it > 0 } == true && !isLoading,
+                        enabled = totalCount in 1..500 && !isLoading,
                     ) {
                         if (isLoading) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                         else Text(stringResource(R.string.add))
@@ -102,15 +107,40 @@ fun BatchAddBirdsScreen(
                 OutlinedTextField(
                     value = ringStart,
                     onValueChange = { ringStart = it },
-                    label = { Text(stringResource(R.string.ring_start) + " *") },
+                    label = { Text(stringResource(R.string.ring_start)) },
+                    placeholder = { Text(stringResource(R.string.lowest_available)) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            }
+            Text(
+                stringResource(R.string.ring_start_optional_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
+
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = maleCount,
+                    onValueChange = { maleCount = it },
+                    label = { Text(stringResource(R.string.sex_male)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
                 OutlinedTextField(
-                    value = count,
-                    onValueChange = { count = it },
-                    label = { Text(stringResource(R.string.count) + " *") },
+                    value = femaleCount,
+                    onValueChange = { femaleCount = it },
+                    label = { Text(stringResource(R.string.sex_female)) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+                OutlinedTextField(
+                    value = unknownCount,
+                    onValueChange = { unknownCount = it },
+                    label = { Text(stringResource(R.string.sex_unknown)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -126,8 +156,6 @@ fun BatchAddBirdsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
-            SexDropdown(selected = sex, onSelected = { sex = it },
-                        modifier = Modifier.fillMaxWidth())
             DatePickerField(
                 label = { Text(stringResource(R.string.born)) },
                 value = birthDate,

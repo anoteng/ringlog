@@ -182,6 +182,66 @@ def ring_number_taken(flock, ring_number, exclude_bird_id=None):
     return db.execute(sql, params).fetchone() is not None
 
 
+def _existing_ring_numbers(flock, ring_prefix):
+    """Set of integer suffixes currently in use for ring_prefix in this flock
+    (e.g. prefix 'A' + bird ring 'A12' -> 12). Respects allow_ring_reuse."""
+    db = get_db()
+    sql = "SELECT ring_number FROM birds WHERE flock_id = ?"
+    params = [flock["id"]]
+    if flock["allow_ring_reuse"]:
+        sql += " AND is_dead = 0 AND is_sold = 0"
+    rows = db.execute(sql, params).fetchall()
+    prefix_len = len(ring_prefix)
+    numbers = set()
+    for r in rows:
+        rn = r["ring_number"] or ""
+        suffix = rn[prefix_len:] if ring_prefix and rn.startswith(ring_prefix) else (rn if not ring_prefix else None)
+        if suffix and suffix.isdigit():
+            numbers.add(int(suffix))
+    return numbers
+
+
+def _batch_insert_birds(flock, ring_prefix, ring_start, sex_counts, species, breed, birth_date):
+    """Insert birds with auto-assigned, sequential ring numbers, automatically
+    skipping over numbers already in use instead of dropping that bird.
+    sex_counts: list of (sex, count) tuples assigned in that order.
+    ring_start=None picks the lowest available number. Returns (added, skipped_numbers)."""
+    db = get_db()
+    sequence = []
+    for sex, count in sex_counts:
+        sequence.extend([sex] * count)
+
+    n = ring_start if ring_start is not None else 1
+    taken = _existing_ring_numbers(flock, ring_prefix)
+
+    added = 0
+    skipped_numbers = 0
+    max_attempts = max(len(sequence) * 20, 2000)
+    attempts = 0
+    while sequence and attempts < max_attempts:
+        attempts += 1
+        if n in taken:
+            skipped_numbers += 1
+            n += 1
+            continue
+        ring = f"{ring_prefix}{n}"
+        sex = sequence[0]
+        try:
+            db.execute(
+                """INSERT INTO birds (flock_id, ring_number, species, breed, sex, birth_date, flock_join_date)
+                   VALUES (?,?,?,?,?,?,CURDATE())""",
+                (flock["id"], ring, species, breed, sex, birth_date)
+            )
+            sequence.pop(0)
+            added += 1
+            taken.add(n)
+        except pymysql.IntegrityError:
+            skipped_numbers += 1
+        n += 1
+    db.commit()
+    return added, skipped_numbers
+
+
 def resolve_flock(username, flock_name):
     """Look up a flock by owner username + flock name (case-insensitive)."""
     return get_db().execute(
@@ -648,35 +708,34 @@ def batch_add_birds(username, flock_name):
     if not flock or get_permission(flock["id"]) != "edit":
         flash(_("Access denied."), "error")
         return redirect(url_for("flocks"))
-    db = get_db()
     result = None
     if request.method == "POST":
-        ring_prefix = request.form.get("ring_prefix", "").strip()
-        ring_start  = request.form.get("ring_start", "").strip()
-        count_str   = request.form.get("count", "").strip()
-        species     = request.form.get("species", "chicken")
-        breed       = request.form.get("breed", "").strip() or None
-        sex         = request.form.get("sex", "unknown")
-        birth_date  = request.form.get("birth_date") or None
-        if not ring_start.isdigit() or not count_str.isdigit():
-            flash(_("Starting ring number and count must be numbers."), "error")
+        ring_prefix    = request.form.get("ring_prefix", "").strip()
+        ring_start_str = request.form.get("ring_start", "").strip()
+        species        = request.form.get("species", "chicken")
+        breed          = request.form.get("breed", "").strip() or None
+        birth_date     = request.form.get("birth_date") or None
+
+        def count_of(field):
+            v = request.form.get(field, "").strip()
+            return int(v) if v.isdigit() else 0
+
+        male_count    = count_of("male_count")
+        female_count  = count_of("female_count")
+        unknown_count = count_of("unknown_count")
+        total = male_count + female_count + unknown_count
+
+        if ring_start_str and not ring_start_str.isdigit():
+            flash(_("Starting ring number must be a number."), "error")
+        elif total < 1 or total > 500:
+            flash(_("Total count must be between 1 and 500."), "error")
         else:
-            added = skipped = 0
-            for i in range(min(int(count_str), 500)):
-                ring = f"{ring_prefix}{int(ring_start) + i}"
-                if ring_number_taken(flock, ring):
-                    skipped += 1
-                    continue
-                try:
-                    db.execute(
-                        """INSERT INTO birds (flock_id, ring_number, species, breed, sex, birth_date, flock_join_date)
-                           VALUES (?,?,?,?,?,?,CURDATE())""",
-                        (flock["id"], ring, species, breed, sex, birth_date)
-                    )
-                    added += 1
-                except Exception:
-                    skipped += 1
-            db.commit()
+            ring_start = int(ring_start_str) if ring_start_str else None
+            added, skipped = _batch_insert_birds(
+                flock, ring_prefix, ring_start,
+                [("male", male_count), ("female", female_count), ("unknown", unknown_count)],
+                species, breed, birth_date,
+            )
             result = {"added": added, "skipped": skipped}
     return render_template("batch_add.html", flock=flock, result=result)
 
@@ -1794,31 +1853,36 @@ def api_batch_add_birds(flock_id):
     db = get_db()
     flock = db.execute("SELECT * FROM flocks WHERE id=?", (flock_id,)).fetchone()
     data = request.get_json(silent=True) or {}
-    ring_prefix  = (data.get("ring_prefix") or "").strip()
-    ring_start   = data.get("ring_start")
-    count        = data.get("count")
-    species      = data.get("species") or "chicken"
-    breed        = (data.get("breed") or "").strip() or None
-    sex          = data.get("sex") or "unknown"
-    birth_date   = data.get("birth_date") or None
-    if ring_start is None or not count or int(count) < 1 or int(count) > 500:
-        return jsonify({"error": "ring_start and count (1-500) required"}), 400
-    added = skipped = 0
-    for i in range(int(count)):
-        ring = f"{ring_prefix}{int(ring_start) + i}"
-        if ring_number_taken(flock, ring):
-            skipped += 1
-            continue
+    ring_prefix = (data.get("ring_prefix") or "").strip()
+    ring_start  = data.get("ring_start")
+    species     = data.get("species") or "chicken"
+    breed       = (data.get("breed") or "").strip() or None
+    birth_date  = data.get("birth_date") or None
+
+    def to_count(v):
         try:
-            db.execute(
-                """INSERT INTO birds (flock_id, ring_number, species, breed, sex, birth_date, flock_join_date)
-                   VALUES (?,?,?,?,?,?,CURDATE())""",
-                (flock_id, ring, species, breed, sex, birth_date)
-            )
-            added += 1
-        except pymysql.IntegrityError:
-            skipped += 1
-    db.commit()
+            return max(0, int(v))
+        except (TypeError, ValueError):
+            return 0
+
+    male_count    = to_count(data.get("male_count"))
+    female_count  = to_count(data.get("female_count"))
+    unknown_count = to_count(data.get("unknown_count"))
+    total = male_count + female_count + unknown_count
+
+    if total < 1 or total > 500:
+        return jsonify({"error": "Total count (male_count + female_count + unknown_count) must be 1-500"}), 400
+    if ring_start is not None:
+        try:
+            ring_start = int(ring_start)
+        except (TypeError, ValueError):
+            return jsonify({"error": "ring_start must be a number"}), 400
+
+    added, skipped = _batch_insert_birds(
+        flock, ring_prefix, ring_start,
+        [("male", male_count), ("female", female_count), ("unknown", unknown_count)],
+        species, breed, birth_date,
+    )
     return jsonify({"added": added, "skipped": skipped})
 
 

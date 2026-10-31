@@ -148,8 +148,10 @@
     <!-- Add bird / Batch add -->
     <string name="add_bird">Legg til fugl</string>
     <string name="batch_add">Masseregistrer fugler</string>
-    <string name="batch_add_result">La til %1$d fugl(er). %2$d hoppet over (ringnummer allerede i bruk).</string>
+    <string name="batch_add_result">La til %1$d fugl(er). %2$d ringnummer var allerede i bruk og ble hoppet over.</string>
     <string name="count">Antall</string>
+    <string name="lowest_available">Lavest tilgjengelig</string>
+    <string name="ring_start_optional_hint">La stå tom for å bruke lavest tilgjengelige nummer. Ringnummer i bruk hoppes automatisk over.</string>
 
     <!-- Species -->
     <string name="species_chicken">Høne</string>
