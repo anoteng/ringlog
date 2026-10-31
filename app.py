@@ -25,6 +25,11 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+app.config.update(
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "1") == "1",
+    SESSION_COOKIE_HTTPONLY=True,
+)
 
 SUPPORTED_LANGS = ["en", "nb", "nl"]
 
@@ -90,6 +95,22 @@ def close_db(exc):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+ALLOWED_IMAGE_MIMES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"}
+
+
+def _image_mime(mime):
+    """Normalized image MIME type, or None if it isn't an allowed image type."""
+    mime = (mime or "").split(";")[0].strip().lower()
+    return mime if mime in ALLOWED_IMAGE_MIMES else None
+
+
+def _image_response(data, mime):
+    resp = send_file(BytesIO(data), mimetype=_image_mime(mime) or "application/octet-stream")
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Content-Security-Policy"] = "default-src 'none'; sandbox"
+    return resp
+
 
 def _natural_key(s):
     return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", s or "")]
@@ -201,12 +222,15 @@ def _existing_ring_numbers(flock, ring_prefix):
     return numbers
 
 
-def _batch_insert_birds(flock, ring_prefix, ring_start, sex_counts, species, breed, birth_date):
+def _batch_insert_birds(flock, ring_prefix, ring_start, sex_counts, species, breed, birth_date,
+                        flock_join_date=None, commit=True):
     """Insert birds with auto-assigned, sequential ring numbers, automatically
     skipping over numbers already in use instead of dropping that bird.
     sex_counts: list of (sex, count) tuples assigned in that order.
-    ring_start=None picks the lowest available number. Returns (added, skipped_numbers)."""
+    ring_start=None picks the lowest available number. flock_join_date=None means today.
+    Returns (added, skipped_numbers, created_ids)."""
     db = get_db()
+    created_ids = []
     sequence = []
     for sex, count in sex_counts:
         sequence.extend([sex] * count)
@@ -229,17 +253,19 @@ def _batch_insert_birds(flock, ring_prefix, ring_start, sex_counts, species, bre
         try:
             db.execute(
                 """INSERT INTO birds (flock_id, ring_number, species, breed, sex, birth_date, flock_join_date)
-                   VALUES (?,?,?,?,?,?,CURDATE())""",
-                (flock["id"], ring, species, breed, sex, birth_date)
+                   VALUES (?,?,?,?,?,?,COALESCE(?, CURDATE()))""",
+                (flock["id"], ring, species, breed, sex, birth_date, flock_join_date)
             )
+            created_ids.append(db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"])
             sequence.pop(0)
             added += 1
             taken.add(n)
         except pymysql.IntegrityError:
             skipped_numbers += 1
         n += 1
-    db.commit()
-    return added, skipped_numbers
+    if commit:
+        db.commit()
+    return added, skipped_numbers, created_ids
 
 
 def resolve_flock(username, flock_name):
@@ -355,7 +381,7 @@ def login():
             session.clear()
             session["user_id"] = user["id"]
             next_url = request.args.get("next", "")
-            if not next_url.startswith("/"):
+            if not next_url.startswith("/") or next_url.startswith("//") or "\\" in next_url:
                 next_url = url_for("flocks")
             flash(_("Welcome back, %(name)s!", name=user["username"]), "success")
             return redirect(next_url)
@@ -666,9 +692,9 @@ def add_bird(username, flock_name):
     if request.method == "POST":
         image_data, image_mime = None, None
         file = request.files.get("image")
-        if file and file.filename:
+        if file and file.filename and _image_mime(file.content_type):
             image_data = file.read()
-            image_mime = file.content_type
+            image_mime = _image_mime(file.content_type)
 
         breed     = request.form.get("breed", "").strip()
         breed_mix = request.form.get("breed_mix", "").strip() if breed == "hybrid" else ""
@@ -731,7 +757,7 @@ def batch_add_birds(username, flock_name):
             flash(_("Total count must be between 1 and 500."), "error")
         else:
             ring_start = int(ring_start_str) if ring_start_str else None
-            added, skipped = _batch_insert_birds(
+            added, skipped, _ = _batch_insert_birds(
                 flock, ring_prefix, ring_start,
                 [("male", male_count), ("female", female_count), ("unknown", unknown_count)],
                 species, breed, birth_date,
@@ -760,9 +786,9 @@ def edit_bird(bird_id):
         if request.form.get("remove_image"):
             image_data, image_mime = None, None
         file = request.files.get("image")
-        if file and file.filename:
+        if file and file.filename and _image_mime(file.content_type):
             image_data = file.read()
-            image_mime = file.content_type
+            image_mime = _image_mime(file.content_type)
 
         breed     = request.form.get("breed", "").strip()
         breed_mix = request.form.get("breed_mix", "").strip() if breed == "hybrid" else ""
@@ -770,6 +796,10 @@ def edit_bird(bird_id):
         is_sold   = 1 if request.form.get("is_sold") else 0
         death_date = (request.form.get("death_date") or None) if is_dead else None
         sold_date  = (request.form.get("sold_date") or None) if is_sold else None
+        if is_dead and not death_date and not bird["is_dead"]:
+            death_date = _date.today().isoformat()
+        if is_sold and not sold_date and not bird["is_sold"]:
+            sold_date = _date.today().isoformat()
         # A bird can only be dead or sold, not both
         if is_dead:
             is_sold, sold_date = 0, None
@@ -839,7 +869,7 @@ def bird_image(bird_id):
         return "", 404
     if not get_permission(bird["flock_id"]):
         return "", 403
-    return send_file(BytesIO(bird["image"]), mimetype=bird["image_mime"])
+    return _image_response(bird["image"], bird["image_mime"])
 
 
 @app.route("/bird/<int:bird_id>/delete", methods=["GET", "POST"])
@@ -1034,7 +1064,7 @@ def hatch_timeline(h):
         status = "hatching"
     else:
         status = "complete"
-    total   = int(h["incubation_days"])
+    total   = max(1, int(h["incubation_days"]))
     elapsed = max(0, min(total, (now - start).days))
     return {
         "start":          start,
@@ -1216,6 +1246,11 @@ def _save_hatch(hatch_id):
         if is_api:
             return jsonify({"error": "incubation_days and lockdown_day must be numbers"}), 400
         flash(_("Incubation days and lockdown day must be numbers."), "error")
+        return redirect(request.url)
+    if incubation_days < 1 or not 0 <= lockdown_day <= incubation_days:
+        if is_api:
+            return jsonify({"error": "incubation_days must be at least 1 and lockdown_day between 0 and incubation_days"}), 400
+        flash(_("Incubation days must be at least 1, and lockdown day can't be after hatch day."), "error")
         return redirect(request.url)
 
     def _int(key):
@@ -1443,8 +1478,8 @@ def flock_report(username, flock_name):
               (SELECT COUNT(*) FROM birds b
                WHERE b.flock_id = l.flock_id AND b.sex = 'female'
                  AND b.flock_join_date <= l.log_date
-                 AND (b.death_date IS NULL OR b.death_date > l.log_date)
-                 AND (b.sold_date IS NULL OR b.sold_date > l.log_date)
+                 AND (b.death_date > l.log_date OR (b.death_date IS NULL AND b.is_dead = 0))
+                 AND (b.sold_date > l.log_date OR (b.sold_date IS NULL AND b.is_sold = 0))
                  AND (b.birth_date IS NULL OR b.birth_date <= DATE_SUB(l.log_date, INTERVAL 5 MONTH))
               ) AS laying_hens
            FROM flock_log l
@@ -1486,6 +1521,13 @@ def delete_account():
         db = get_db()
         user_id = g.user["id"]
         # Cascade: birds → via flock_id, flock_shares, flock_log, hatches, user_tokens, password_resets, users
+        # Entries this user logged in other people's flocks stay with the flock owner
+        db.execute("""UPDATE flock_log l JOIN flocks f ON f.id = l.flock_id
+                      SET l.user_id = f.user_id WHERE l.user_id = ? AND f.user_id != ?""",
+                   (user_id, user_id))
+        db.execute("""UPDATE flock_stash s JOIN flocks f ON f.id = s.flock_id
+                      SET s.user_id = f.user_id WHERE s.user_id = ? AND f.user_id != ?""",
+                   (user_id, user_id))
         db.execute("DELETE FROM user_tokens WHERE user_id = ?", (user_id,))
         db.execute("DELETE FROM password_resets WHERE user_id = ?", (user_id,))
         db.execute("DELETE FROM hatch_shares WHERE hatch_id IN (SELECT id FROM hatches WHERE user_id = ?)", (user_id,))
@@ -1506,7 +1548,7 @@ def delete_account():
         db.commit()
         session.clear()
         flash(_("Your account and all data have been permanently deleted."), "success")
-        return redirect(url_for("landing"))
+        return redirect(url_for("index"))
     return render_template("data_deletion.html")
 
 
@@ -1823,8 +1865,10 @@ def api_add_bird(flock_id):
     image_data = image_mime = None
     if request.files.get("image"):
         img = request.files["image"]
+        image_mime = _image_mime(img.mimetype)
+        if not image_mime:
+            return jsonify({"error": "Unsupported image type"}), 400
         image_data = img.read()
-        image_mime = img.mimetype
     birth_approx = 1 if f.get("birth_approximate") in (True, "true", "1", 1) else 0
     try:
         db.execute(
@@ -1878,7 +1922,7 @@ def api_batch_add_birds(flock_id):
         except (TypeError, ValueError):
             return jsonify({"error": "ring_start must be a number"}), 400
 
-    added, skipped = _batch_insert_birds(
+    added, skipped, _ = _batch_insert_birds(
         flock, ring_prefix, ring_start,
         [("male", male_count), ("female", female_count), ("unknown", unknown_count)],
         species, breed, birth_date,
@@ -1919,9 +1963,19 @@ def api_update_bird(bird_id):
     image_mime = bird["image_mime"]
     if request.files.get("image"):
         img = request.files["image"]
+        image_mime = _image_mime(img.mimetype)
+        if not image_mime:
+            return jsonify({"error": "Unsupported image type"}), 400
         image_data = img.read()
-        image_mime = img.mimetype
     birth_approx = 1 if f.get("birth_approximate") in (True, "true", "1", 1) else 0
+    is_dead = 1 if f.get("is_dead") in (True, "true", "1", 1) else 0
+    is_sold = 1 if f.get("is_sold") in (True, "true", "1", 1) else 0
+    death_date = (f.get("death_date") or None) if is_dead else None
+    sold_date  = (f.get("sold_date") or None) if is_sold else None
+    if is_dead and not death_date and not bird["is_dead"]:
+        death_date = _date.today().isoformat()
+    if is_sold and not sold_date and not bird["is_sold"]:
+        sold_date = _date.today().isoformat()
     db.execute(
         """UPDATE birds SET ring_number=?, name=?, species=?, breed=?, breed_mix=?, sex=?,
            birth_date=?, birth_approximate=?, notes=?, is_dead=?, death_date=?, is_sold=?, sold_date=?,
@@ -1931,10 +1985,7 @@ def api_update_bird(bird_id):
          (f.get("breed_mix") or "").strip() or None, f.get("sex") or bird["sex"],
          f.get("birth_date") or None, birth_approx,
          (f.get("notes") or "").strip() or None,
-         1 if f.get("is_dead") in (True, "true", "1", 1) else 0,
-         f.get("death_date") or None,
-         1 if f.get("is_sold") in (True, "true", "1", 1) else 0,
-         f.get("sold_date") or None,
+         is_dead, death_date, is_sold, sold_date,
          image_data, image_mime, bird_id)
     )
     db.commit()
@@ -1951,8 +2002,11 @@ def api_upload_bird_image(bird_id):
     img = request.files.get("image")
     if not img:
         return jsonify({"error": "No image provided"}), 400
+    mime = _image_mime(img.mimetype)
+    if not mime:
+        return jsonify({"error": "Unsupported image type"}), 400
     db.execute("UPDATE birds SET image=?, image_mime=? WHERE id=?",
-               (img.read(), img.mimetype, bird_id))
+               (img.read(), mime, bird_id))
     db.commit()
     return jsonify({"ok": True})
 
@@ -1979,7 +2033,7 @@ def api_bird_image(bird_id):
     bird = db.execute("SELECT image, image_mime, flock_id FROM birds WHERE id=?", (bird_id,)).fetchone()
     if not bird or not bird["image"] or not get_permission(bird["flock_id"]):
         return jsonify({"error": "Not found"}), 404
-    return send_file(BytesIO(bird["image"]), mimetype=bird["image_mime"])
+    return _image_response(bird["image"], bird["image_mime"])
 
 
 # --- Bird notes ---
@@ -2075,8 +2129,8 @@ def api_flock_report(flock_id):
               (SELECT COUNT(*) FROM birds b
                WHERE b.flock_id = l.flock_id AND b.sex = 'female'
                  AND b.flock_join_date <= l.log_date
-                 AND (b.death_date IS NULL OR b.death_date > l.log_date)
-                 AND (b.sold_date IS NULL OR b.sold_date > l.log_date)
+                 AND (b.death_date > l.log_date OR (b.death_date IS NULL AND b.is_dead = 0))
+                 AND (b.sold_date > l.log_date OR (b.sold_date IS NULL AND b.is_sold = 0))
                  AND (b.birth_date IS NULL OR b.birth_date <= DATE_SUB(l.log_date, INTERVAL 5 MONTH))
               ) AS laying_hens
            FROM flock_log l
@@ -2209,57 +2263,59 @@ def api_finish_hatch(hatch_id):
             return None
         return int(v)
 
-    eggs_hatched   = _int("eggs_hatched")
-    eggs_brooder   = _int("eggs_brooder")
-    eggs_discarded = _int("eggs_discarded")
-    flock_id       = _int("flock_id")
+    try:
+        eggs_hatched   = _int("eggs_hatched")
+        eggs_brooder   = _int("eggs_brooder")
+        eggs_discarded = _int("eggs_discarded")
+        flock_id       = _int("flock_id")
+        ring_start     = _int("ring_start")
+    except (TypeError, ValueError):
+        return jsonify({"error": "Counts, flock_id and ring_start must be numbers"}), 400
     new_flock_name = (f.get("new_flock_name") or "").strip() or None
-    ring_prefix    = f.get("ring_prefix") or ""
-    ring_start     = int(f.get("ring_start") or 1)
+    ring_prefix    = (f.get("ring_prefix") or "").strip()
     birth_date_override = (f.get("birth_date") or "").strip() or None
     breed_override      = (f.get("breed") or "").strip() or None
 
+    if eggs_hatched is not None and not 0 <= eggs_hatched <= 500:
+        return jsonify({"error": "eggs_hatched must be between 0 and 500"}), 400
+
     db = get_db()
     hatch = db.execute("SELECT * FROM hatches WHERE id=?", (hatch_id,)).fetchone()
+    transfer = bool(eggs_hatched) and bool(flock_id or new_flock_name)
 
-    db.execute(
-        "UPDATE hatches SET eggs_hatched=?, eggs_brooder=?, eggs_discarded=?, finished_at=NOW() WHERE id=?",
-        (eggs_hatched, eggs_brooder, eggs_discarded, hatch_id)
-    )
-    db.commit()
+    # Validate the target flock before changing anything, so a failure leaves the hatch open for a retry.
+    if transfer and flock_id and get_permission(flock_id) != "edit":
+        return jsonify({"error": "No access to target flock"}), 403
 
     created_ids = []
     result_flock_id = None
+    try:
+        if transfer:
+            if not flock_id:
+                db.execute("INSERT INTO flocks (user_id, name) VALUES (?,?)",
+                           (g.user["id"], new_flock_name))
+                flock_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+            flock = db.execute("SELECT * FROM flocks WHERE id=?", (flock_id,)).fetchone()
 
-    if eggs_hatched and eggs_hatched > 0 and (flock_id or new_flock_name):
-        if not flock_id and new_flock_name:
-            db.execute("INSERT INTO flocks (user_id, name) VALUES (?,?)",
-                       (g.user["id"], new_flock_name))
-            db.commit()
-            flock_id = db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"]
+            species, breed = hatch["species"], breed_override
+            if species == "muscovy":
+                species, breed = "duck", breed or "Muscovy"
+            birth_date = birth_date_override or str(hatch_timeline(hatch)["hatch_dt"].date())
 
-        perm = get_permission(flock_id)
-        if perm not in ("owner", "edit"):
-            return jsonify({"error": "No access to target flock"}), 403
+            _, _, created_ids = _batch_insert_birds(
+                flock, ring_prefix, ring_start, [("unknown", eggs_hatched)],
+                species, breed, birth_date, flock_join_date=birth_date, commit=False,
+            )
+            result_flock_id = flock_id
 
-        tl = hatch_timeline(hatch)
-        birth_date = birth_date_override or str(tl["hatch_dt"].date())
-
-        for i in range(eggs_hatched):
-            ring = f"{ring_prefix}{ring_start + i}"
-            try:
-                db.execute(
-                    """INSERT INTO birds (flock_id, ring_number, species, breed, sex,
-                       birth_date, birth_approximate, flock_join_date)
-                       VALUES (?,?,?,?,?,?,0,?)""",
-                    (flock_id, ring, hatch["species"], breed_override, "unknown", birth_date, birth_date)
-                )
-                db.commit()
-                created_ids.append(db.execute("SELECT LAST_INSERT_ID() AS id").fetchone()["id"])
-            except pymysql.IntegrityError:
-                return jsonify({"error": f"Ring number '{ring}' already in use in that flock"}), 409
-
-        result_flock_id = flock_id
+        db.execute(
+            "UPDATE hatches SET eggs_hatched=?, eggs_brooder=?, eggs_discarded=?, finished_at=NOW() WHERE id=?",
+            (eggs_hatched, eggs_brooder, eggs_discarded, hatch_id)
+        )
+        db.commit()
+    except pymysql.IntegrityError:
+        db._c.rollback()
+        return jsonify({"error": "A flock with that name already exists"}), 409
 
     return jsonify({"ok": True, "flock_id": result_flock_id, "created_bird_ids": created_ids})
 

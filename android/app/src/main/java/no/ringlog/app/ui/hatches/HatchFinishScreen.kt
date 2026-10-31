@@ -50,7 +50,7 @@ fun HatchFinishScreen(
     var newFlockName  by remember { mutableStateOf("") }
     var useNewFlock   by remember { mutableStateOf(false) }
     var ringPrefix    by remember { mutableStateOf("") }
-    var ringStart     by remember { mutableStateOf("1") }
+    var ringStart     by remember { mutableStateOf("") }
     var birthDate     by remember { mutableStateOf(LocalDate.now().toString()) }
     var breed         by remember { mutableStateOf("") }
     var flockExpanded by remember { mutableStateOf(false) }
@@ -213,14 +213,12 @@ fun HatchFinishScreen(
                         OutlinedTextField(
                             value = ringStart, onValueChange = { ringStart = it },
                             label = { Text(stringResource(R.string.ring_start)) },
+                            placeholder = { Text(stringResource(R.string.lowest_available)) },
                             modifier = Modifier.weight(1f), singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         )
                     }
-                    val start = ringStart.toIntOrNull() ?: 1
-                    val preview = (0 until minOf(count, 5)).joinToString(", ") { "$ringPrefix${start + it}" }
-                    val suffix  = if (count > 5) " …" else ""
-                    Text("$preview$suffix",
+                    Text(stringResource(R.string.ring_start_optional_hint),
                          style = MaterialTheme.typography.bodySmall,
                          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }

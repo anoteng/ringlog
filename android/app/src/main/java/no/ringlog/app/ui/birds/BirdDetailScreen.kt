@@ -173,9 +173,9 @@ fun BirdDetailScreen(
             put("birth_approximate", editBirthApprox.toString())
             if (editNotes.isNotBlank()) put("notes", editNotes.trim())
             put("is_dead", editIsDead.toString())
-            if (editIsDead && editDeathDate.isNotBlank()) put("death_date", editDeathDate.trim())
+            if (editIsDead) put("death_date", editDeathDate.trim().ifBlank { today })
             put("is_sold", editIsSold.toString())
-            if (editIsSold && editSoldDate.isNotBlank()) put("sold_date", editSoldDate.trim())
+            if (editIsSold) put("sold_date", editSoldDate.trim().ifBlank { today })
         }
         vm.updateBird(birdId, fields)
     }
